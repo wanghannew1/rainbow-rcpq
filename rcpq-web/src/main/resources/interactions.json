@@ -1,0 +1,210 @@
+[
+ {
+  "code": "REQ-xahb_cont-sys_questionStore_Query-Q",
+  "page": "xahb_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": false
+ },
+ {
+  "code": "REQ-xahb_dialog-sys_questionStore-Q",
+  "page": "xahb_dialog.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": false
+ },
+ {
+  "code": "REQ-xahb_dialog-sys_questionStore-M",
+  "page": "xahb_dialog.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": false
+ },
+ {
+  "code": "REQ-xahd_cont-sys_questionStore_Query-Q",
+  "page": "xahd_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": false
+ },
+ {
+  "code": "REQ-xahd_dialog-sys_questionStore-Q",
+  "page": "xahd_dialog.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": false
+ },
+ {
+  "code": "REQ-xahd_dialog-sys_questionStore-M",
+  "page": "xahd_dialog.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": false
+ },
+ {
+  "code": "REQ-xahe_cont-sys_questionStore_Query-Q",
+  "page": "xahe_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": false
+ },
+ {
+  "code": "REQ-xahe_dialog-sys_questionStore_Query-Q",
+  "page": "xahe_dialog.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": false
+ },
+ {
+  "code": "REQ-xahc_cont-sys_questionStore_Query-Q",
+  "page": "xahc_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": false
+ },
+ {
+  "code": "REQ-xahc_dialog-sys_questionStore-Q",
+  "page": "xahc_dialog.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": false
+ },
+ {
+  "code": "REQ-xahc_dialog-sys_questionStore-M",
+  "page": "xahc_dialog.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": false
+ },
+ {
+  "code": "REQ-xahc_dialog_dispose-sys_questionStore-Q",
+  "page": "xahc_dialog_dispose.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": false
+ },
+ {
+  "code": "REQ-xahc_dialog_dispose-sys_questionStore-M",
+  "page": "xahc_dialog_dispose.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": false
+ },
+ {
+  "code": "REQ-xaha_cont-sys_questionStore_Query-Q",
+  "page": "xaha_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": false
+ },
+ {
+  "code": "REQ-xaha_cont-sys_questionStore_List-U",
+  "page": "xaha_cont.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": false
+ },
+ {
+  "code": "REQ-xaha_dialog-sys_questionStore-Q",
+  "page": "xaha_dialog.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": false
+ },
+ {
+  "code": "REQ-xaha_dialog-sys_questionStore-M",
+  "page": "xaha_dialog.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": false
+ },
+ {
+  "code": "REQ-xaab_cont-aa12Store-Query",
+  "page": "xaab_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": false
+ },
+ {
+  "code": "REQ-xaab_cont-aa12Store-Del",
+  "page": "xaab_cont.jsp",
+  "type": "M",
+  "bean": "XaabService",
+  "method": "doDelete",
+  "metadataValidate": false
+ },
+ {
+  "code": "REQ-xaab_cont-aa12Store-M",
+  "page": "xaab_cont.jsp",
+  "type": "M",
+  "bean": "XaabService",
+  "method": "doUpdate",
+  "metadataValidate": false
+ },
+ {
+  "code": "REQ-xaad_cont-aa10Store_QueryList-Query",
+  "page": "xaad_cont.jsp",
+  "type": "Q",
+  "bean": "XaadService",
+  "method": "doQuery",
+  "metadataValidate": false
+ },
+ {
+  "code": "REQ-xaad_cont-aa10Store_Delete",
+  "page": "xaad_cont.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": false
+ },
+ {
+  "code": "REQ-xaad_cont-aa10Store_Save",
+  "page": "xaad_cont.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": false
+ },
+ {
+  "code": "REQ-xaad_cont-aa10Store_Query-Query",
+  "page": "xaad_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-xaac_cont-aa01Store-Save",
+  "page": "xaac_cont.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": false
+ },
+ {
+  "code": "REQ-xaac_cont-aa01Store-Query",
+  "page": "xaac_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": false
+ }
+]
