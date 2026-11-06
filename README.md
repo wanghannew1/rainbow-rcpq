@@ -28,10 +28,11 @@ java -jar rcpq-web/build/libs/rcpq-web.jar
 
 - [x] 骨架编译 + 启动 + 路由
 - [ ] GenericCrudDispatcher 四操作语义（TODO-BEHAVIOR 标注，对应契约文档章节）
-- [ ] 元数据校验（非空 + 长度非 ASCII 计 2）
+- [x] 元数据校验（MetadataValidator，8 单测通过）
 - [ ] 主从表保存 + 外键回填两种形态
 - [ ] PG16 数据源 + 实体序列对齐
-- [ ] 行为对照管线（备份库黄金样本 diff）
+- [x] 黄金样本导出（备份库 → rcpq-service/src/test/resources/golden/xa-samples.json）
+- [ ] 行为对照 diff 测试
 
 ## 规约
 
