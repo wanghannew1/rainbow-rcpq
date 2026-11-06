@@ -30,7 +30,7 @@ java -jar rcpq-web/build/libs/rcpq-web.jar
 - [ ] GenericCrudDispatcher 四操作语义（TODO-BEHAVIOR 标注，对应契约文档章节）
 - [x] 元数据校验（MetadataValidator，8 单测通过）
 - [ ] 主从表保存 + 外键回填两种形态
-- [ ] PG16 数据源 + 实体序列对齐
+- [x] PG16 数据源 + 序列对齐（V1-V3 已应用，数据与 Oracle 全对齐）
 - [x] 黄金样本导出（备份库 → rcpq-service/src/test/resources/golden/xa-samples.json）
 - [ ] 行为对照 diff 测试
 
