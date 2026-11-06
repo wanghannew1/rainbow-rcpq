@@ -1,0 +1,5 @@
+-- V2: xa 序列创建 + 对齐备份库当前值(2026-11-06)
+-- AA12 主键为 assigned(业务编码) 不需要序列; AA10 复合主键无序列
+
+CREATE SEQUENCE SEQ_AA01_AAA010 START 10059;
+CREATE SEQUENCE SEQ_SYS_QUESTION_QSEQ START 181;
