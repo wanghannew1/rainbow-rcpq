@@ -1,0 +1,1946 @@
+{
+ "sys_questionStore_List": {
+  "entity": "com.neusoft.lemis.apps.entities.baseDB.S.SYS_QUESTION",
+  "table": "SYS_QUESTION",
+  "columns": [
+   {
+    "name": "qseq",
+    "label": "流水号",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 14,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qid",
+    "label": "问题编号",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 40,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qproject",
+    "label": "项目名称",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 40,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qphase",
+    "label": "项目所在阶段",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 3,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qgrade",
+    "label": "问题来源",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 3,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qsource",
+    "label": "紧急程度",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 3,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qoper",
+    "label": "业务线",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 40,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qmodule",
+    "label": "模块名称",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 40,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qdescribe",
+    "label": "问题详述",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 2000,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qpresenter",
+    "label": "问题提出人",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 20,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qphone",
+    "label": "联系电话",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 20,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qbring",
+    "label": "提出时间",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 12,
+    "scale": 0,
+    "jdbcType": 91
+   },
+   {
+    "name": "qsection",
+    "label": "科室领导",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 20,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qsectionidea",
+    "label": "科室领导意见",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 200,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qbureau",
+    "label": "市局负责人",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 20,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qbureauidea",
+    "label": "市局意见",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 200,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qbureautime",
+    "label": "市局确认时间",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 12,
+    "scale": 0,
+    "jdbcType": 91
+   },
+   {
+    "name": "qtype",
+    "label": "问题类型",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 3,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qresult",
+    "label": "处理结果",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 3,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qshow",
+    "label": "处理说明",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 200,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qdispose",
+    "label": "处理时间",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 12,
+    "scale": 0,
+    "jdbcType": 91
+   },
+   {
+    "name": "qtransactor",
+    "label": "处理人",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 20,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qclose",
+    "label": "是否关闭",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 3,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qclosetime",
+    "label": "关闭时间",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 12,
+    "scale": 0,
+    "jdbcType": 91
+   },
+   {
+    "name": "qcloseman",
+    "label": "关闭人",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 20,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qcloseshow",
+    "label": "关闭说明",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 200,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qstate",
+    "label": "问题状态",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 3,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "aae100",
+    "label": "有效标记",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 3,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "aae013",
+    "label": "备注",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 600,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qdestine",
+    "label": "预定修改人",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 32,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "baz001",
+    "label": "业务编号",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 16,
+    "scale": 0,
+    "jdbcType": 2
+   },
+   {
+    "name": "baz002",
+    "label": "记录编号",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 16,
+    "scale": 0,
+    "jdbcType": 2
+   },
+   {
+    "name": "aae011",
+    "label": "经办人",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 20,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "aae017",
+    "label": "经办机构",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 20,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "aae019",
+    "label": "经办人",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 32,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "aae020",
+    "label": "经办机构",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 100,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "aae022",
+    "label": "经办行政区划",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 12,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "aae036",
+    "label": "经办时间",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 12,
+    "scale": 0,
+    "jdbcType": 91
+   }
+  ]
+ },
+ "sys_questionStore": {
+  "entity": "com.neusoft.lemis.apps.entities.baseDB.S.SYS_QUESTION",
+  "table": "SYS_QUESTION",
+  "columns": [
+   {
+    "name": "qseq",
+    "label": "实施问题记录流水号",
+    "nullable": false,
+    "primaryKey": true,
+    "precision": 14,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qid",
+    "label": "问题编号",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 40,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qproject",
+    "label": "项目名称",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 40,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qphase",
+    "label": "项目所在阶段",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 3,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qgrade",
+    "label": "问题来源",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 3,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qsource",
+    "label": "紧急程度",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 3,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qoper",
+    "label": "业务线",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 40,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qmodule",
+    "label": "模块名称",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 40,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qdescribe",
+    "label": "问题详述",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 2000,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qpresenter",
+    "label": "问题提出人",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 20,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qphone",
+    "label": "联系电话",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 20,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qbring",
+    "label": "提出时间",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 12,
+    "scale": 0,
+    "jdbcType": 91
+   },
+   {
+    "name": "qsection",
+    "label": "科室领导",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 20,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qsectionidea",
+    "label": "科室领导意见",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 200,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qbureau",
+    "label": "市局负责人",
+    "nullable": false,
+    "primaryKey": false,
+    "precision": 20,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qbureauidea",
+    "label": "市局意见",
+    "nullable": false,
+    "primaryKey": false,
+    "precision": 200,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qbureautime",
+    "label": "市局确认时间",
+    "nullable": false,
+    "primaryKey": false,
+    "precision": 12,
+    "scale": 0,
+    "jdbcType": 91
+   },
+   {
+    "name": "qtype",
+    "label": "问题类型",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 3,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qresult",
+    "label": "处理结果",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 3,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qshow",
+    "label": "处理说明",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 200,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qdispose",
+    "label": "处理时间",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 12,
+    "scale": 0,
+    "jdbcType": 91
+   },
+   {
+    "name": "qtransactor",
+    "label": "处理人",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 20,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qclose",
+    "label": "是否关闭",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 3,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qclosetime",
+    "label": "关闭时间",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 12,
+    "scale": 0,
+    "jdbcType": 91
+   },
+   {
+    "name": "qcloseman",
+    "label": "关闭人",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 20,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qcloseshow",
+    "label": "关闭说明",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 200,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qstate",
+    "label": "问题状态",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 3,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "aae100",
+    "label": "有效标记",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 3,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "aae013",
+    "label": "备注",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 600,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qdestine",
+    "label": "预定修改人",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 32,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "baz001",
+    "label": "业务编号",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 16,
+    "scale": 0,
+    "jdbcType": 2
+   },
+   {
+    "name": "baz002",
+    "label": "记录编号",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 16,
+    "scale": 0,
+    "jdbcType": 2
+   },
+   {
+    "name": "aae011",
+    "label": "经办人",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 20,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "aae017",
+    "label": "经办机构",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 20,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "aae019",
+    "label": "经办人",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 32,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "aae020",
+    "label": "经办机构",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 100,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "aae022",
+    "label": "经办行政区划",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 12,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "aae036",
+    "label": "经办日期",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 12,
+    "scale": 0,
+    "jdbcType": 91
+   }
+  ]
+ },
+ "sys_questionStore_Query": {
+  "entity": "com.neusoft.lemis.apps.entities.baseDB.S.SYS_QUESTION",
+  "table": "SYS_QUESTION",
+  "columns": [
+   {
+    "name": "qseq",
+    "label": "流水号",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 14,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qid",
+    "label": "问题编号",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 40,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qproject",
+    "label": "项目名称",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 40,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qphase",
+    "label": "项目所在阶段",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 3,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qgrade",
+    "label": "问题来源",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 3,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qsource",
+    "label": "紧急程度",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 3,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qoper",
+    "label": "业务线",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 40,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qmodule",
+    "label": "模块名称",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 40,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qdescribe",
+    "label": "问题详述",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 2000,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qpresenter",
+    "label": "问题提出人",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 20,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qphone",
+    "label": "联系电话",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 20,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qbring",
+    "label": "提出时间从",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 12,
+    "scale": 0,
+    "jdbcType": 91
+   },
+   {
+    "name": "qbring_1",
+    "label": "到",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 12,
+    "scale": 0,
+    "jdbcType": 91
+   },
+   {
+    "name": "qsection",
+    "label": "科室领导",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 20,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qsectionidea",
+    "label": "科室领导意见",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 200,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qbureau",
+    "label": "市局负责人",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 20,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qbureauidea",
+    "label": "市局意见",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 200,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qbureautime",
+    "label": "市局确认时间",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 12,
+    "scale": 0,
+    "jdbcType": 91
+   },
+   {
+    "name": "qtype",
+    "label": "问题类型",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 3,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qresult",
+    "label": "处理结果",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 3,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qshow",
+    "label": "处理说明",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 200,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qdispose",
+    "label": "处理时间",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 12,
+    "scale": 0,
+    "jdbcType": 91
+   },
+   {
+    "name": "qtransactor",
+    "label": "处理人",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 20,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qclose",
+    "label": "是否关闭",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 3,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qclosetime",
+    "label": "关闭时间",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 12,
+    "scale": 0,
+    "jdbcType": 91
+   },
+   {
+    "name": "qcloseman",
+    "label": "关闭人",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 20,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qcloseshow",
+    "label": "关闭说明",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 200,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qstate",
+    "label": "问题状态",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 3,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "aae100",
+    "label": "有效标记",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 3,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "aae013",
+    "label": "备注",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 600,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qdestine",
+    "label": "预定修改人",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 32,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "baz001",
+    "label": "业务编号",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 16,
+    "scale": 0,
+    "jdbcType": 2
+   },
+   {
+    "name": "baz002",
+    "label": "记录编号",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 16,
+    "scale": 0,
+    "jdbcType": 2
+   },
+   {
+    "name": "aae011",
+    "label": "经办人",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 20,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "aae017",
+    "label": "经办机构",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 20,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "aae019",
+    "label": "经办人",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 32,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "aae020",
+    "label": "经办机构",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 100,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "aae022",
+    "label": "经办行政区划",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 12,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "aae036",
+    "label": "经办时间",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 12,
+    "scale": 0,
+    "jdbcType": 91
+   }
+  ]
+ },
+ "sys_questionStore_dispose": {
+  "entity": "com.neusoft.lemis.apps.entities.baseDB.S.SYS_QUESTION",
+  "table": "SYS_QUESTION",
+  "columns": [
+   {
+    "name": "qseq",
+    "label": "流水号",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 16,
+    "scale": 0,
+    "jdbcType": 2
+   },
+   {
+    "name": "qid",
+    "label": "问题编号",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 40,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qproject",
+    "label": "项目名称",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 40,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qphase",
+    "label": "项目所在阶段",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 3,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qgrade",
+    "label": "问题来源",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 3,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qsource",
+    "label": "紧急程度",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 3,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qoper",
+    "label": "业务线",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 40,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qmodule",
+    "label": "模块名称",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 40,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qdescribe",
+    "label": "问题详述",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 2000,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qpresenter",
+    "label": "问题提出人",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 20,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qphone",
+    "label": "联系电话",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 20,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qbring",
+    "label": "提出时间",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 12,
+    "scale": 0,
+    "jdbcType": 91
+   },
+   {
+    "name": "qsection",
+    "label": "科室领导",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 20,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qsectionidea",
+    "label": "科室领导意见",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 200,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qbureau",
+    "label": "市局负责人",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 20,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qbureauidea",
+    "label": "市局意见",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 200,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qbureautime",
+    "label": "市局确认时间",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 12,
+    "scale": 0,
+    "jdbcType": 91
+   },
+   {
+    "name": "qtype",
+    "label": "问题类型",
+    "nullable": false,
+    "primaryKey": false,
+    "precision": 3,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qresult",
+    "label": "处理结果",
+    "nullable": false,
+    "primaryKey": false,
+    "precision": 3,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qshow",
+    "label": "处理说明",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 200,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qdispose",
+    "label": "处理时间",
+    "nullable": false,
+    "primaryKey": false,
+    "precision": 12,
+    "scale": 0,
+    "jdbcType": 91
+   },
+   {
+    "name": "qtransactor",
+    "label": "处理人",
+    "nullable": false,
+    "primaryKey": false,
+    "precision": 20,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qclose",
+    "label": "是否关闭",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 3,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qclosetime",
+    "label": "关闭时间",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 12,
+    "scale": 0,
+    "jdbcType": 91
+   },
+   {
+    "name": "qcloseman",
+    "label": "关闭人",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 20,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qcloseshow",
+    "label": "关闭说明",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 200,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qstate",
+    "label": "问题状态",
+    "nullable": false,
+    "primaryKey": false,
+    "precision": 3,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "aae100",
+    "label": "有效标记",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 3,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "aae013",
+    "label": "备注",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 600,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "qdestine",
+    "label": "预定修改人",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 32,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "baz001",
+    "label": "业务编号",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 16,
+    "scale": 0,
+    "jdbcType": 2
+   },
+   {
+    "name": "baz002",
+    "label": "记录编号",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 16,
+    "scale": 0,
+    "jdbcType": 2
+   },
+   {
+    "name": "aae011",
+    "label": "经办人代码",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 20,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "aae017",
+    "label": "经办机构代码",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 20,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "aae019",
+    "label": "经办人",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 32,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "aae020",
+    "label": "经办机构",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 100,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "aae022",
+    "label": "机构行政区划",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 12,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "aae036",
+    "label": "经办日期",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 12,
+    "scale": 0,
+    "jdbcType": 91
+   }
+  ]
+ },
+ "aa12Store_M": {
+  "entity": "com.neusoft.lemis.apps.entities.baseDB.A.AA12",
+  "table": "AA12",
+  "columns": [
+   {
+    "name": "id",
+    "label": "主键",
+    "nullable": false,
+    "primaryKey": true,
+    "precision": 30,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "parentid",
+    "label": "父节点ID",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 16,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "haschild",
+    "label": "是否有子节点",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 8,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "label",
+    "label": "标签",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 60,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "spell",
+    "label": "拼音码",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 30,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "iscommon",
+    "label": "是否常用",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 8,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "isvalid",
+    "label": "是否有效",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 8,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "baz001",
+    "label": "记录编号",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 16,
+    "scale": 0,
+    "jdbcType": 2
+   },
+   {
+    "name": "baz002",
+    "label": "操作序号",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 16,
+    "scale": 0,
+    "jdbcType": 2
+   },
+   {
+    "name": "ordnumber",
+    "label": "排列顺序",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 30,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "floor",
+    "label": "层级",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 3,
+    "scale": 0,
+    "jdbcType": 12
+   }
+  ]
+ },
+ "aa12Store": {
+  "entity": "com.neusoft.lemis.apps.entities.baseDB.A.AA12",
+  "table": "AA12",
+  "columns": [
+   {
+    "name": "id",
+    "label": "主键",
+    "nullable": false,
+    "primaryKey": true,
+    "precision": 30,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "parentid",
+    "label": "父节点ID",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 16,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "haschild",
+    "label": "是否有子节点",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 8,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "label",
+    "label": "标签",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 60,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "spell",
+    "label": "拼音码",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 30,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "iscommon",
+    "label": "是否常用",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 8,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "isvalid",
+    "label": "是否有效",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 8,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "baz001",
+    "label": "记录编号",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 16,
+    "scale": 0,
+    "jdbcType": 2
+   },
+   {
+    "name": "baz002",
+    "label": "操作序号",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 16,
+    "scale": 0,
+    "jdbcType": 2
+   },
+   {
+    "name": "ordnumber",
+    "label": "排列顺序",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 30,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "floor",
+    "label": "层级",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 3,
+    "scale": 0,
+    "jdbcType": 12
+   }
+  ]
+ },
+ "aa10Store_QueryList": {
+  "entity": "com.neusoft.lemis.apps.entities.baseDB.A.AA10",
+  "table": "AA10",
+  "columns": [
+   {
+    "name": "aaa100",
+    "label": "代码类别",
+    "nullable": false,
+    "primaryKey": true,
+    "precision": 10,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "aaa101",
+    "label": "类别名称",
+    "nullable": false,
+    "primaryKey": false,
+    "precision": 60,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "aaa102",
+    "label": "代码值",
+    "nullable": false,
+    "primaryKey": true,
+    "precision": 6,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "aaa103",
+    "label": "代码名称",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 100,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "aaa104",
+    "label": "代码可维护标志",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 8,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "aaa105",
+    "label": "月报代码",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 10,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "aaa106",
+    "label": "月报项目名称",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 50,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "aaa107",
+    "label": "项目标识",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 10,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "aaa108",
+    "label": "拼音码",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 100,
+    "scale": 0,
+    "jdbcType": 12
+   }
+  ]
+ },
+ "aa10Store_Query": {
+  "entity": "com.neusoft.lemis.apps.entities.baseDB.A.AA10",
+  "table": "AA10",
+  "columns": [
+   {
+    "name": "aaa100",
+    "label": "代码类别",
+    "nullable": false,
+    "primaryKey": true,
+    "precision": 10,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "aaa101",
+    "label": "类别名称",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 60,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "aaa102",
+    "label": "代码值",
+    "nullable": true,
+    "primaryKey": true,
+    "precision": 6,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "aaa103",
+    "label": "代码名称",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 100,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "aaa104",
+    "label": "代码可维护标志",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 8,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "aaa105",
+    "label": "月报代码",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 10,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "aaa106",
+    "label": "月报项目名称",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 50,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "aaa107",
+    "label": "项目标识",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 10,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "aaa108",
+    "label": "拼音码",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 100,
+    "scale": 0,
+    "jdbcType": 12
+   }
+  ]
+ },
+ "aa01Store": {
+  "entity": "com.neusoft.lemis.apps.entities.baseDB.A.AA01",
+  "table": "AA01",
+  "columns": [
+   {
+    "name": "aaa010",
+    "label": "ID",
+    "nullable": false,
+    "primaryKey": true,
+    "precision": 16,
+    "scale": 0,
+    "jdbcType": 2
+   },
+   {
+    "name": "aab034",
+    "label": "机构编码",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 20,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "aae140",
+    "label": "业务线代码",
+    "nullable": false,
+    "primaryKey": false,
+    "precision": 6,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "aaa001",
+    "label": "参数代码（交互代码）",
+    "nullable": false,
+    "primaryKey": false,
+    "precision": 200,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "aaa002",
+    "label": "参数名称",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 100,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "aaa004",
+    "label": "参数说明",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 200,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "aaa005",
+    "label": "参数值(事件链)",
+    "nullable": false,
+    "primaryKey": false,
+    "precision": 100,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "aaa006",
+    "label": "参数类型",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 6,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "aaa009",
+    "label": "参数可维护标志",
+    "nullable": false,
+    "primaryKey": false,
+    "precision": 3,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "aae013",
+    "label": "备注",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 100,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "aae011",
+    "label": "经办人代码",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 20,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "aae017",
+    "label": "经办机构代码",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 20,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "aae036",
+    "label": "经办日期",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 12,
+    "scale": 0,
+    "jdbcType": 91
+   },
+   {
+    "name": "aae019",
+    "label": "经办人",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 32,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "aae020",
+    "label": "经办机构",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 100,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "aae022",
+    "label": "机构行政区划",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 12,
+    "scale": 0,
+    "jdbcType": 12
+   },
+   {
+    "name": "aaa003",
+    "label": "参数二级代码[暂时不用]",
+    "nullable": true,
+    "primaryKey": false,
+    "precision": 10,
+    "scale": 0,
+    "jdbcType": 12
+   }
+  ]
+ }
+}
