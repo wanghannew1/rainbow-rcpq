@@ -1,0 +1,12 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/rainbow_rcpq
+    username: rcpq
+    password: rcpq_dev
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: none   # DDL 由 db/V1-V3 迁移脚本管理, 禁止 Hibernate 自动建表
+    open-in-view: false
+server:
+  port: 8080
