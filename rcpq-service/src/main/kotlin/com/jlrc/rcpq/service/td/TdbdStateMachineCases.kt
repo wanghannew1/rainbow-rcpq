@@ -155,10 +155,10 @@ class TdbdStateMachineCases(
             for (tb in JBGG_TABLES) {
                 updated += jdbcTemplate.update(
                     "UPDATE $tb SET aac002=?, aac004=?, aac006=? WHERE aac001=?",
-                    tc92.aac002, tc92.aac004, tc92.aac006, aac001)
+                    tc92.aac002, tc92.aac004, tc92.aac006, aac001)  // aac001 为 Long(数值列)
             }
             for (tb in JBGG_TABLES_ID_ONLY) {
-                updated += jdbcTemplate.update("UPDATE $tb SET aac002=? WHERE aac001=?", tc92.aac002, aac001.toString())
+                updated += jdbcTemplate.update("UPDATE $tb SET aac002=? WHERE aac001=?", tc92.aac002, aac001.toString())  // varchar 列
             }
         }
         // 姓名变更(广播 aac003)
