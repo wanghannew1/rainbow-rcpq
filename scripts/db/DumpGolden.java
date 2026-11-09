@@ -30,7 +30,7 @@ public class DumpGolden {
                     String v = r.getString(i);
                     j.append('"').append(col).append("\": ");
                     if (v == null) j.append("null");
-                    else { j.append('"').append(v.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "")).append('"'); }
+                    else { j.append('"').append(v.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r")).append('"'); }
                 }
                 j.append('}');
             }
@@ -40,11 +40,17 @@ public class DumpGolden {
             if (t < tables.length - 1) j.append(",\n");
         }
         j.append("\n}\n");
-        File dir = new File("../rcpq-service/src/test/resources/golden");
+        File dir = new File(new File(repoRoot(), "rcpq-service/src/test/resources"), "golden");
         dir.mkdirs();
         Writer w = new OutputStreamWriter(new FileOutputStream(new File(dir, "xa-samples.json")), "UTF-8");
         w.write(j.toString()); w.close();
         c.close(); System.out.println("done");
+    }
+    static File repoRoot() {
+        File d = new File("").getAbsoluteFile();
+        while (d != null && !new File(d, "settings.gradle.kts").exists()) d = d.getParentFile();
+        if (d == null) throw new IllegalStateException("未找到仓库根(settings.gradle.kts)");
+        return d;
     }
     static Connection conn(String h, String svc, String u, String p) throws SQLException {
         return DriverManager.getConnection("jdbc:oracle:thin:@" + h + ":1521:" + svc, u, p);

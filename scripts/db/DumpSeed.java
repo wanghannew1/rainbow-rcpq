@@ -6,7 +6,7 @@ public class DumpSeed {
         Class.forName("oracle.jdbc.driver.OracleDriver");
         String[] tables = {"AA01", "AA10", "AA12", "SYS_QUESTION"};
         SimpleDateFormat ts = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        File dir = new File("../rcpq-web/src/main/resources/db");
+        File dir = new File(new File(repoRoot(), "rcpq-web/src/main/resources"), "db");
         dir.mkdirs();
         Writer w = new OutputStreamWriter(new FileOutputStream(new File(dir, "V3__xa_seed_data.sql")), "UTF-8");
         Connection c = conn(System.getenv().getOrDefault("ORA_HOST", "172.16.0.60"), System.getenv().getOrDefault("ORA_SVC", "orcl"),
@@ -40,6 +40,12 @@ public class DumpSeed {
             System.err.println(tb + ": " + rows + " rows");
         }
         w.close(); c.close(); System.out.println("done");
+    }
+    static File repoRoot() {
+        File d = new File("").getAbsoluteFile();
+        while (d != null && !new File(d, "settings.gradle.kts").exists()) d = d.getParentFile();
+        if (d == null) throw new IllegalStateException("未找到仓库根(settings.gradle.kts)");
+        return d;
     }
     static Connection conn(String h, String svc, String u, String p) throws SQLException {
         return DriverManager.getConnection("jdbc:oracle:thin:@" + h + ":1521:" + svc, u, p);

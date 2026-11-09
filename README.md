@@ -33,7 +33,7 @@ java -jar rcpq-web/build/libs/rcpq-web.jar
 - [x] PG16 数据源 + 序列对齐（V1-V3 已应用，数据与 Oracle 全对齐）
 - [x] 黄金样本导出（备份库 → rcpq-service/src/test/resources/golden/xa-samples.json）
 - [x] 自定义用例移植（XabUnitCases: saveUnit 自动childId 120114108213+拼音首字母 TinyPinyin / deleteUnit 层级前缀判断；XadCodeCases: queryCodes 修复原 get(1) 索引 bug）
-- [ ] 行为对照 diff 测试
+- [x] 行为对照 diff 测试（GoldenParityTest: 1744 单元格全绿，含 CRLF/时间戳格式归一）
 
 ## 规约
 
