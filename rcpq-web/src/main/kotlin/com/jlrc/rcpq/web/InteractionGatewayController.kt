@@ -15,6 +15,7 @@ import com.jlrc.rcpq.service.td.TdboAjaxCase
 import com.jlrc.rcpq.service.td.TdbfAuditCases
 import com.jlrc.rcpq.service.td.TdcAhCases
 import com.jlrc.rcpq.service.td.TdcBatchCases
+import com.jlrc.rcpq.service.td.TddCases
 import com.jlrc.rcpq.service.td.TdcjCases
 import com.jlrc.rcpq.service.td.TdckCases
 import com.jlrc.rcpq.service.xa.XabUnitCases
@@ -49,6 +50,7 @@ class InteractionGatewayController(
     private val tdcjCases: TdcjCases,
     private val tdcAhCases: TdcAhCases,
     private val tdcBatchCases: TdcBatchCases,
+    private val tddCases: TddCases,
     private val xadCodeCases: XadCodeCases,
 ) {
     @GetMapping("/{code}")
@@ -173,6 +175,53 @@ class InteractionGatewayController(
                         ?: return mapOf("error" to "缺少 tc9w", "code" to -30001)
                     val r = tdckCases.doSave(tc9w)
                     return mapOf("interaction" to code, "doSave" to r)
+                }
+            }
+        }
+
+        // td/d 8a-lite: tdda/tddd/tddf 路由
+        if (spec.bean?.endsWith("tddaService") == true) {
+            when (spec.method) {
+                "update" -> {
+                    val rows = (body["rows"] as? List<Map<String, Any?>>)
+                        ?: return mapOf("error" to "缺少 rows", "code" to -30001)
+                    val r = tddCases.cloneTemplatesToAgreements(
+                        body["atb900"]?.toString() ?: return mapOf("error" to "缺少 atb900", "code" to -30001),
+                        body["atb930"]?.toString() ?: return mapOf("error" to "缺少 atb930", "code" to -30001), rows)
+                    return mapOf("interaction" to code, "cloned" to r)
+                }
+                "updateAa90" -> {
+                    val rows = (body["rows"] as? List<Map<String, Any?>>)
+                        ?: return mapOf("error" to "缺少 rows", "code" to -30001)
+                    return mapOf("interaction" to code, "copyUpdated" to tddCases.copyUpdateAa90(rows))
+                }
+            }
+        }
+        if (spec.bean?.endsWith("tdddService") == true) {
+            when (spec.method) {
+                "update" -> {
+                    val rows = (body["rows"] as? List<Map<String, Any?>>)
+                        ?: return mapOf("error" to "缺少 rows", "code" to -30001)
+                    return mapOf("interaction" to code, "tc93Flags" to tddCases.updateTc93Flags(rows))
+                }
+                "doSaveTc93" -> {
+                    val tc93 = body["tc93"] as? Map<String, Any?>
+                        ?: return mapOf("error" to "缺少 tc93", "code" to -30001)
+                    return mapOf("interaction" to code, "doSaveTc93" to tddCases.doSaveTc93(tc93))
+                }
+            }
+        }
+        if (spec.bean?.endsWith("tddfService") == true) {
+            when (spec.method) {
+                "doSaveAa80" -> {
+                    val aa80 = body["aa80"] as? Map<String, Any?>
+                        ?: return mapOf("error" to "缺少 aa80", "code" to -30001)
+                    return mapOf("interaction" to code, "doSaveAa80" to tddCases.doSaveAa80(aa80))
+                }
+                "doSaveAa81" -> {
+                    val rows = (body["rows"] as? List<Map<String, Any?>>)
+                        ?: return mapOf("error" to "缺少 rows", "code" to -30001)
+                    return mapOf("interaction" to code, "doSaveAa81" to tddCases.doSaveAa81(rows))
                 }
             }
         }
