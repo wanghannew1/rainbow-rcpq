@@ -8,6 +8,7 @@ import com.jlrc.rcpq.service.UpdateExecutor
 import com.jlrc.rcpq.service.az.AzCases
 import com.jlrc.rcpq.service.td.TdaProtocolCases
 import com.jlrc.rcpq.service.td.TdbContractCases
+import com.jlrc.rcpq.service.td.TdbcChangeCases
 import com.jlrc.rcpq.service.xa.XabUnitCases
 import com.jlrc.rcpq.service.xa.XadCodeCases
 import com.jlrc.rcpq.service.MetadataValidator
@@ -31,6 +32,7 @@ class InteractionGatewayController(
     private val azCases: AzCases,
     private val tdaCases: TdaProtocolCases,
     private val tdbCases: TdbContractCases,
+    private val tdbcChangeCases: TdbcChangeCases,
     private val xadCodeCases: XadCodeCases,
 ) {
     @GetMapping("/{code}")
@@ -113,6 +115,19 @@ class InteractionGatewayController(
             val tb91 = (body["tb91"] as? Map<String, Any?>) ?: return mapOf("error" to "缺少 tb91", "code" to -30001)
             val r = tdbCases.commitContract(tc90, tb91)
             return mapOf("interaction" to code, "committed" to r)
+        }
+
+        // td/b/c 合同变更用例路由
+        if (spec.bean?.endsWith("TdbcService") == true && spec.method == "saveUpdate") {
+            val tc92 = (body["tc92"] as? Map<String, Any?>) ?: return mapOf("error" to "缺少 tc92", "code" to -30001)
+            val tc90 = (body["tc90"] as? Map<String, Any?>) ?: return mapOf("error" to "缺少 tc90", "code" to -30001)
+            val r = tdbcChangeCases.saveUpdate(tc92, tc90)
+            return mapOf("interaction" to code, "changeSaved" to r)
+        }
+        if (spec.bean?.endsWith("TdbcService") == true && spec.method == "changeJbxx") {
+            val r = tdbcChangeCases.changeJbxx(
+                (body["aac001"] ?: return mapOf("error" to "缺少 aac001")).toString().toLong())
+            return mapOf("interaction" to code, "changeJbxx" to r)
         }
 
         // td/a 协议用例路由
