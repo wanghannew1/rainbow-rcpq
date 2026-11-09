@@ -13,6 +13,7 @@ import com.jlrc.rcpq.service.td.TdbdStateMachineCases
 import com.jlrc.rcpq.service.td.TdbeTdblCases
 import com.jlrc.rcpq.service.td.TdboAjaxCase
 import com.jlrc.rcpq.service.td.TdbfAuditCases
+import com.jlrc.rcpq.service.td.TdckCases
 import com.jlrc.rcpq.service.xa.XabUnitCases
 import com.jlrc.rcpq.service.xa.XadCodeCases
 import com.jlrc.rcpq.service.MetadataValidator
@@ -41,6 +42,7 @@ class InteractionGatewayController(
     private val tdbeTdblCases: TdbeTdblCases,
     private val tdbfAuditCases: TdbfAuditCases,
     private val tdboAjaxCase: TdboAjaxCase,
+    private val tdckCases: TdckCases,
     private val xadCodeCases: XadCodeCases,
 ) {
     @GetMapping("/{code}")
@@ -146,6 +148,35 @@ class InteractionGatewayController(
                 atc900,
                 body["atc90d"]?.toString() ?: return mapOf("error" to "缺少 atc90d", "code" to -30001),
                 body["atc90dOld"]?.toString() ?: "")
+            return mapOf("interaction" to code, "ajax" to r)
+        }
+
+        // td/c/k 社保报增报减中枢路由
+        if (spec.bean?.endsWith("tdckService") == true) {
+            when (spec.method) {
+                "delete", "delete1" -> {
+                    // 两 store 同语义: 按(年月,户头,区划)整批删 TC9W_BP
+                    val r = tdckCases.deleteTc9wBp(
+                        body["aae002"]?.toString() ?: return mapOf("error" to "缺少 aae002", "code" to -30001),
+                        body["aaa030"]?.toString() ?: return mapOf("error" to "缺少 aaa030", "code" to -30001),
+                        body["aaa020"]?.toString() ?: return mapOf("error" to "缺少 aaa020", "code" to -30001))
+                    return mapOf("interaction" to code, "deleted" to r)
+                }
+                "doSave" -> {
+                    val tc9w = body["tc9w"] as? Map<String, Any?>
+                        ?: return mapOf("error" to "缺少 tc9w", "code" to -30001)
+                    val r = tdckCases.doSave(tc9w)
+                    return mapOf("interaction" to code, "doSave" to r)
+                }
+            }
+        }
+
+        // td/c/k 报增/报减处理 ajax 直调
+        if (spec.bean?.endsWith("tdckAjax") == true && spec.method == "doAjax") {
+            val r = tdckCases.doAjax(
+                body["atc9w0"]?.toString() ?: "",
+                body["atc900"]?.toString() ?: return mapOf("error" to "缺少 atc900", "code" to -30001),
+                body["flag"]?.toString() ?: "")
             return mapOf("interaction" to code, "ajax" to r)
         }
 

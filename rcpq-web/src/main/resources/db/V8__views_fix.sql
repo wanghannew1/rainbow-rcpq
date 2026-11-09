@@ -239,3 +239,7 @@ SELECT A.AAE00M,
    AND T.ATB930 = B.ATB930
    AND C.ATB900 = T.ATB900
    AND t.aab001=d.aab001;
+
+-- Oracle instr(str,sub) 等价: PG strpos 同语义(1起, 无匹配=0)
+CREATE OR REPLACE FUNCTION public.instr(str text, sub text) RETURNS int
+LANGUAGE sql IMMUTABLE AS $fn$ SELECT strpos(str, sub) $fn$;

@@ -10934,5 +10934,14 @@
   "method": "doAjax",
   "metadataValidate": false,
   "stores": []
+ },
+ {
+  "code": "AJAX-tdck_tdckAjax",
+  "page": "tdck_cont.jsp",
+  "type": "M",
+  "bean": "tdck_tdckAjax",
+  "method": "doAjax",
+  "metadataValidate": false,
+  "stores": []
  }
 ]
