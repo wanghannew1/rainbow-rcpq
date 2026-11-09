@@ -23,7 +23,8 @@ import org.springframework.transaction.annotation.Transactional
  * 过程移植决策（原 7 个 PL/SQL → Kotlin）：
  * - PRC_CREATE_CHILD → rebuildUnitChildIndex（WITH RECURSIVE 层级展开重建 AB01_CHILD）
  * - PRC_单位基本信息变更 → auditAb06（逐字段写 AB06；列中文注释以 ColumnMeta.label 等价）
- * - PRC_个人信息变更 → 旧库中该过程不存在（azbb 为旧系统坏功能），按意图以 auditAc06 等价实现
+ * - PRC_个人信息变更 → 【数据字典三重验证】旧代码调用名少"基本"二字(真实过程 PRC_个人基本信息变更
+ *     存在但全库零引用=孤儿过程)，auditAc06Field 已逐列对齐真实过程语义(含 BAZ001/BAZ002/AAE035/AAE036)
  * - PRC_AC01_UPDATE_ONLY → JPA update（等价：动态更新 AC01 指定列）
  * - PKG_COMMON.P_UPDATE_VALUE / P_DELETE → broadcastUpdate / broadcastDelete
  *   （查 information_schema 动态展开含键列表；渐进迁移期仅命中已迁移表——限制已记录）
@@ -320,7 +321,10 @@ class AzCases(
     private fun auditAb06(aab001: Long, col: String, label: String, before: String, after: String) {
         val e = AB06()
         e.aab001 = aab001
-        // 原过程: aae0b1=字段名, aae0b2=列中文注释, aae0b3=旧值, aae0b4=新值
+        setField(e, "baz001", nextSeq("seq_sys_baz001"))
+        setField(e, "baz002", nextSeq("seq_sys_baz002"))
+        setField(e, "id", nextSeq("seq_ab06_id"))
+        // 原过程 PRC_单位基本信息变更: aae0b1=字段名, aae0b2=列中文注释, aae0b3=旧值, aae0b4=新值
         setField(e, "aae0b1", col)
         setField(e, "aae0b2", label)
         setField(e, "aae0b3", before)
@@ -329,6 +333,7 @@ class AzCases(
         setField(e, "aae017", TEST_USER_AAE017)
         setField(e, "aae019", TEST_USER_AAE019)
         setField(e, "aae020", TEST_USER_AAE020)
+        setField(e, "aae035", java.time.LocalDateTime.now())
         em.persist(e)
     }
 
@@ -340,16 +345,24 @@ class AzCases(
         em.persist(e)
     }
 
-    /** AC06 字段级审计（旧 PRC_个人信息变更 意图等价） */
+    /** AC06 字段级审计 — 与真实过程 PRC_个人基本信息变更 逐列对齐
+     *  (修正: 旧代码调用名 PRC_个人信息变更 少"基本"二字→运行时报错; 真实过程为孤儿, 本实现对齐其语义) */
     private fun auditAc06Field(aac001: Long, col: String, label: String, before: String, after: String) {
         val e = AC06()
         setField(e, "aac001", aac001)
+        setField(e, "baz001", nextSeq("seq_sys_baz001"))
+        setField(e, "baz002", nextSeq("seq_sys_baz002"))
+        setField(e, "aae035", java.time.LocalDateTime.now())   // 审计时间
         setField(e, "aae0b1", col)
         setField(e, "aae0b2", label)
         setField(e, "aae0b3", before)
         setField(e, "aae0b4", after)
         setField(e, "aae011", TEST_USER_AAE011)
-        em.persist(e)
+        setField(e, "aae017", TEST_USER_AAE017)
+        setField(e, "aae019", TEST_USER_AAE019)
+        setField(e, "aae020", TEST_USER_AAE020)
+        setField(e, "aae036", java.time.LocalDateTime.now())   // 业务时间
+        em.persist(e)   // id 由 SEQ_AC06_ID 生成(与过程 SEQ_AC06_ID.NEXTVAL 一致)
     }
 
     /** Cc0P 操作日志（Cc0pUtil.saveCc0p 等价，acc0p2=操作类型码） */
@@ -386,10 +399,19 @@ class AzCases(
     private fun setField(obj: Any, name: String, value: Any?) {
         val m = obj.javaClass.methods.firstOrNull { it.name == propSet(name) } ?: return
         val paramType = m.parameterTypes[0]
-        val v = when (paramType) {
-            java.lang.Long::class.java -> (value?.toString() ?: return).let {
-                if (it.contains('.')) it.toDouble().toLong() else it.toLong()
+        val v: Any? = when (paramType) {
+            java.lang.Long::class.java -> value?.toString()?.let {
+                if (it.contains('.')) it.toDouble().toLong() else it.toLongOrNull() ?: return
             }
+            java.time.LocalDate::class.java ->
+                if (value is java.time.LocalDateTime) value.toLocalDate()
+                else value?.toString()?.let { java.time.LocalDate.parse(it.take(10)) } ?: value
+            java.time.LocalDateTime::class.java ->
+                if (value is java.time.LocalDate) value.atStartOfDay()
+                else value?.toString()?.let {
+                    java.time.LocalDateTime.parse(it.replace(" ", "T").take(19))
+                } ?: value
+            java.math.BigDecimal::class.java -> value?.toString()?.let { java.math.BigDecimal(it) }
             else -> value
         }
         m.invoke(obj, v)
@@ -435,6 +457,9 @@ class AzCases(
 
     private fun propGet(name: String) = "get${name.replaceFirstChar { it.uppercaseChar() }}"
     private fun propSet(name: String) = "set${name.replaceFirstChar { it.uppercaseChar() }}"
+
+    private fun nextSeq(seq: String): Long =
+        jdbcTemplate.queryForObject("SELECT nextval('$seq')", Long::class.java)!!
 
     companion object {
         /** 试点固定测试用户（TODO 接入 Spring Security 后从登录态取） */
