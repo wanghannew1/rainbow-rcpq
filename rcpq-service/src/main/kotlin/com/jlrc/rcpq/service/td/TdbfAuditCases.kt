@@ -194,13 +194,18 @@ class TdbfAuditCases(
     data class ProcResult(val appCode: Int, val errMsg: String?, val detail: Map<String, Any?> = emptyMap())
 
     /**
-     * PKG_RCPQ_FZ.PRC_GENERATE_TFMX 等价实现（终止重新生成明细）。
-     * TODO-PLSQL: 备份库源码待人工评审比对（旧包 PKG_RCPQ_FZ 259 行）。
+     * PKG_RCPQ_FZ.PRC_GENERATE_TFMX 等价实现。
+     *
+     * 备份库实况(work/pkg_rcpq_fz.sql 包体 L1369 起): 过程体仅 `P_APCODE := 1;`，
+     * 其后全部退费明细生成逻辑(按 ATC932 分组汇总 AC10 → 生成负数金额 AC10 退费行 +
+     * 汇总 TC9E)整块被块注释禁用，EXCEPTION 永不触发 → 运行时为空操作恒返回成功。
+     * 旧 reCommit 对 appCode>=1 不抛错 → 本实现按可观测行为等价：no-op + appCode=1。
+     * 若未来恢复注释块，需按源码重译（生成 AAC109='2' 退费行的逻辑见 work/pkg_rcpq_fz.sql）。
      */
     private fun generateTfmx(
         atc900: Long, aae011: String, atb910: Long,
         start: Long, end: Long, atc90as: String?, atc90m: String?,
     ): ProcResult {
-        throw UnsupportedOperationException("PRC_GENERATE_TFMX 源码待备份库导出后翻译")
+        return ProcResult(appCode = 1, errMsg = null, detail = mapOf("bodyDisabled" to true))
     }
 }
