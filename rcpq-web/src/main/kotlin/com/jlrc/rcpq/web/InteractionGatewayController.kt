@@ -50,16 +50,18 @@ class InteractionGatewayController(
     ): Map<String, Any?> {
         val spec = registry.resolve(code)
             ?: return mapOf("error" to "未知交互码: $code", "code" to -30010)
-        val store = resolveStore(code, spec, params["store"])
+        val storeCandidates = storeCandidates(code, spec, params["store"])
         return when (spec.method) {
             "query" -> {
-                val meta = metadataRegistry.meta(store)
-                    ?: return mapOf("error" to "无store元数据: $store", "code" to -30010)
+                // 候选按序取首个有元数据的 store（码内段可能是页面名而非 store，回填清单兜底）
+                val hit = storeCandidates.firstOrNull { metadataRegistry.meta(it) != null }
+                val meta = hit?.let { metadataRegistry.meta(it) }
+                    ?: return mapOf("error" to "无store元数据: ${storeCandidates.joinToString(",")}", "code" to -30010)
                 val r = queryExecutor.query(meta.table, meta.columns, pksOf(meta), params)
                 mapOf(
                     "interaction" to spec.code,
                     "routedTo" to "${spec.bean}.${spec.method}",
-                    "store" to store,
+                    "store" to hit,
                     "table" to meta.table,
                     "rows" to r.rows,
                     "totalCount" to r.totalCount,
@@ -88,20 +90,19 @@ class InteractionGatewayController(
         }
     }
 
-    /** 交互码 REQ-<page>-<store>-<action> → store 名 */
+    /** 交互码 REQ-<page>-<store>-<action> → store 名（注意 3 段式 REQ-<page>-<action> 的中段是页面名，非 store） */
     private fun storeOf(code: String): String =
         code.split("-").let { if (it.size >= 3) it[it.size - 2] else "" }
 
     /**
-     * store 解析链: 显式 ?store= 参数 > 码内 store 段 > 页面 XML datastores 回填清单首项。
-     * 哈希交互码(354/683)无码内段，靠回填清单路由（对应旧 DataCenter 携带命名 store 语义）。
+     * store 候选链: 显式参数 > 码内中段 > 页面 XML datastores 回填清单。
+     * 哈希交互码(354/683)无码内段；3 段式码中段是页面名——调用方按元数据命中顺序取候选。
      */
-    private fun resolveStore(code: String, spec: com.jlrc.rcpq.service.model.InteractionSpec, explicit: String?): String {
-        if (!explicit.isNullOrBlank()) return explicit
-        val fromCode = storeOf(code)
-        if (fromCode.isNotBlank()) return fromCode
-        return spec.stores.firstOrNull() ?: ""
-    }
+    private fun storeCandidates(code: String, spec: com.jlrc.rcpq.service.model.InteractionSpec, explicit: String?): List<String> =
+        listOfNotNull(
+            explicit?.takeIf { it.isNotBlank() },
+            storeOf(code).takeIf { it.isNotBlank() },
+        ).plus(spec.stores).distinct()
 
     private fun pksOf(meta: MetadataRegistry.StoreMeta): List<String> =
         meta.columns.filter { it.primaryKey }.map { it.name }
@@ -120,7 +121,8 @@ class InteractionGatewayController(
     fun update(@PathVariable code: String, @RequestBody body: Map<String, Any?>): Map<String, Any?> {
         val spec = registry.resolve(code)
             ?: return mapOf("error" to "未知交互码: $code", "code" to -30010)
-        val store = resolveStore(code, spec, body["store"]?.toString())
+        val storeCandidates = storeCandidates(code, spec, body["store"]?.toString())
+        val store = storeCandidates.firstOrNull { metadataRegistry.meta(it) != null } ?: ""
         // td/b/a 合同用例路由
         if (spec.bean?.endsWith("tdbaService") == true && spec.method == "update") {
             val tc90 = (body["tc90"] as? Map<String, Any?>) ?: return mapOf("error" to "缺少 tc90", "code" to -30001)

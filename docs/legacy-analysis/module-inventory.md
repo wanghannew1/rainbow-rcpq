@@ -54,11 +54,11 @@ td/n 到期提醒（只读预警，随时可插队）
 | **2** | **az（a+b 合并）** | 主档前置依赖；规模小（24 页/37 交互/1215 行 Java/**0 过程**）；6 个自定义用例是与 xa 同量级的显式用例移植 | 变更审核链（PRC_单位/个人信息变更 → Kotlin）、人员合并/删除审计 |
 | **3** | **td/g** | 零自定义模块首次实战：验证通用分发器吃下"非 xa 元数据"；顺手补 Excel 导入（EasyExcel 替代 IOUtil） | 元数据迁移质量（8 store）+ EasyExcel 通道 |
 | ✅ 4 | **td/a** | 已完成(2026-11-09)：saveAgreement/commitAgreement(TB93批次 02/1)/continueAgreement(批次迁移+8字段同步) 三链路实测 | 协议号序列接续(61856-61858)、TB93 迁移与字段同步 ✓ |
-| 🔵 5 | **td/b** | **5a✅ 新建合同三路径实测；5b✅ 变更审计(TdbcChangeCases: TC92→TC90 十八字段回填+TC92_LIST 逐字段审计含 AA10 中文翻译+TC90_LIST 历史行同步；原码 get(0) 循环 bug 修正；JPA 受管实例快照陷阱修正——原值快照须在 merge 前取)；5c✅ 状态机(TdbdStateMachineCases 8 方法；doJbbg 9 表广播实测 updatedRows=25 精确闭合，TC9\* 系 aac001 列类型两簇 varchar(tc9w/u)/numeric(tc9e/t/v/93) 分簇绑定)；5d✅ 审核(TdbeTdblCases.transferApply + TdbfAuditCases 6 方法：doXinqCommit 变更列逐列 TC90_BG/doXinqCancle/doRenewCancle 删新行+旧行按 atb900 清单复活/doJsdyCancle/terminateCancel TC9E+AC10(aac109='2') 清理/reCommit——全部实测；**PRC_GENERATE_TFMX 备份库源码整块被注释禁用，运行时空操作恒返回 appCode=1，按可观测行为等价为 no-op**，"PRC_GENERATE_TFMX 决策点"就此关闭)；5e✅ 调转(tdbl archiveForTransfer 归档行 8 字段对齐批次，l/s 双份复制合并实现)；5f✅ 碎片(o/p/q/r/t 六页泛型路由全量实测+tdboAjax 44L 移植(AJAX-bean 名通道)+孤儿页甄别=ab_cont.jsp 裸名不存在(xaab/azab/tddab 均已注册，glob 误报))** | **遗留 td/p-imp 独立小波：tdbp 四个导入弹窗直调 PKG_派遣批量导入 5 对校验/提交过程(备份库源码 8593 行，单过程最大 1420 行)，须按 PL/SQL 重镇对待**；测试 12/12 绿 ✓ |
-| 🔵 6 | td/l | 基建就绪(路由注册/表已建/V7 种子灌库中)，验收待灌库后 | 只读元数据查询 |
+| ✅ 5 | **td/b** | **全部收官(2026-11-09/10)：5a✅ 新建合同三路径实测；5b✅ 变更审计(TdbcChangeCases: TC92→TC90 十八字段回填+TC92_LIST 逐字段审计含 AA10 中文翻译+TC90_LIST 历史行同步)；5c✅ 状态机(TdbdStateMachineCases 8 方法；doJbbg 9 表广播实测 updatedRows=25 精确闭合，TC9\* 系 aac001 列类型两簇 varchar(tc9w/u)/numeric(tc9e/t/v/93) 分簇绑定)；5d✅ 审核(TdbeTdblCases.transferApply + TdbfAuditCases 6 方法全实测；PRC_GENERATE_TFMX 备份库源码整块被注释禁用→等价 no-op，决策点关闭)；5e✅ 调转(tdbl archiveForTransfer，l/s 双份复制合并实现)；5f✅ 碎片(六页泛型路由全量实测+tdboAjax 44L 移植 AJAX-bean 通道+孤儿页甄别=ab_cont.jsp glob 误报)** | **唯一遗留 td/p-imp 独立小波：tdbp 四导入弹窗直调 PKG_派遣批量导入 5 对校验/提交过程(备份库 8593 行)，须按 PL/SQL 重镇对待**；测试 12/12 绿 ✓ |
+| ✅ 6 | td/l | 已完成(2026-11-10)：零自定义模块验收 **51/51 交互全 PASS**(scripts/accept_module.py，32 query 真数据可查 + 19 update 三态路由/实体解析通)；AA97=77833 灌库校准达标后执行 | TB96-TB99/TC8M 档案族 + v_tb9x 视图族全通 |
 | **7** | **td/c** | 页面最多但 Java 仅 746 行——大半是元数据驱动标准 CRUD；按时期/类型分 4-5 个批次迁元数据 | 53 子模块 datastore 批量迁移工具化 |
 | **8** | **td/d** | 存储过程重镇（8 个），工资计算 PRC_SALARYCOMPUTE 是行为对照的重头戏 | 工资计算结果逐条对照 |
-| 🔵 9 | td/h / td/i / td/n | 基建就绪(同上)；审计发现 tdhy_cont 页 23 条交互 store 未定义(旧系统坏配置清单 work/broken_interactions.json) | 工单流转状态、统计口径 |
+| ✅ 9 | td/h / td/i / td/n | 已完成(2026-11-10)：三模块验收 **110/110 全 PASS**(td/h 62、td/i 29、td/n 19)。**旧审计"23 条坏引用"口径修正**：tdhy_cont 等页面交互经 store 候选链(码内段可能是页面名+回填清单兜底)后全部可路由；真正旧配置缺陷收敛为 5 store(tc02/tc03/tc04 Store_new·Form、tb90Store1 笔误)，审计清单 work/broken_interactions.json 增补至 28 条 | 工单流转状态、统计口径；tdhm_cont 依赖 V_TC90_DZH2 已建(fun_缴费基数 已移植 PG，numeric 命名参数重载) |
 | ⛔ | wts / TKTools / lemis_ext 等 | ADR D4 暂不迁移 | 用到再补 |
 
 ## 4. 规模总账
