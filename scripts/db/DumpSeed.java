@@ -15,6 +15,7 @@ public class DumpSeed {
             System.getenv().getOrDefault("ORA_USER", "ccrcpq"), System.getenv("ORA_PASS"));
         w.write("-- 种子数据(备份库全量导出) " + outfile + "\n-- " + String.join(",", tables) + "\n\n");
         for (String tb : tables) {
+            try {
             Statement s = c.createStatement();
             ResultSet r = s.executeQuery("select * from " + tb);
             ResultSetMetaData md = r.getMetaData();
@@ -40,6 +41,7 @@ public class DumpSeed {
             }
             r.close(); s.close();
             System.err.println(tb + ": " + rows + " rows");
+            } catch (Exception eSkip) { System.err.println("SKIP " + tb + ": " + eSkip.getMessage()); }
         }
         w.close(); c.close(); System.out.println("done");
     }

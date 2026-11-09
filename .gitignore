@@ -10,3 +10,4 @@ rcpq-web/src/main/resources/db/V5__az_seed_data.sql
 # 全量 schema 与种子(可由 scripts/gen_full_ddl.py + DumpSeed 重新生成)
 rcpq-web/src/main/resources/db/V6__full_schema.sql
 rcpq-web/src/main/resources/db/V6b__views_fix.sql
+rcpq-web/src/main/resources/db/V7__full_seed.sql
