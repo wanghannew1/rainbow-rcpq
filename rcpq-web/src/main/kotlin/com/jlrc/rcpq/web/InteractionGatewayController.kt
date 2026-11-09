@@ -6,6 +6,7 @@ import com.jlrc.rcpq.service.MetadataRegistry
 import com.jlrc.rcpq.service.QueryExecutor
 import com.jlrc.rcpq.service.UpdateExecutor
 import com.jlrc.rcpq.service.az.AzCases
+import com.jlrc.rcpq.service.td.TdaProtocolCases
 import com.jlrc.rcpq.service.xa.XabUnitCases
 import com.jlrc.rcpq.service.xa.XadCodeCases
 import com.jlrc.rcpq.service.MetadataValidator
@@ -27,6 +28,7 @@ class InteractionGatewayController(
     private val updateExecutor: UpdateExecutor,
     private val xabUnitCases: XabUnitCases,
     private val azCases: AzCases,
+    private val tdaCases: TdaProtocolCases,
     private val xadCodeCases: XadCodeCases,
 ) {
     @GetMapping("/{code}")
@@ -96,6 +98,28 @@ class InteractionGatewayController(
         val spec = registry.resolve(code)
             ?: return mapOf("error" to "未知交互码: $code", "code" to -30010)
         val store = storeOf(code)
+        // td/a 协议用例路由
+        if (spec.bean?.endsWith("tdaaService") == true && spec.method == "doSave") {
+            val tb90 = (body["tb90"] as? Map<String, Any?>) ?: return mapOf("error" to "缺少 tb90", "code" to -30001)
+            val tb91 = (body["tb91"] as? Map<String, Any?>) ?: return mapOf("error" to "缺少 tb91", "code" to -30001)
+            val r = tdaCases.saveAgreement(tb90, tb91)
+            return mapOf("interaction" to code, "saved" to r)
+        }
+        if (spec.bean?.endsWith("tdaaService") == true && spec.method == "doCommit") {
+            val tb90 = (body["tb90"] as? Map<String, Any?>) ?: return mapOf("error" to "缺少 tb90", "code" to -30001)
+            val tb91 = (body["tb91"] as? Map<String, Any?>) ?: return mapOf("error" to "缺少 tb91", "code" to -30001)
+            val r = tdaCases.commitAgreement(tb90, tb91, body["aab004"]?.toString(), body["aab998"]?.toString())
+            return mapOf("interaction" to code, "committed" to r)
+        }
+        if (spec.bean?.endsWith("tdabService") == true && spec.method == "doContinue") {
+            val newR = (body["new"] as? Map<String, Any?>) ?: return mapOf("error" to "缺少 new", "code" to -30001)
+            val tmpR = (body["tmp"] as? Map<String, Any?>) ?: return mapOf("error" to "缺少 tmp", "code" to -30001)
+            val tb91 = (body["tb91"] as? Map<String, Any?>) ?: return mapOf("error" to "缺少 tb91", "code" to -30001)
+            val r = tdaCases.continueAgreement(newR, tmpR, tb91, body["atb90w"]?.toString())
+            return mapOf("interaction" to code, "continued" to r)
+        }
+
+
         @Suppress("UNCHECKED_CAST")
         val rows = (body["rows"] as? List<Map<String, Any?>>)
             ?: return mapOf("error" to "缺少 rows 数组", "code" to -30001)
