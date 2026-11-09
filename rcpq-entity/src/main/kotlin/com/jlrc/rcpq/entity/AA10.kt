@@ -5,6 +5,7 @@ import java.io.Serializable
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
+
 @Entity
 @Table(name = "AA10")
 @IdClass(AA10Id::class)
@@ -40,6 +41,6 @@ open class AA10 {
 
 }
 data class AA10Id(
-    val aaa100: Long? = null,
-    val aaa102: Long? = null,
+    val aaa100: String? = null,
+    val aaa102: String? = null,
 ) : Serializable

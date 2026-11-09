@@ -5,15 +5,13 @@ import java.io.Serializable
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
+
 @Entity
 @Table(name = "AA12")
 open class AA12 {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "AA12_SEQ")
-    // TODO: 序列名待与 PG DDL 对齐(原 Oracle sequence)
-    @SequenceGenerator(name = "AA12_SEQ", sequenceName = "AA12_SEQ", allocationSize = 1)
     @Column(name = "ID")
-    var id: Long? = null
+    var id: String? = null
 
     @Column(name = "PARENTID")
     var parentid: String? = null
