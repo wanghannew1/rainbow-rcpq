@@ -3,6 +3,7 @@ package com.jlrc.rcpq.web
 import com.jlrc.rcpq.service.DefaultCrudDispatcher
 import com.jlrc.rcpq.service.InteractionContext
 import com.jlrc.rcpq.service.MetadataRegistry
+import com.jlrc.rcpq.service.QueryExecutor
 import com.jlrc.rcpq.service.MetadataValidator
 import org.springframework.web.bind.annotation.*
 
@@ -18,6 +19,7 @@ class InteractionGatewayController(
     private val registry: InteractionRegistry,
     private val dispatcher: DefaultCrudDispatcher,
     private val metadataRegistry: MetadataRegistry,
+    private val queryExecutor: QueryExecutor,
 ) {
     @GetMapping("/{code}")
     fun dispatch(
@@ -26,19 +28,45 @@ class InteractionGatewayController(
     ): Map<String, Any?> {
         val spec = registry.resolve(code)
             ?: return mapOf("error" to "未知交互码: $code", "code" to -30010)
-        val ctx = InteractionContext(params.toMutableMap())
-        val result = when (spec.method) {
-            "query" -> dispatcher.query(ctx)
-            "update" -> dispatcher.update(ctx)
-            "count" -> dispatcher.count(ctx)
-            else -> ctx // TODO: 自定义用例路由(XabUnitService.doDelete 等)接 Spring bean 名映射
+        val store = storeOf(code)
+        return when (spec.method) {
+            "query" -> {
+                val meta = metadataRegistry.meta(store)
+                    ?: return mapOf("error" to "无store元数据: $store", "code" to -30010)
+                val r = queryExecutor.query(meta.table, meta.columns, pksOf(meta), params)
+                mapOf(
+                    "interaction" to spec.code,
+                    "routedTo" to "${spec.bean}.${spec.method}",
+                    "store" to store,
+                    "table" to meta.table,
+                    "rows" to r.rows,
+                    "totalCount" to r.totalCount,
+                    "page" to r.page,
+                    "pageSize" to r.pageSize,
+                )
+            }
+            else -> {
+                val ctx = InteractionContext(params.toMutableMap())
+                val result = when (spec.method) {
+                    "update" -> dispatcher.update(ctx)
+                    "count" -> dispatcher.count(ctx)
+                    else -> ctx // TODO: 自定义用例路由(XabUnitService.doDelete 等)接 Spring bean 名映射
+                }
+                mapOf(
+                    "interaction" to spec.code,
+                    "routedTo" to "${spec.bean}.${spec.method}",
+                    "params" to result.params,
+                )
+            }
         }
-        return mapOf(
-            "interaction" to spec.code,
-            "routedTo" to "${spec.bean}.${spec.method}",
-            "params" to result.params,
-        )
     }
+
+    /** 交互码 REQ-<page>-<store>-<action> → store 名 */
+    private fun storeOf(code: String): String =
+        code.split("-").let { if (it.size >= 3) it[it.size - 2] else "" }
+
+    private fun pksOf(meta: MetadataRegistry.StoreMeta): List<String> =
+        meta.columns.filter { it.primaryKey }.map { it.name }
 
     @GetMapping("/registry")
     fun registry(): Map<String, Any> = mapOf(
