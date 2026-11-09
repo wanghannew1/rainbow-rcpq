@@ -315,6 +315,7 @@ class TdcTc90ImpCases(
             val str = { k: String -> when (val v = f[k]) { null -> null; else -> v.toString() } }
             val dec = { k: String -> str(k)?.toBigDecimalOrNull() }
             val lng = { k: String -> str(k)?.toLongOrNull() }
+            val aac006Str = (str("aac006_") ?: str("aac006") ?: "").replace("-", "")
             val aac001Old = lng("aac001")
             val aac002 = str("aac002")
             val aac003 = str("aac003")
@@ -334,7 +335,7 @@ class TdcTc90ImpCases(
                        ?, ?, now(), ?, ?, ?,
                        substr(?,1,2), substr(?,1,2), substr(?,1,2), substr(?,1,1), substr(?,1,8)::date, ?, ?, ?, ?, ?)""",
                     ace100N, aac001, aac002, aac003, str("aac004"),
-                    replace((str("aac006_") ?: str("aac006") ?: ""), "-", ""),
+                    aac006Str,
                     str("aac009_"),
                     str("aab299"), str("bab305"), str("aae005"), str("aae006"), str("aae008"),
                     str("aae005"), str("aac013_"), str("aae00p_"),
