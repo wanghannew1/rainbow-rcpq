@@ -31,6 +31,7 @@ TYPE_MAP = {
     "java.lang.Float": "BigDecimal", "float": "BigDecimal",
     "java.sql.Timestamp": "LocalDateTime", "timestamp": "LocalDateTime",
     "java.util.Date": "LocalDateTime", "date": "LocalDate",
+    "java.sql.Date": "LocalDate",
     "java.lang.Boolean": "Boolean", "boolean": "Boolean", "true_false": "Boolean",
 }
 NUMERIC_ID = {"java.lang.Long", "long", "java.lang.Integer", "integer", "int"}

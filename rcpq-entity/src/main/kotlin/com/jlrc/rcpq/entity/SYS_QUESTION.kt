@@ -46,7 +46,7 @@ open class SYS_QUESTION {
     var qphone: String? = null
 
     @Column(name = "QBRING")
-    var qbring: String? = null
+    var qbring: LocalDate? = null
 
     @Column(name = "QSECTION")
     var qsection: String? = null
@@ -61,7 +61,7 @@ open class SYS_QUESTION {
     var qbureauidea: String? = null
 
     @Column(name = "QBUREAUTIME")
-    var qbureautime: String? = null
+    var qbureautime: LocalDate? = null
 
     @Column(name = "QTYPE")
     var qtype: String? = null
@@ -73,7 +73,7 @@ open class SYS_QUESTION {
     var qshow: String? = null
 
     @Column(name = "QDISPOSE")
-    var qdispose: String? = null
+    var qdispose: LocalDate? = null
 
     @Column(name = "QTRANSACTOR")
     var qtransactor: String? = null
@@ -82,7 +82,7 @@ open class SYS_QUESTION {
     var qclose: String? = null
 
     @Column(name = "QCLOSETIME")
-    var qclosetime: String? = null
+    var qclosetime: LocalDate? = null
 
     @Column(name = "QCLOSEMAN")
     var qcloseman: String? = null

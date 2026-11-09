@@ -4,6 +4,7 @@ import com.jlrc.rcpq.service.DefaultCrudDispatcher
 import com.jlrc.rcpq.service.InteractionContext
 import com.jlrc.rcpq.service.MetadataRegistry
 import com.jlrc.rcpq.service.QueryExecutor
+import com.jlrc.rcpq.service.UpdateExecutor
 import com.jlrc.rcpq.service.MetadataValidator
 import org.springframework.web.bind.annotation.*
 
@@ -20,6 +21,7 @@ class InteractionGatewayController(
     private val dispatcher: DefaultCrudDispatcher,
     private val metadataRegistry: MetadataRegistry,
     private val queryExecutor: QueryExecutor,
+    private val updateExecutor: UpdateExecutor,
 ) {
     @GetMapping("/{code}")
     fun dispatch(
@@ -73,6 +75,28 @@ class InteractionGatewayController(
         "count" to registry.size(),
         "interactions" to registry.all().map { mapOf("code" to it.code, "page" to it.page, "method" to it.method) },
     )
+
+    /**
+     * 保存通道：POST /interaction/{code}，body={"rows":[{__state:new|modified|deleted,...}]}
+     * 对应原 getDS().save() 交互（method=update）。
+     */
+    @PostMapping("/{code}")
+    fun update(@PathVariable code: String, @RequestBody body: Map<String, Any?>): Map<String, Any?> {
+        val spec = registry.resolve(code)
+            ?: return mapOf("error" to "未知交互码: $code", "code" to -30010)
+        if (spec.method != "update") return mapOf("error" to "非保存交互: ${spec.method}", "code" to -30001)
+        val store = storeOf(code)
+        @Suppress("UNCHECKED_CAST")
+        val rows = (body["rows"] as? List<Map<String, Any?>>)
+            ?: return mapOf("error" to "缺少 rows 数组", "code" to -30001)
+        return try {
+            val r = updateExecutor.execute(store, rows)
+            mapOf("interaction" to code, "store" to store,
+                "inserted" to r.inserted, "updated" to r.updated, "deleted" to r.deleted)
+        } catch (e: IllegalArgumentException) {
+            mapOf("error" to (e.message ?: "参数错误"), "code" to -30001)
+        }
+    }
 
     /**
      * 行数据元数据校验。交互码形如 REQ-<page>-<store>-<action>，store 取倒数第二段。

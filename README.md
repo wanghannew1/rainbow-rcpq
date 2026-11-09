@@ -27,7 +27,7 @@ java -jar rcpq-web/build/libs/rcpq-web.jar
 ## 行为等价状态
 
 - [x] 骨架编译 + 启动 + 路由
-- [ ] GenericCrudDispatcher 四操作语义（TODO-BEHAVIOR 标注，对应契约文档章节）
+- [x] query/update 分发语义（QueryExecutor/UpdateExecutor，PG 真数据冒烟：查 14165 分页/插入序列取值 10059+182/改/删零残留）
 - [x] 元数据校验（MetadataValidator，8 单测通过）
 - [ ] 主从表保存 + 外键回填两种形态
 - [x] PG16 数据源 + 序列对齐（V1-V3 已应用，数据与 Oracle 全对齐）
