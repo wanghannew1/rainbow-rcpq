@@ -10,7 +10,9 @@ public class DumpSeed {
         SimpleDateFormat ts = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         File dir = new File(new File(repoRoot(), "rcpq-web/src/main/resources"), "db");
         dir.mkdirs();
-        Writer w = new OutputStreamWriter(new FileOutputStream(new File(dir, outfile)), "UTF-8");
+        File outF = new File(outfile).isAbsolute() ? new File(outfile) : new File(dir, outfile);
+        outF.getParentFile().mkdirs();
+        Writer w = new OutputStreamWriter(new FileOutputStream(outF), "UTF-8");
         Connection c = conn(System.getenv().getOrDefault("ORA_HOST", "172.16.0.60"), System.getenv().getOrDefault("ORA_SVC", "orcl"),
             System.getenv().getOrDefault("ORA_USER", "ccrcpq"), System.getenv("ORA_PASS"));
         w.write("-- 种子数据(备份库全量导出) " + outfile + "\n-- " + String.join(",", tables) + "\n\n");

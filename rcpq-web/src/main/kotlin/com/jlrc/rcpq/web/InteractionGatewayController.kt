@@ -9,6 +9,8 @@ import com.jlrc.rcpq.service.az.AzCases
 import com.jlrc.rcpq.service.td.TdaProtocolCases
 import com.jlrc.rcpq.service.td.TdbContractCases
 import com.jlrc.rcpq.service.td.TdbcChangeCases
+import com.jlrc.rcpq.service.td.TdbdStateMachineCases
+import com.jlrc.rcpq.service.td.TdbeTdblCases
 import com.jlrc.rcpq.service.xa.XabUnitCases
 import com.jlrc.rcpq.service.xa.XadCodeCases
 import com.jlrc.rcpq.service.MetadataValidator
@@ -33,6 +35,8 @@ class InteractionGatewayController(
     private val tdaCases: TdaProtocolCases,
     private val tdbCases: TdbContractCases,
     private val tdbcChangeCases: TdbcChangeCases,
+    private val tdbdCases: TdbdStateMachineCases,
+    private val tdbeTdblCases: TdbeTdblCases,
     private val xadCodeCases: XadCodeCases,
 ) {
     @GetMapping("/{code}")
@@ -115,6 +119,66 @@ class InteractionGatewayController(
             val tb91 = (body["tb91"] as? Map<String, Any?>) ?: return mapOf("error" to "缺少 tb91", "code" to -30001)
             val r = tdbCases.commitContract(tc90, tb91)
             return mapOf("interaction" to code, "committed" to r)
+        }
+
+        // td/b/e 转移申请 + td/b/l 调转归档路由
+        if (spec.bean?.endsWith("tdbeService") == true && spec.method == "update") {
+            val atc900s = (body["atc900s"] as? List<*>)?.mapNotNull { it?.toString()?.toLongOrNull() }
+                ?: return mapOf("error" to "缺少 atc900s", "code" to -30001)
+            val r = tdbeTdblCases.transferApply(
+                atc900s,
+                body["aab001"]?.toString() ?: return mapOf("error" to "缺少 aab001", "code" to -30001),
+                body["aab004"]?.toString() ?: return mapOf("error" to "缺少 aab004", "code" to -30001),
+                body["time"]?.toString() ?: "")
+            return mapOf("interaction" to code, "transferred" to r)
+        }
+        if (spec.bean?.endsWith("tdblService") == true && spec.method == "update") {
+            val atc900s = (body["atc900s"] as? List<*>)?.mapNotNull { it?.toString()?.toLongOrNull() }
+                ?: return mapOf("error" to "缺少 atc900s", "code" to -30001)
+            val r = tdbeTdblCases.archiveForTransfer(atc900s, body["atb930"]?.toString() ?: "", body["tb91"] as? Map<String, Any?>)
+            return mapOf("interaction" to code, "archived" to r)
+        }
+
+        // td/b/d 状态机路由 (8 方法)
+        if (spec.bean?.endsWith("tdbdService") == true) {
+            val tc90 = body["tc90"] as? Map<String, Any?>
+            val tb91 = body["tb91"] as? Map<String, Any?> ?: return mapOf("error" to "缺少 tb91", "code" to -30001)
+            when (spec.method) {
+                "doNew" -> {
+                    val r = tdbdCases.doNew(tc90 ?: return mapOf("error" to "缺少 tc90", "code" to -30001), tb91)
+                    return mapOf("interaction" to code, "doNew" to r)
+                }
+                "doJbbg" -> {
+                    val tc92 = body["tc92"] as? Map<String, Any?> ?: return mapOf("error" to "缺少 tc92", "code" to -30001)
+                    val r = tdbdCases.doJbbg(tc92, tb91)
+                    return mapOf("interaction" to code, "doJbbg" to r)
+                }
+                "doRenewAll" -> {
+                    val newRows = (body["new"] as? List<Map<String, Any?>>) ?: emptyList()
+                    val r = tdbdCases.doRenewAll(newRows, tb91)
+                    return mapOf("interaction" to code, "doRenewAll" to r)
+                }
+                "doTerminateCancle" -> {
+                    val r = tdbdCases.doTerminateCancle(
+                        (body["atb910"] ?: return mapOf("error" to "缺少 atb910")).toString().toLong(),
+                        body["atb911"]?.toString())
+                    return mapOf("interaction" to code, "doTerminateCancle" to r)
+                }
+                "doJsdy" -> {
+                    val r = tdbdCases.doJsdy(tb91, body["atb930"]?.toString())
+                    return mapOf("interaction" to code, "doJsdy" to r)
+                }
+                "doBg" -> {
+                    val r = tdbdCases.doBg(tc90 ?: return mapOf("error" to "缺少 tc90", "code" to -30001), tb91)
+                    return mapOf("interaction" to code, "doBg" to r)
+                }
+                "doCbSh" -> {
+                    val atc900 = (body["atc900"] ?: return mapOf("error" to "缺少 atc900")).toString().toLong()
+                    val tc92 = body["tc92"] as? Map<String, Any?> ?: emptyMap()
+                    val r = tdbdCases.doCbSh(atc900, tb91, tc92)
+                    return mapOf("interaction" to code, "doCbSh" to r)
+                }
+            }
         }
 
         // td/b/c 合同变更用例路由
