@@ -1,13 +1,5 @@
 [
  {
-  "code": "REQ-xahb_cont-sys_questionStore_Query-Q",
-  "page": "xahb_cont.jsp",
-  "type": "Q",
-  "bean": "LemisBusinessMgrPoJo",
-  "method": "query",
-  "metadataValidate": false
- },
- {
   "code": "REQ-xahb_dialog-sys_questionStore-Q",
   "page": "xahb_dialog.jsp",
   "type": "Q",
@@ -21,6 +13,14 @@
   "type": "M",
   "bean": "LemisBusinessMgrPoJo",
   "method": "update",
+  "metadataValidate": false
+ },
+ {
+  "code": "REQ-xahb_cont-sys_questionStore_Query-Q",
+  "page": "xahb_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
   "metadataValidate": false
  },
  {
@@ -64,14 +64,6 @@
   "metadataValidate": false
  },
  {
-  "code": "REQ-xahc_cont-sys_questionStore_Query-Q",
-  "page": "xahc_cont.jsp",
-  "type": "Q",
-  "bean": "LemisBusinessMgrPoJo",
-  "method": "query",
-  "metadataValidate": false
- },
- {
   "code": "REQ-xahc_dialog-sys_questionStore-Q",
   "page": "xahc_dialog.jsp",
   "type": "Q",
@@ -101,6 +93,14 @@
   "type": "M",
   "bean": "LemisBusinessMgrPoJo",
   "method": "update",
+  "metadataValidate": false
+ },
+ {
+  "code": "REQ-xahc_cont-sys_questionStore_Query-Q",
+  "page": "xahc_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
   "metadataValidate": false
  },
  {
@@ -206,6 +206,4966 @@
   "bean": "LemisBusinessMgrPoJo",
   "method": "query",
   "metadataValidate": false
+ },
+ {
+  "code": "REQ-e7ca0581603b4c29ba3d09d64ff13fec",
+  "page": "tdbb_dialog_zhongzhi.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-b327d8054e6240a7afcee9eff375da4e",
+  "page": "tdbb_dialog_zhongzhi.jsp",
+  "type": "M",
+  "bean": "tdbb_tdbbService",
+  "method": "doZhongzhi",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdbb_dialog_detail-tc90Store-query",
+  "page": "tdbb_dialog_detail.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-633084d4bee84e9fa0aa90ce03e2146c",
+  "page": "tdbb_dialog_modify.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-196fb853f15744608fac2c2e1e896931",
+  "page": "tdbb_dialog_modify.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdbb_dialog_renew-tc90Store-Q",
+  "page": "tdbb_dialog_renew.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdbb_dialog_renew-tc90Store-Save",
+  "page": "tdbb_dialog_renew.jsp",
+  "type": "M",
+  "bean": "tdbb_tdbbService",
+  "method": "doNewHt",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdbb_dialog_terminate-tc90Store-Q",
+  "page": "tdbb_dialog_terminate.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdbb_dialog_terminate-tc90Store-Save",
+  "page": "tdbb_dialog_terminate.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdbb_dialog_terminate-Commit",
+  "page": "tdbb_dialog_terminate.jsp",
+  "type": "M",
+  "bean": "tdbb_tdbbService",
+  "method": "doTerminate",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdbb_cont-tc90Store-Q",
+  "page": "tdbb_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdbb_dialog_renewall-query",
+  "page": "tdbb_dialog_renewall.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdbb_dialog_renewall-save",
+  "page": "tdbb_dialog_renewall.jsp",
+  "type": "M",
+  "bean": "tdbb_tdbbService",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-d155c77cb8084593b5acb04823ec9dbb",
+  "page": "tdbb_dialog_renewall.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-e5dfd051a90e4de8ac84804906cc3d59",
+  "page": "tdbo_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-3a8e273a00af485eb8a70895bcd4fb2c",
+  "page": "tdbd_dialog_dzjsdy.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-0ccf1c0a605441129e959bd90d155be7",
+  "page": "tdbd_dialog_dzjsdy.jsp",
+  "type": "M",
+  "bean": "tdbd_tdbdService",
+  "method": "doJsdy",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-a2095f1b762c465a88d08355f0a49614",
+  "page": "tdbd_dialog_zhongzhi_sh.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdbd_cont-tb91Store-Q",
+  "page": "tdbd_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-4b4e484807574d7ca2c0a3ff534f1f77",
+  "page": "tdbd_cont.jsp",
+  "type": "M",
+  "bean": "tdbd_tdbdService",
+  "method": "doTerminateCancle",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdbd_dialog_xinqsh-tc90Store-Save",
+  "page": "tdbd_dialog_xinqsh.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdbd_dialog_xinqsh-tb91Store-Q",
+  "page": "tdbd_dialog_xinqsh.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdbd_dialog_xinqsh-tc90Store-Q",
+  "page": "tdbd_dialog_xinqsh.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdbd_dialog_xinqsh-save",
+  "page": "tdbd_dialog_xinqsh.jsp",
+  "type": "M",
+  "bean": "tdbd_tdbdService",
+  "method": "doNew",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-1d7d5f25ee0e42488fb1d37de84f3b98",
+  "page": "tdbd_dialog_bgsh.jsp",
+  "type": "M",
+  "bean": "tdbd_tdbdService",
+  "method": "doCbSh",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-4cc016388145489591ba495440abb522",
+  "page": "tdbd_dialog_bgsh.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-91c018ad83de4f87ac785f94a3bef152",
+  "page": "tdbd_dialog_mxjs.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdbd_dialog_renewall-query",
+  "page": "tdbd_dialog_renewall.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdbd_dialog_renewall-save",
+  "page": "tdbd_dialog_renewall.jsp",
+  "type": "M",
+  "bean": "tdbd_tdbdService",
+  "method": "doRenewAll",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdbd_dialog_jbbgsh-query",
+  "page": "tdbd_dialog_jbbgsh.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdbd_dialog_jbbgsh-save",
+  "page": "tdbd_dialog_jbbgsh.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-f6dcdbe7e8d14efab9ff23267cf8316d",
+  "page": "tdbd_dialog_jbbgsh.jsp",
+  "type": "M",
+  "bean": "tdbd_tdbdService",
+  "method": "doJbbg",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdbd_dialog_xuqsh-tc90Store-Save",
+  "page": "tdbd_dialog_xuqsh.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdbd_dialog_xuqsh-tb91Store-Q",
+  "page": "tdbd_dialog_xuqsh.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdbd_dialog_xuqsh-tc90Store-Q",
+  "page": "tdbd_dialog_xuqsh.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdbd_dialog_ygdzsh-tc90Store-Q",
+  "page": "tdbd_dialog_ygdzsh.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdbd_dialog_ygdzsh-tb91Store-Q",
+  "page": "tdbd_dialog_ygdzsh.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdbd_dialog_ygdzsh-tb90Store-Q",
+  "page": "tdbd_dialog_ygdzsh.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdbd_dialog_ygdzsh-tc90Store-Save",
+  "page": "tdbd_dialog_ygdzsh.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdbd_dialog_zzsh-tc90Store-Save",
+  "page": "tdbd_dialog_zzsh.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdbd_dialog_zzsh-tb91Store-Q",
+  "page": "tdbd_dialog_zzsh.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdbd_dialog_zzsh-tc90Store-Q",
+  "page": "tdbd_dialog_zzsh.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-0f6deae5192145b1a2f6e8a72a1bf9bf",
+  "page": "tdbd_dialog_cbsh.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-b51805f78fbe49c2a18f52a569d36fc7",
+  "page": "tdbd_dialog_cbsh.jsp",
+  "type": "M",
+  "bean": "tdbd_tdbdService",
+  "method": "doCbSh",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-6fba876ae3094f92bcac7efba29646fb",
+  "page": "tdbd_dialog_mx.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-3d16cfb28ee6419a821b1b43f255eb0a",
+  "page": "tdbl_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-047bd90ca8f54b798ed71d49ba3fab1e",
+  "page": "tdbl_cont.jsp",
+  "type": "M",
+  "bean": "tdbl_tdblService",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-122962a54ee5478cbbbd24ec79bbafb8",
+  "page": "tdbr_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-d269453cc5064652a730a6ca4cd57dde",
+  "page": "tdbr_dialog_modify.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-03462994dbd34a3ebaff8787e8c49e4c",
+  "page": "tdbr_dialog_modify.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-d1a641ab77df4ca7bc81922edf6b3d8b",
+  "page": "tdbs_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-191956b136c540d3b10f7cc9d4d78e51",
+  "page": "tdbs_cont.jsp",
+  "type": "M",
+  "bean": "tdbl_tdblService",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdbf_dialog_renewallcl-query",
+  "page": "tdbf_dialog_renewallcl.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdbf_dialog_renewallcl-confirm",
+  "page": "tdbf_dialog_renewallcl.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdbf_dialog_renewallcl-cancle",
+  "page": "tdbf_dialog_renewallcl.jsp",
+  "type": "M",
+  "bean": "tdbf_tdbfService",
+  "method": "doRenewCancle",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdbf_cont-tb91Store-Q",
+  "page": "tdbf_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-9cd721f313e747fca76d8adfc616f761",
+  "page": "tdbf_dialog_cbcl.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-7b4534559d444a3689c4888f2b373f2b",
+  "page": "tdbf_dialog_cbcl.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdbf_dialog_query-tb90Store-Q",
+  "page": "tdbf_dialog_query.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdbf_dialog_zzcl-tc90Store_terminate-Q",
+  "page": "tdbf_dialog_zzcl.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdbf_dialog_zzcl-tb91Store-Q",
+  "page": "tdbf_dialog_zzcl.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdbf_dialog_zzcl-tc90Store_terminate-Save",
+  "page": "tdbf_dialog_zzcl.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-e3670657cd544b96b38bf55dd666d1e7",
+  "page": "tdbf_dialog_zzcl.jsp",
+  "type": "M",
+  "bean": "tdbf_tdbfService",
+  "method": "terminateCancel",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-c50fe7809f1a4d1e83440109dedd8749",
+  "page": "tdbf_dialog_zzcl.jsp",
+  "type": "M",
+  "bean": "tdbf_tdbfService",
+  "method": "reCommit",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdbf_dialog_dzdwcl-tc90Store-Q",
+  "page": "tdbf_dialog_dzdwcl.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdbf_dialog_dzdwcl-tb91Store-Q",
+  "page": "tdbf_dialog_dzdwcl.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdbf_dialog_dzdwcl-tc90Store-Save",
+  "page": "tdbf_dialog_dzdwcl.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdbf_dialog_dzdwcl-tb90Store-Q",
+  "page": "tdbf_dialog_dzdwcl.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-de042a09bd88422c87f6ee803a79379a",
+  "page": "tdbf_dialog_dzjsdycl.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-b4964bafcc3149e4a69fdbd31dbed4d1",
+  "page": "tdbf_dialog_dzjsdycl.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-ae50d1592aaf47a5a47449cf864456d2",
+  "page": "tdbf_dialog_dzjsdycl.jsp",
+  "type": "M",
+  "bean": "tdbf_tdbfService",
+  "method": "doJsdyCancle",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-28dd44946a2b4a21b7e15901792e1d4f",
+  "page": "tdbf_dialog_bgcl.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-0b31e3e50a734fc8bd0688b135923161",
+  "page": "tdbf_dialog_bgcl.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdbf_dialog_xinqcl-tc90Store-Q",
+  "page": "tdbf_dialog_xinqcl.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdbf_dialog_xinqcl-tb91Store-Q",
+  "page": "tdbf_dialog_xinqcl.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdbf_dialog_xinqcl-tc90Store-Save",
+  "page": "tdbf_dialog_xinqcl.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdbf__dialog_xinqcl-commit",
+  "page": "tdbf_dialog_xinqcl.jsp",
+  "type": "M",
+  "bean": "tdbf_tdbfService",
+  "method": "doXinqCommit",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdbf_dialog_xinqcl-cancle",
+  "page": "tdbf_dialog_xinqcl.jsp",
+  "type": "M",
+  "bean": "tdbf_tdbfService",
+  "method": "doXinqCancle",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdbf_dialog_xuqcl-tc90Store-Q",
+  "page": "tdbf_dialog_xuqcl.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdbf_dialog_xuqcl-tc90Store_renew-Q",
+  "page": "tdbf_dialog_xuqcl.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdbf_dialog_xuqcl-tb91Store-Q",
+  "page": "tdbf_dialog_xuqcl.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdbf_dialog_xuqcl-tc90Store_renew-Save",
+  "page": "tdbf_dialog_xuqcl.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-1a2f06e2d2ee47e1a17556dac89dc466",
+  "page": "tdbt_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdbe_cont-tc90Store-Q",
+  "page": "tdbe_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdbe_dialog_query-tb90Store-Q",
+  "page": "tdbe_dialog_query.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdbe_dialog_query-save",
+  "page": "tdbe_dialog_query.jsp",
+  "type": "M",
+  "bean": "tdbe_tdbeService",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-517f8ffff3e04edfa4fe4af522d14cbb",
+  "page": "tdbc_dialog_bg_bsh.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-c00760bbc00541bdac64461b4b833848",
+  "page": "tdbc_dialog_bg_bsh.jsp",
+  "type": "M",
+  "bean": "tdbc_TdbcService",
+  "method": "saveUpdate",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-b7b56a84339a4462b245b6d5514bc1cd",
+  "page": "tdbc_dialog_cb.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-865ed6d9bdc64f06ae177aabccfc88ed",
+  "page": "tdbc_dialog_cb.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-1fe596abb2e244bd82f5f0c09cec6b31",
+  "page": "tdbc_dialog_jbxx.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-04f337436d384a9481042ed511ca1805",
+  "page": "tdbc_dialog_jbxx.jsp",
+  "type": "M",
+  "bean": "tdbc_TdbcService",
+  "method": "changeJbxx",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-98f995be67934b8986728b00a885a34f",
+  "page": "tdbc_dialog_bg_bsh_1.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-35347be5a3d043c8b57d53833ff75499",
+  "page": "tdbc_dialog_bg_bsh_1.jsp",
+  "type": "M",
+  "bean": "tdbc_TdbcService",
+  "method": "saveUpdate",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdbc_dialog_mod2-query",
+  "page": "tdbc_dialog_mod2.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdbc_dialog_mod2-save",
+  "page": "tdbc_dialog_mod2.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdbc_cont-tc90Store-Q",
+  "page": "tdbc_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdbc_cont-tc92Store-Save",
+  "page": "tdbc_cont.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-fad2557f56dc406fa8e9424a92b7b8a8",
+  "page": "tdbc_dialog_htbg.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-4e310a5984bb414ea984849d714367f0",
+  "page": "tdbc_dialog_htbg.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdbc_dialog_mod1-query",
+  "page": "tdbc_dialog_mod1.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdbc_dialog_mod1-save",
+  "page": "tdbc_dialog_mod1.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-7b861a65fdca4d74bc9489cd2632734e",
+  "page": "tdbp_dialog_import4.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-f131dabdc721425d8eee32d539cdeede",
+  "page": "tdbp_dialog_import4.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-b7236806cf384e49a25b9999a6ae0d07",
+  "page": "tdbp_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-fc64196b5ba14a6f90ee9bc2ce812fe8",
+  "page": "tdbp_dialog_import3.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-1c9ae415f6104ff2bd5643d239e6d178",
+  "page": "tdbp_dialog_import3.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-5b6d552d48934e549bb869d1ee1ace44",
+  "page": "tdbp_dialog_import1.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-ff00628023fa4c899cebc0190e3a8846",
+  "page": "tdbp_dialog_import1.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-010bbaa448194cf5bb0cac34a9298642",
+  "page": "tdbp_dialog_import.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdbp_cont-tb93Store-Q",
+  "page": "tdbp_dialog_import.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-c6a472b73c774a3c81a74180a90c24a0",
+  "page": "tdbp_dialog_import2.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-e7f1766ecf7a4bf29ac2385da320b34e",
+  "page": "tdbp_dialog_import2.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdba_cont-tc90Store_new-Q",
+  "page": "tdba_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdba_cont-tc90Store_new-Save",
+  "page": "tdba_cont.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdba_cont-save",
+  "page": "tdba_cont.jsp",
+  "type": "M",
+  "bean": "tdba_tdbaService",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdba_cont-commit",
+  "page": "tdba_cont.jsp",
+  "type": "M",
+  "bean": "tdba_tdbaService",
+  "method": "doCommit",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-187537432adf452d9472634d02be92b6",
+  "page": "tdba_dialog_query_tc90.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdba_dialog_aa91Store-query",
+  "page": "tdba_dialog_aa91List.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdba_dialog_empquery-tc90Store-Q",
+  "page": "tdba_dialog_empquery.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdba_dialog_tc90List-tc90Store-query",
+  "page": "tdba_dialog_tc90List.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdba_dialog_query-tb90Store-Q",
+  "page": "tdba_dialog_query.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdba_dialog_import-tc90_bp-query",
+  "page": "tdba_dialog_import.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-67561d35de2c430c8d25475cbe4a0a53",
+  "page": "tdbq_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tddb_cont-tb90Store-Q",
+  "page": "tddb_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tddb_dialog_export-tb90Store-Q",
+  "page": "tddb_dialog_export.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tddb_dialog_export-tc90Store-Q",
+  "page": "tddb_dialog_export.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tddb_dialog_export-tc93Store-Q",
+  "page": "tddb_dialog_export.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-f961d17120ef4300974f249bbb89aa8f",
+  "page": "tddd_dialog_view5.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-c952dec9434b4e099973da742bcd7e60",
+  "page": "tddd_dialog_view5.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tddd_dialog_imp_Q",
+  "page": "tddd_dialog_imp.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-ebb323538d824900ba05feaed83a4ffb",
+  "page": "tddd_dialog_bz.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-87d607c71a2345e08a5e0e0361c937a9",
+  "page": "tddd_dialog_bz.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tddd_dialog_mod_Q",
+  "page": "tddd_dialog_mod.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tddd_dialog_mod_U",
+  "page": "tddd_dialog_mod.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tddd_dialog_mod_doSave",
+  "page": "tddd_dialog_mod.jsp",
+  "type": "M",
+  "bean": "tddd_tdddService",
+  "method": "doSaveTc93",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tddd_cont-tb90Store-Q",
+  "page": "tddd_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-93a59903cc8e4b3aae9f8f5f46411ec5",
+  "page": "tddd_dialog_view1.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tddd_dialog_salarydetail-tc94Store-Q",
+  "page": "tddd_dialog_salarydetail.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tddd_dialog_compute-tb90Store-Q",
+  "page": "tddd_dialog_compute.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tddd_dialog_compute-tc93Store-Q",
+  "page": "tddd_dialog_compute.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-3e6d4df5dabc4460b76d596e061df51b",
+  "page": "tddd_dialog_compute.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-322f3f603e634e8db988208b4ce28fde",
+  "page": "tddd_dialog_sm.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-fea6979ce1c94df8bb7c167c6967751b",
+  "page": "tddd_dialog_sm.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-0f4468eed3fd4d4e9d8de188bd0f81da",
+  "page": "tddd_dialog_view4.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tddd_dialog_tc93_check-Q",
+  "page": "tddd_dialog_tc93_check.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-6fc94fb95d754f31b10ba787db247bfd",
+  "page": "tddd_dialog_view2.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-9c9aa5230505455cb20c3fd5cd1c9ce2",
+  "page": "tddd_dialog_view2.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-a21339fb1aad4e01a4b5ab58c90becd7",
+  "page": "tddd_dialog_view3.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tddd_dialog_grqf-Q",
+  "page": "tddd_dialog_grqf.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tddd_dialog_grqf-U",
+  "page": "tddd_dialog_grqf.jsp",
+  "type": "M",
+  "bean": "tddd_tdddService",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tddg_cont-Q",
+  "page": "tddg_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tddg_cont-U",
+  "page": "tddg_cont.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-8643ea11082b45b996494bda636aced2",
+  "page": "tddg_dialog_salarydetail.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-c2b5c56e31944c0fbabf81ff247cfd43",
+  "page": "tddg_dialog_salarydetail.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-a0dedc425be94196bf1bddfb3d931e22",
+  "page": "tddg_dialog_tc93List.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-277e26b7959e497d88cfd2b44f3d8340",
+  "page": "tddg_dialog_tc93List.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-535a5b57b12f4456af24e59f2e67fa0e",
+  "page": "tddaf_dialog_import.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-485a36bea8db48228fd17df200068f48",
+  "page": "tddaf_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-1ad4d531c0d245dbb60866f367945c03",
+  "page": "tddag_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-53084192008e4a22b86937ea404aa88c",
+  "page": "tddae_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-2d62dd84c1b54d85a593337c445b3628",
+  "page": "tddy_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tddf_cont-Q",
+  "page": "tddf_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tddf_cont-U",
+  "page": "tddf_cont.jsp",
+  "type": "M",
+  "bean": "tddf_tddfService",
+  "method": "doSaveAa81",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-ca7139469c57400aa99fc390fb578490",
+  "page": "tddf_cont.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tddf_dialog_addAa80-Q",
+  "page": "tddf_dialog_addAa80.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tddf_dialog_addAa80-U",
+  "page": "tddf_dialog_addAa80.jsp",
+  "type": "M",
+  "bean": "tddf_tddfService",
+  "method": "doSaveAa80",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-d33f26d87749450eb0bfe150015be3b8",
+  "page": "tddx_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-f779089b55d84503869fe4a06ba7e77b",
+  "page": "tddx_cont.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-d8be7243e5d440fbb3468a7a76290f35",
+  "page": "tddx_dialog_imp.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-470a33091c684a4b80e2f943a8297c44",
+  "page": "tddx_dialog_query.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-6bf1ec41127044579f64f931ce0b9a89",
+  "page": "tddx_dialog_query.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-470083e72d86488fb7a69019c3361af1",
+  "page": "tddab_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-08b24c93930d40c88de55e16ec4f24bc",
+  "page": "tddab_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-fcf3991009354c23b0ad6b09491bd266",
+  "page": "tddv_dialog_sm.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-8a901be1a5e84ce2943ed7a6d5f063ea",
+  "page": "tddv_dialog_sm.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-b21b558806964d10a164d1874b378ed2",
+  "page": "tddv_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tddc_cont-tb90Store-Q",
+  "page": "tddc_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tddc_dialog_import-tb90Store-Q",
+  "page": "tddc_dialog_import.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tddc_dialog_import-tc93Store-Q",
+  "page": "tddc_dialog_import.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tddc_dialog_import-tc94Store-Save",
+  "page": "tddc_dialog_import.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tddc_dialog_salarydetail-tc94Store-Q",
+  "page": "tddc_dialog_salarydetail.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tddc_dialog_salarydetail-tc94Store-Save",
+  "page": "tddc_dialog_salarydetail.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdda_dialog_mod-aa90Store-Q",
+  "page": "tdda_dialog_mod.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdda_dialog_mod-aa90Store-U",
+  "page": "tdda_dialog_mod.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-491c60023d8c4d39bb23633b9c15786a",
+  "page": "tdda_dialog_mod.jsp",
+  "type": "M",
+  "bean": "tdda_tddaService",
+  "method": "updateAa90",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdda_cont-tb90Store-Q",
+  "page": "tdda_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdda_dialog_salsryset-aa90Store-Q",
+  "page": "tdda_dialog_salaryset.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdda_dialog_salsryset-aa90Store-Save",
+  "page": "tdda_dialog_salaryset.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdda_dialog_salsryset-aa90Store-Update",
+  "page": "tdda_dialog_salaryset.jsp",
+  "type": "M",
+  "bean": "tdda_tddaService",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdgb_cont-aa94Store-Q",
+  "page": "tdgb_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdgb_cont-aa94Store-Save",
+  "page": "tdgb_cont.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdgb_dialog_addmodify-aa94Store-Q",
+  "page": "tdgb_dialog_addmodify.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdgb_dialog_addmodify-aa94Store-Save",
+  "page": "tdgb_dialog_addmodify.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdgg_dialog_addmod-query",
+  "page": "tdgg_dialog_addmod.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdgg_dialog_addmod-update",
+  "page": "tdgg_dialog_addmod.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdgg_cont-query",
+  "page": "tdgg_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdgg_cont-update",
+  "page": "tdgg_cont.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-0d95e101a46f4d09837f97622a7f406b",
+  "page": "tdgh_dialog.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-ae2d6c175d8e46c4b93cfdeaf1674d7d",
+  "page": "tdgh_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-a711678dd2f04e0ead33b960a4c9a070",
+  "page": "tdgh_cont.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdgf_cont-tc90Store-Q",
+  "page": "tdgf_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-b073b82638ac4c27b2a6906fa12155dd",
+  "page": "tdgj_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-bbfe0e465bbb4b0c8b5f31b90529b2ce",
+  "page": "tdgj_cont.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdgc_cont-aa95Store-Q",
+  "page": "tdgc_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdgc_cont-aa95Store-Save",
+  "page": "tdgc_cont.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdgc_dialog_addmodify-aa95Store-Q",
+  "page": "tdgc_dialog_addmodify.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdgc_dialog_addmodify-aa95Store-Save",
+  "page": "tdgc_dialog_addmodify.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdga_cont-aa92Store-Save",
+  "page": "tdga_cont.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdga_cont-aa93Store-Save",
+  "page": "tdga_cont.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdga_cont-aa92Store-Q",
+  "page": "tdga_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdga_cont-aa93Store-Q",
+  "page": "tdga_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-3363f6add78f46d4b3c0841e02d82aa6",
+  "page": "tdgi_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-0b844c5b381e4377baee5ef9aed16d97",
+  "page": "tdgi_cont.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-1066d519918b4255b3e539b18d24f914",
+  "page": "tdhz_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-1c36fc32ec824b039886c2e3063a1ca5",
+  "page": "tdhb_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-b27b59136ce24590bd6181da1d5d4df1",
+  "page": "tdhaa_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-07a23d85480c44f1965911d0506cd881",
+  "page": "tdhaa_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-6f9ea6c45f0c4375ae983c5dfe3afa6a",
+  "page": "tdhff_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-c7c3de421cde41aaa05745c1172f3064",
+  "page": "tdhbb_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-273ac97ffe6c4f8c9f734dac951954a9",
+  "page": "tdhcc_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-ee7c76c5828a488f9576760c481faa98",
+  "page": "tdhee_dialog_tb97.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-f5aa55e90fcb441ebb32f2940104c45c",
+  "page": "tdhee_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-cbf2592970af47bfab71bc400813ad7b",
+  "page": "tdhee_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-0d2efdc5f4154c659367d60eba3ad22a",
+  "page": "tdhee_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-2245a0b7e532440e924d24f49dcff53e",
+  "page": "tdhee_dialog_tb96.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdhm_dialog_tb93_Q",
+  "page": "tdhm_dialog_tb93.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdhm_dialog_tc97_Q",
+  "page": "tdhm_dialog_tc97.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-15df15bc66c5411a832461da2ae5776a",
+  "page": "tdhm_dialog_vac10tc90.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdhm_cont-Q",
+  "page": "tdhm_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-a4ed2edb368041249bc24fb75d90dba3",
+  "page": "tdhm_dialog_tc98.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-4c43e3f3a1a74824b9a81f0f28bcd893",
+  "page": "tdhm_dialog_tc98.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-1d860953acdc4e3aa82d7b38b78d0cda",
+  "page": "tdhm_dialog_tc90zz.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdhm_dialog_tc9f_Q",
+  "page": "tdhm_dialog_tc9f.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdhm_dialog_tc93_Q",
+  "page": "tdhm_dialog_tc93.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-8267e0d2b3954286b1881d6e2fb64b1a",
+  "page": "tdhm_dialog_tc90_qdls.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdhm_dialog_tc91_Q",
+  "page": "tdhm_dialog_tc91.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdhy_cont-tc90Store-query",
+  "page": "tdhy_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdhy_cont-tc90Store-q",
+  "page": "tdhy_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdhy_cont-tc06Store-query",
+  "page": "tdhy_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdhy_cont-tc9wStore-query",
+  "page": "tdhy_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdhy_cont-tc9w1Store-query",
+  "page": "tdhy_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdhy_cont-tc9uStore-query",
+  "page": "tdhy_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdhy_cont-Vtc90Store-query",
+  "page": "tdhy_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdhy_cont-tc93Store-query",
+  "page": "tdhy_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdhy_cont-tj0aStore-query",
+  "page": "tdhy_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdhy_cont-tj0a1Store-query",
+  "page": "tdhy_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdhy_cont-tc9w_bpStore-query",
+  "page": "tdhy_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdhy_cont-tc07Store-query",
+  "page": "tdhy_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdhy_cont-tj0bStore-query",
+  "page": "tdhy_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdhy_cont-tj0b1Store-query",
+  "page": "tdhy_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdhy_cont-tc9w_bp01Store-query",
+  "page": "tdhy_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdhy_cont-tc07Store-shengyib-query",
+  "page": "tdhy_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdhy_cont-tj0cStore-query",
+  "page": "tdhy_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdhy_cont-tj0c1Store-query",
+  "page": "tdhy_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdhy_cont-tc9w_bp04Store-query",
+  "page": "tdhy_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdhy_cont-tc07Store-shiyib-query",
+  "page": "tdhy_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdhy_cont-tj0dStore-query",
+  "page": "tdhy_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdhy_cont-tj0d1Store-query",
+  "page": "tdhy_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdhy_cont-tc9w_bp02Store-query",
+  "page": "tdhy_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdhy_cont-tc07Store-shenggjj-query",
+  "page": "tdhy_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdhy_cont-tj0eStore-query",
+  "page": "tdhy_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdhy_cont-tj0e1Store-query",
+  "page": "tdhy_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdhy_cont-tc9w_bp02Store-sgjj-query",
+  "page": "tdhy_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdhy_cont-tc07Store-shigjj-query",
+  "page": "tdhy_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-e0c40084a3234644955eb65d336056c2",
+  "page": "tdhy_cont.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdhy_cont-tj0fStore-query",
+  "page": "tdhy_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdhy_cont-tj0f1Store-query",
+  "page": "tdhy_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdhy_cont_vtc90ab01tb93_7",
+  "page": "tdhy_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-9a5280276b8d4e9dabc1ee51e1d1777b",
+  "page": "tdhdd_dialog_tb96.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-e632cd18d26247b68bd2fd711621f8b3",
+  "page": "tdhdd_dialog_tb97.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-85546e723be7485b84358807e9b5b820",
+  "page": "tdhdd_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-271a67cf883f44e9977fdb56562f1b25",
+  "page": "tdhc_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdha_dialog_detail-tb90Store-Q",
+  "page": "tdha_dialog_detail.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdha_cont-tb90Store-Q",
+  "page": "tdha_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-f819b14cd4534131ac554cc8fe9e9bcb",
+  "page": "tdhq_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-fb5f96620bdf48e6a4d9385003bf5d0d",
+  "page": "tdlz_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-28ddbee63d934ffab60eee6efc1c80bf",
+  "page": "tdlz_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-b46059ad950c46c984cb6b048f7e15ec",
+  "page": "tdlb_dialog_imp.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-ab43b6de6eb54e33a5e747a8be402497",
+  "page": "tdlb_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-38a9f80eaf5c4ebfa8cedaec7fb239c5",
+  "page": "tdlb_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-84f537baff2a495b87171c9af8166516",
+  "page": "tdld_dialog.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-015f91b9bd9a43aebab9994964a7fc8b",
+  "page": "tdld_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-dd2687414ee843e295c5958c21289861",
+  "page": "tdld_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-25d984f52f2843e8846f6a7c600c3844",
+  "page": "tdld_dialog_qqjl.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-1e3e719662ea473dad6d8096475c9d5f",
+  "page": "tdlw_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-1e367da50dc748a8998f67d200d19339",
+  "page": "tdlw_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-ca64e5276eb54a2aa434d95899e766ca",
+  "page": "tdlw_dialog_view1.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-964bff3483834870b8fa9b37f0a57b3e",
+  "page": "tdlw_dialog_view4.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-1d690e26b09b4092ab4e345f44167445",
+  "page": "tdlw_dialog_view2.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-121153543d254b9a837e103e3bd6ffa7",
+  "page": "tdlw_dialog_view2.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-b7354c94da6043f5ab81aa7cabaeeb3f",
+  "page": "tdls_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-fd68482b9ec04ab89badd1a7d5ec237e",
+  "page": "tdls_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-d43896e88e8e40d5ad1825131d4e48d8",
+  "page": "tdls_dialog_addmodify.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-5018ceaa68d749ec80d86b6543afc7b8",
+  "page": "tdls_dialog_addmodify.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-f4832c27ab9045fc8b95a453daeb0c30",
+  "page": "tdly_dialog_impgh.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-376802645ecf424583ec804a52ef92f6",
+  "page": "tdly_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-bf843c70630d454f8beb487f4e03cb59",
+  "page": "tdly_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-5a10e654d89644c0b533e5f2b604dd1c",
+  "page": "tdly_dialog_impjlyh.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-5aa850646eb74831b48bed584f5086a6",
+  "page": "tdly_dialog_impjh.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-1ecd417c066d44f7bdee00ac57913fc5",
+  "page": "tdlu_dialog_view1.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-25d3457a43eb4738bb7088a0c8b8e95e",
+  "page": "tdlu_dialog_view1.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-123b8d55d530497e9cb6859c1199857e",
+  "page": "tdlu_dialog_addmodify.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-a636f2d6b2ed463bbfe7cef12862d056",
+  "page": "tdlu_dialog_addmodify.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-e1492a8a40ad452e821782f085d1b744",
+  "page": "tdlu_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-cf87e939a5854cb6ad1d297ef24c0892",
+  "page": "tdlu_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-2bb401092273432cab3d9d5298592b0f",
+  "page": "tdlt_dialog_tab2_addmodify.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-de7dcd1f79f24904a104b859d6b98003",
+  "page": "tdlt_dialog_tab2_addmodify.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-6485792ea04e47b0af2949b6b7c1b773",
+  "page": "tdlt_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-5466943e51f84592a8f594fa7de3fd7b",
+  "page": "tdlt_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-9da61768217042879216a8696b56f0d1",
+  "page": "tdlt_dialog_addmodify.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-01a9500c034441149d03fd8e1a3bc6a1",
+  "page": "tdlt_dialog_addmodify.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-608623d023c74ba5bc9f8215289a2b6d",
+  "page": "tdlx_dialog.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-8097c0f7d6904ed0814565c80e37b7dd",
+  "page": "tdlx_dialog.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-daf9edafd2b341239366d2873b945c79",
+  "page": "tdlx_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-25ae7c7653db4978b1608ccce4876da2",
+  "page": "tdlx_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-231acdbdf4c34d78b2554aacc2a6e226",
+  "page": "tdlx_dialog_view1.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-f53ce4edc91c45e4a44e64263d3206df",
+  "page": "tdlx_dialog_view1.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-9c6f77fe53364b35b8048cedb13bd54a",
+  "page": "tdlv_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-e192f58b255949fbbe3b318b86102af2",
+  "page": "tdlv_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-e2d4f396b5144e27b36842e6cfd592e6",
+  "page": "tdlv_dialog_addmodify.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-07d5a4735a7d4515886d27d61e319b68",
+  "page": "tdlv_dialog_addmodify.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-4f0534a2334842229125a65b2823a215",
+  "page": "tdlc_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-dd4fd7484f3440b88dd1a78ac77b898a",
+  "page": "tdlc_dialog_view3.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-824e12580731451dbccbd29bf5f3406f",
+  "page": "tdlc_dialog_view2.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-7abc93f3a2354a0d87a68727425839d5",
+  "page": "tdlc_dialog_view4.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-1b677bd855594c22a9ab43cf36d1fa4e",
+  "page": "tdla_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-9b8ae8ec27cd4a1b8dc62ea1c786e28a",
+  "page": "tdnb_dialog_tb97.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-353af68215864109a067b80c718d8225",
+  "page": "tdnb_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-cca32cfa153b4396b1506e307a9c1035",
+  "page": "tdnb_dialog_tj0f1.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-a6a3755a104f42fcba21d2cdd76d78fc",
+  "page": "tdnb_dialog_tb96.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-fd5c7a1714274137b2e3e1dccb5078de",
+  "page": "tdnb_dialog_tb9a.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-bfc06df22aa84cbca2a4bb93f93ad76c",
+  "page": "tdnb_dialog_tb93.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-6929dac9e34648a6b0e8aaf8587555ec",
+  "page": "tdna_dialog_tc8tList.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdna_dialog_TC90-tc90Store-Q",
+  "page": "tdna_dialog_TC90.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-ec7b6ce3dd0b48428faa8b37b43b8e7e",
+  "page": "tdna_dialog_tc90tx_xy.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-c410136f23054359af3c72f50595d95a",
+  "page": "tdna_dialog_tc8fList.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdna_dialog_TB90-tb90Store1-Q",
+  "page": "tdna_dialog_TB901.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-d17cf1ba6beb42b4b91b4e24487056f4",
+  "page": "tdna_dialog_tc90htdq_xy.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-6de601284f274fae9c82019a039bb473",
+  "page": "tdna_dialog_tc90tx_dy.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdna_dialog_TC8F-tc8fStore-Q",
+  "page": "tdna_dialog_TC8F.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdna_dialog_TC9Q-tc9qStore-Q",
+  "page": "tdna_dialog_TC9Q.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdna_dialog_TB93-tb93Store-Q",
+  "page": "tdna_dialog_TB93.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-2bc154d92ffe400c9fbd8e77a450b09c",
+  "page": "tdna_dialog_tc90tx.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-02c91bccee684125a20e2b4370dc17a6",
+  "page": "tdna_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdna_dialog_TB90-tb90Store-Q",
+  "page": "tdna_dialog_TB90.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-43d227156e3a41e4821d47480b2f14ae",
+  "page": "tdcay_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-1a0452fe10fa43c988482709bb077a4f",
+  "page": "tdcay_cont.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-c04a905ac7df4684a56980b3321f529b",
+  "page": "tdcay_dialog_import.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-61a7886ff15a4ff3abd247d0f779dd7b",
+  "page": "tdcay_dialog_import.jsp",
+  "type": "M",
+  "bean": "tdcay_tdcahService",
+  "method": "delete1",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-35ccdd77186a471f8ffeb70f0aa09e9c",
+  "page": "tdcay_dialog_import.jsp",
+  "type": "M",
+  "bean": "tdcay_tdcahService",
+  "method": "delete",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-31a750b2fb3a48d68c3f278f825114d4",
+  "page": "tdcay_dialog_import.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-5d47c63f266442dcbbca30ee72ece5d8",
+  "page": "tdcay_dialog_modify.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-ca980873f8fd48c1a3b789d8f8e1f020",
+  "page": "tdcay_dialog_modify.jsp",
+  "type": "M",
+  "bean": "tdcah_tdcahService",
+  "method": "doSave",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdcao_cont-tb93Store-Q",
+  "page": "tdcao_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdcao_cont-tc90Store-Q",
+  "page": "tdcao_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-430b1c9920a646f49566d7265773265f",
+  "page": "tdcbm_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-6c7045544e4b4202bb728ccb1f584bff",
+  "page": "tdcbm_dialog_import.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdcb_cont-tc90Store-Q",
+  "page": "tdcb_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-49dcd4f738dd4d7a95017fa2ac69856d",
+  "page": "tdcb_cont.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdcb_cont-tc9wStore-Q",
+  "page": "tdcb_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdcb_dialog_import-query",
+  "page": "tdcb_dialog_imoprt.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdck_cont-tc9wStore-Q",
+  "page": "tdck_dialog_modify.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdck_cont-tc9wStore-save",
+  "page": "tdck_dialog_modify.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-b35c29976d124db28b5436f497dba26b",
+  "page": "tdck_dialog_modify.jsp",
+  "type": "M",
+  "bean": "tdck_tdckService",
+  "method": "doSave",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdck_dialog_import_query",
+  "page": "tdck_dialog_import.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdck_cont-tc9wStore-delete",
+  "page": "tdck_dialog_import.jsp",
+  "type": "M",
+  "bean": "tdck_tdckService",
+  "method": "delete1",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdck_cont-tc9wStore-del",
+  "page": "tdck_dialog_import.jsp",
+  "type": "M",
+  "bean": "tdck_tdckService",
+  "method": "delete",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-b8e4c60d860a43f2bd3a217b8e12c3a9",
+  "page": "tdck_dialog_imp.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdck_dialog_import_bj_query",
+  "page": "tdck_dialog_import_bj.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdck_dialog_bj_query",
+  "page": "tdck_dialog_bj.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdck_dialog_import_bz_query",
+  "page": "tdck_dialog_import_bz.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-c2f18fb6dcdb4a2e81925032439f36b9",
+  "page": "tdck_dialog_import_success.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-18eb62c1ffb4484bacb23617f9036685",
+  "page": "tdck_dialog_error.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-9d0f397be66f4457bb217b78c756ed61",
+  "page": "tdck_dialog_import_bz_success.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdck_cont-query",
+  "page": "tdck_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-aeff707f26934853b121827252526370",
+  "page": "tdck_cont.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-e3c8f612b58d4ed69d55f04d851fca4e",
+  "page": "tdcbc_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-fed068e1f3154b23b32a1f58760a3a0b",
+  "page": "tdcbc_cont.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-3f464523223e47aa8cc205fb3d4183a7",
+  "page": "tdcbc_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-6b1bd1bcc52c4b94929febb70b5b2313",
+  "page": "tdcd_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-ded4c6edcfe045f8a4583e64249e7c60",
+  "page": "tdcd_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-0c4bfc721a8d47df9182fe6bdd4fb649",
+  "page": "tdcg_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-ad01cfbd5da443e5b69c398f279a583d",
+  "page": "tdch_dialog_view1.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-a5cc36132f4b4df294a4fa4a6310d5e1",
+  "page": "tdch_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-7a3c087a38d84627b4da10201eb718bb",
+  "page": "tdch_dialog_view3.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-0f96db11067942839a1254551856fece",
+  "page": "tdch_dialog_view2.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-76f811aacc004c8c8f95e6aebb2027ed",
+  "page": "tdch_dialog_view2.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-a374ea9d21be47e3a64333a1885ecad0",
+  "page": "tdch_dialog_view4.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdcl_dialog_mod-Q",
+  "page": "tdcl_dialog_mod.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdcl_dialog_mod-U",
+  "page": "tdcl_dialog_mod.jsp",
+  "type": "M",
+  "bean": "tdcl_TdclService",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdcl_dialog_import_gjj-Q",
+  "page": "tdcl_dialog_import_gjj.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-a1b0ad0b7e5b41b9b97e3bc271df5de5",
+  "page": "tdcl_dialog_import_check.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-830c8f7ba943412eab310b6aec8d14db",
+  "page": "tdcl_dialog_error.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdcl_dialog_import_sb-Q",
+  "page": "tdcl_dialog_import_sb.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdcl_dialog_import-Q",
+  "page": "tdcl_dialog_import.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdcl_cont-query",
+  "page": "tdcl_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdcaf_cont-tc9w1Store-Q",
+  "page": "tdcaf_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdcaf_cont-tc9w1Store-Commit",
+  "page": "tdcaf_cont.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdcaf_cont-tc9w1Store-q",
+  "page": "tdcaf_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdcax_cont-tc9w2Store-Q",
+  "page": "tdcax_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdcax_cont-tc9w2Store-Commit",
+  "page": "tdcax_cont.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-51f80b9111db48e1b4a5a59e749be517",
+  "page": "tdcax_dialog_knbj.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-e652d03ce2ff458ea79429e8860504fd",
+  "page": "tdcbg_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdcaa_cont_query",
+  "page": "tdcaa_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-1758dc2da86449659e56d948ecaecacb",
+  "page": "tdcbj_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-a6a0dbdc476a41168f98e25a7fd399df",
+  "page": "tdcbb_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-b9f62e8cd0734706aa0cb03c1c8842be",
+  "page": "tdcbb_cont.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-daa5f120ef9f4c49b3024822eb60755e",
+  "page": "tdcbb_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdcac_dialog_import-Q",
+  "page": "tdcac_dialog_view1.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-3b3350d7c1004f77a85674db033a4c4b",
+  "page": "tdcac_dialog_view4.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdcac_cont-Query",
+  "page": "tdcac_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdcac_dialog_xz-aa97Store-query",
+  "page": "tdcac_dialog_view3.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdcq_dialog_list-aa97Store-query",
+  "page": "tdcac_dialog_view2.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-1a9a26797e5542cd9dbaffad9b908a5f",
+  "page": "tdcac_dialog_view2.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdcad_cont-tc9w1Store-Q",
+  "page": "tdcad_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdcad_cont-tc9w1Store-Commit",
+  "page": "tdcad_cont.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdcad_cont-tc9w1Store-q",
+  "page": "tdcad_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdcas_cont-tc30_bp02Store-Q",
+  "page": "tdcas_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-9b8f163320a84b94b153581c3b3822e3",
+  "page": "tdcas_cont.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdcag_cont-tc9uStore-Q",
+  "page": "tdcag_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdcag_cont-tc9uStore-Commit",
+  "page": "tdcag_cont.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdcag_cont-tc9uStore-q",
+  "page": "tdcag_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdcae_cont-tc9uStore-Query",
+  "page": "tdcae_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdcae_cont-tc9uStore-Commit",
+  "page": "tdcae_cont.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdcae_cont-tc9uStore-Q",
+  "page": "tdcae_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-7d987b6cfe134578bbf3d511d045b894",
+  "page": "tdcae_cont.jsp",
+  "type": "M",
+  "bean": "tdcae_tdcaeService",
+  "method": "delete",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-31e4b1fa86f94459a071ff92a27474df",
+  "page": "tdcae_cont.jsp",
+  "type": "M",
+  "bean": "tdcae_tdcaeService",
+  "method": "delete1",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-ffd538fb68534c749b70a71f19a3f717",
+  "page": "tdcae_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-c7e699c766c8449395afada3b535f264",
+  "page": "tdcae_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-72d644ba35b44b8e9c2247778e8d5549",
+  "page": "tdcae_dialog_knbj.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-87a51a039c2e4189b1a34824ee8dc5a5",
+  "page": "tdcbf_dialog_import.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-5a25f270a96f4599aabedaf3b5530f34",
+  "page": "tdcbf_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-813b17a574d94a8399552ebc68c9c313",
+  "page": "tdcbf_cont.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdcat_cont-tc30_bp03Store-Q",
+  "page": "tdcat_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-40cbe43b227d49d2aaad9e843099e87a",
+  "page": "tdcat_cont.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-5b84e38357a24e4394cb177794f02017",
+  "page": "tdcbt_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-426bf6ee690d4aa5a8c9223acc05b75b",
+  "page": "tdcbt_dialog_import.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-c8cef43ed596431c83ede5d7aa96d0b7",
+  "page": "tdcba_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-305fd3dea2044c31b239e3ec8b89623c",
+  "page": "tdcba_cont.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-745fa7f6437847ddb4f1cc1687bac26c",
+  "page": "tdcba_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdcar_cont-tc30_bp01Store-Q",
+  "page": "tdcar_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-04613b57ed51433dbbe275ce33922744",
+  "page": "tdcar_cont.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-e798722b24324e2f851051836b6de6cc",
+  "page": "tdcbi_dialog_import.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-2b927311ceb045b2a18135e862d6873d",
+  "page": "tdcbi_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-7e09edfa0a81484d8f1ab1e1e6b6fbce",
+  "page": "tdcbs_dialog_import.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-54fb3266e9874da3a094f533e4c46f8b",
+  "page": "tdcbs_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdcan_cont-tc9wStore-Q",
+  "page": "tdcan_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-118982fc79fd4415839640e8f20d8e8a",
+  "page": "tdcm_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-299c3d61ac62487e93b95a0c5f7bba10",
+  "page": "tdcbk_dialog_import.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-e9f81e1dbf804bdbb48d86e4c5abc73b",
+  "page": "tdcbk_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-9c8c79c6072d48c2b6d8167ee8bac47f",
+  "page": "tdcbh_dialog_2.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-a5bbb7b7e61744c29a1088d7a2d0bb2f",
+  "page": "tdcbh_dialog_2.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-abdeab26e1ec4a4eadfb727ac50e81be",
+  "page": "tdcbh_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-3b26586b75b641078a0ce63babf0140d",
+  "page": "tdcbh_cont.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-f376d5b41e354d28941652eca67341a8",
+  "page": "tdcbh_dialog_3.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-5df9b376fce74577827e5e1e43ccc4b8",
+  "page": "tdcbh_dialog_3.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-575dba0fafcb499abb887280b8ff7bb9",
+  "page": "tdcbh_dialog_1.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-08c06653bd1845579d3ba9ca190660a0",
+  "page": "tdcbh_dialog_1.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdcaj_cont-query",
+  "page": "tdcaj_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-109fe5ffab7c4285a58b6baf64d7f3af",
+  "page": "tdcaj_cont.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdcaj_dialog_import_query",
+  "page": "tdcaj_dialog_import.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdcaj_cont-tc9wStore-delete",
+  "page": "tdcaj_dialog_import.jsp",
+  "type": "M",
+  "bean": "tdcaj_tdcajService",
+  "method": "delete1",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdcaj_cont-tc9wStore-del",
+  "page": "tdcaj_dialog_import.jsp",
+  "type": "M",
+  "bean": "tdcaj_tdcajService",
+  "method": "delete",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdcaj_cont-tc9uStore-Q",
+  "page": "tdcaj_dialog_modify.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdcaj_cont-tc9uStore-save",
+  "page": "tdcaj_dialog_modify.jsp",
+  "type": "M",
+  "bean": "tdcaj_tdcajService",
+  "method": "doSave",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-a4b8ed810d1143b682b3bb6c337bb416",
+  "page": "tdcbp_dialog_modify.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-af30ba4233db47389ca0fea0244b263b",
+  "page": "tdcbp_dialog_modify.jsp",
+  "type": "M",
+  "bean": "tdcbp_tdcahService",
+  "method": "doSave",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-1a02fcf349e64c4f9e462a95f737cf3c",
+  "page": "tdcbp_dialog_import.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-4c919c12968a471a9da486e49ed5e360",
+  "page": "tdcbp_dialog_import.jsp",
+  "type": "M",
+  "bean": "tdcbp_tdcahService",
+  "method": "delete1",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-89e16de3069e4c409121ac09152e5b5a",
+  "page": "tdcbp_dialog_import.jsp",
+  "type": "M",
+  "bean": "tdcbp_tdcahService",
+  "method": "delete",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-3b880541a2fa4fbb8470db2a584e32ab",
+  "page": "tdcbp_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-e11554efcfc745af84c333221bcdaab0",
+  "page": "tdcbp_cont.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-f2572d0a3f774d82a4b35fa081e59417",
+  "page": "tdcf_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-a3fb9bc8e48a4896abaf1f3e794d4e5f",
+  "page": "tdcj_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-7929530d18d142378994633dcee4de75",
+  "page": "tdcj_cont.jsp",
+  "type": "M",
+  "bean": "tdcj_tdcjService",
+  "method": "saveNobt",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-9bd1ac73e67c4b9c9b046cc6897328dd",
+  "page": "tdcj_cont.jsp",
+  "type": "M",
+  "bean": "tdcj_tdcjService",
+  "method": "saveConfirm",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-8d41e457ba344945a710b3fd06aad6b9",
+  "page": "tdcj_cont.jsp",
+  "type": "M",
+  "bean": "tdcj_tdcjService",
+  "method": "AllConfirm",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-40a09f3506f04a2487089aa153ed0010",
+  "page": "tdcaz_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-211c97897aff46449311c1ccc54e83d8",
+  "page": "tdcaz_cont.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-1a7af2ca93ab4838bc560009b3350ddf",
+  "page": "tdcaz_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdcah_dialog_import_query",
+  "page": "tdcah_dialog_import.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdcah_cont-tc9w_bp01Store-delete",
+  "page": "tdcah_dialog_import.jsp",
+  "type": "M",
+  "bean": "tdcah_tdcahService",
+  "method": "delete1",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdcah_cont-tc9w_bp01Store-del",
+  "page": "tdcah_dialog_import.jsp",
+  "type": "M",
+  "bean": "tdcah_tdcahService",
+  "method": "delete",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdcah_cont-query",
+  "page": "tdcah_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-361489e2a1cf48888ad8a3738540ea29",
+  "page": "tdcah_cont.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdcah_cont-tc9w1Store-Q",
+  "page": "tdcah_dialog_modify.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdcah_cont-tc9w1Store-save",
+  "page": "tdcah_dialog_modify.jsp",
+  "type": "M",
+  "bean": "tdcah_tdcahService",
+  "method": "doSave",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-97f9a8f943414e03b99101440b1d83db",
+  "page": "tdcbq_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-ea2da0f258224a64881777642e64c705",
+  "page": "tdcbq_cont.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-6d4366f3c2954b5c9de4b9f664c8c614",
+  "page": "tdcbq_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-0267492a072a44b7becda306981ff0ab",
+  "page": "tdce_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-b74143ea46a34dd0a0af2b4b3f8d44e9",
+  "page": "tdcbn_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-d027ac36d8584ebe9e374f6e5b50d786",
+  "page": "tdcbn_cont.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-cebb1908c93e4f0daaabdebf84a9fcee",
+  "page": "tdcbn_dialog_knbj.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-3932abcb45d8416eb7cc1d2e38d9e633",
+  "page": "tdcbo_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-4a82690b0b224b1cb60bcc008c908408",
+  "page": "tdcbo_cont.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-977fe6258820408a99e4fa6fa2c9fa33",
+  "page": "tdcbo_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-c814e18116314e42a3c96a47004b4116",
+  "page": "tdcab_dialog_view4.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-fe976824e1f648698adcf809f1874051",
+  "page": "tdcab_dialog_view5.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdcab_dialog_list-aa97Store-query",
+  "page": "tdcab_dialog_view2.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-7f38ef550c54400ab28b37f3ddbdb170",
+  "page": "tdcab_dialog_view2.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdcq_dialog_import-Q",
+  "page": "tdcab_dialog_view1.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdcab_dialog_xz-aa97Store-query",
+  "page": "tdcab_dialog_view3.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdcab_cont-Query",
+  "page": "tdcab_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-c61ca51d1d014e6d97b27583220ce54e",
+  "page": "tdcbr_dialog.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-7ab7e47aba714d8a8f5465c34f64bfeb",
+  "page": "tdcbr_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-dcf8b63c0d2b4b278f052b9893757477",
+  "page": "tdcc_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-e5f86c34651a49168cf82ea00971509a",
+  "page": "tdcc_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-db3f5e2bae8d49bebf32659e9df5d5fc",
+  "page": "tdcc_dialog_imp.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-be1a7d02fe0d456f96067cba3fa7062e",
+  "page": "tdcbd_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-59b2eebc67e647c18c9c125bc8957f9d",
+  "page": "tdcbd_cont.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-08fd05477fb44857a2fe9b579f6fdd2b",
+  "page": "tdcbd_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdca_cont-tc90Store-Q",
+  "page": "tdca_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-f9192e418a4e4b85978d45b03f3685a7",
+  "page": "tdca_cont.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdca_cont-tc9wStore-Q",
+  "page": "tdca_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-e6dbc1dc4b60410b8c1d3ea09dee6fec",
+  "page": "tdca_dialog_knbj.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdca_dialog_import_query",
+  "page": "tdca_dialog_import.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdca_cont-tc9wStore-del",
+  "page": "tdca_dialog_import.jsp",
+  "type": "M",
+  "bean": "tdca_tdcaService",
+  "method": "delete",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdca_cont-tc9wStore-delete",
+  "page": "tdca_dialog_import.jsp",
+  "type": "M",
+  "bean": "tdca_tdcaService",
+  "method": "delete1",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-97a9e98ec9c74f38925a67205578e516",
+  "page": "tdca_dialog_import.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdca_cont-tc9wStore-save",
+  "page": "tdca_dialog_modify.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-218da9b8c69448a484c42f3f48153aba",
+  "page": "tdci_dialog_import02.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-ded70510b8e84115a679d404690e1805",
+  "page": "tdci_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-fc30538b2e954cedba1fc3d261e5a1df",
+  "page": "tdci_dialog_import04.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-891549e83c3149c298590e15ada50031",
+  "page": "tdci_dialog_import03.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-d9174076fda3457f9c68c0ebe0d35688",
+  "page": "tdci_dialog_import01.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-02d53b42e9e34e939c8b1ffda9227b1d",
+  "page": "tdcq_dialog_view3.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-2d727343568547af9de5b74fe93c6c68",
+  "page": "tdcq_dialog_view2.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-baff55c78bf84c7097a4329af8217dc6",
+  "page": "tdcq_dialog_view5.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdcq_cont-Query",
+  "page": "tdcq_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-2d005be0201d44dc84f0f607bb735b79",
+  "page": "tdcq_dialog_view4.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-dfdb404751924edd99a66b1cdfb0f661",
+  "page": "tdcbe_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-e08a0dedfc744efa9b3a759ec156e326",
+  "page": "tdcbe_cont.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-9bd607be794244ff898eb36a4cc8bc16",
+  "page": "tdcbe_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdcaw_cont-tc06Store-S",
+  "page": "tdcaw_cont.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdcaw_cont-tc06Store-Q",
+  "page": "tdcaw_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdcaw_cont-tc06Store-query",
+  "page": "tdcaw_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-2e696f0b30ab4ca295728aa223ef0703",
+  "page": "tdcaw_dialog_import.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdcap_cont-query",
+  "page": "tdcap_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdcap_dialog_import_query",
+  "page": "tdcap_dialog_import.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdcaq_dialog_import_query",
+  "page": "tdcaq_dialog_import.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdcaq_cont-query",
+  "page": "tdcaq_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdab_dialog_detail-tb90Store-Q",
+  "page": "tdab_dialog_detail.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdab_cont-tb90Store-Q",
+  "page": "tdab_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdab_dialog_xq-tb90Store-Q",
+  "page": "tdab_dialog_xq.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdab_dialog_xq-tb90Store-Save",
+  "page": "tdab_dialog_xq.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdab_dialog_xq-tb90Store-Update",
+  "page": "tdab_dialog_xq.jsp",
+  "type": "M",
+  "bean": "tdab_tdabService",
+  "method": "doContinue",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdab_dialog_zz-tb90Store-Q",
+  "page": "tdab_dialog_zz.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdab_dialog_zz-tb90Store-Save",
+  "page": "tdab_dialog_zz.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdad_dialog_xinqsh-tb90Store-Q",
+  "page": "tdad_dialog_xinqsh.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdad_dialog_xinqsh-tb91Store-Q",
+  "page": "tdad_dialog_xinqsh.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdad_dialog_xinqsh-tb90Store-Save",
+  "page": "tdad_dialog_xinqsh.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdad_dialog_zzsh-tb90Store-Q",
+  "page": "tdad_dialog_zzsh.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdad_dialog_zzsh-tb91Store-Q",
+  "page": "tdad_dialog_zzsh.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdad_dialog_zzsh-tb90Store-Save",
+  "page": "tdad_dialog_zzsh.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdad_dialog_bgsh-tb92Store-Q",
+  "page": "tdad_dialog_bgsh.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdad_dialog_bgsh-tb91Store-Q",
+  "page": "tdad_dialog_bgsh.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdad_dialog_bgsh-tb90Store-Q",
+  "page": "tdad_dialog_bgsh.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdad_dialog_bgsh-tb90Store-Save",
+  "page": "tdad_dialog_bgsh.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdad_dialog_bgsh-tc90$_1Store-Q",
+  "page": "tdad_dialog_bgsh.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdad_dialog_bgsh-tc90$_1Store-Save",
+  "page": "tdad_dialog_bgsh.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdad_dialog_xuqsh-tb90Store-Q",
+  "page": "tdad_dialog_xuqsh.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdad_dialog_xuqsh-tb91Store-Q",
+  "page": "tdad_dialog_xuqsh.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdad_dialog_xuqsh-tb90Store-Save",
+  "page": "tdad_dialog_xuqsh.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdad_cont-tb91Store-Q",
+  "page": "tdad_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdae_cont-tb91Store-Q",
+  "page": "tdae_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdae_dialog_bgcl-tb92Store-Q",
+  "page": "tdae_dialog_bgcl.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdae_dialog_bgcl-tb91Store-Q",
+  "page": "tdae_dialog_bgcl.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdae_dialog_bgcl-tb90Store-Q",
+  "page": "tdae_dialog_bgcl.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdae_dialog_bgcl-tb90Store-Save",
+  "page": "tdae_dialog_bgcl.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdae_dialog_xqcl-tb90Store-Q",
+  "page": "tdae_dialog_xqcl.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdae_dialog_xqcl-tb91Store-Q",
+  "page": "tdae_dialog_xqcl.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdae_dialog_xqcl-tb90Store-Save",
+  "page": "tdae_dialog_xqcl.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdae_dialog_zzcl-tb90Store-Q",
+  "page": "tdae_dialog_zzcl.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdae_dialog_zzcl-tb91Store-Q",
+  "page": "tdae_dialog_zzcl.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdae_dialog_zzcl-tb90Store-Save",
+  "page": "tdae_dialog_zzcl.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdae_dialog_qxcl-tb90Store-Q",
+  "page": "tdae_dialog_qxcl.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdae_dialog_qxcl-tb91Store-Q",
+  "page": "tdae_dialog_qxcl.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdae_dialog_qxcl-tb90Store-Save",
+  "page": "tdae_dialog_qxcl.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdac_dialog_query-tb90Store-Q",
+  "page": "tdac_dialog_query.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdac_cont-tb90Store-Q",
+  "page": "tdac_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdac_cont-tb92Store-Save",
+  "page": "tdac_cont.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdaa_dialog_tb93-tb93Store-query",
+  "page": "tdaa_dialog_tb93.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdaa_dialog_tb93-tb93Store-save",
+  "page": "tdaa_dialog_tb93.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdaa_dialog_query-tb90Store-Q",
+  "page": "tdaa_dialog_query.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdaa_cont-tb91Store-Q",
+  "page": "tdaa_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdaa_cont-tb90Store-Save",
+  "page": "tdaa_cont.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdaa_cont-tb90Store-Q",
+  "page": "tdaa_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdaa_cont-Save",
+  "page": "tdaa_cont.jsp",
+  "type": "M",
+  "bean": "tdaa_tdaaService",
+  "method": "doSave",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdaa_cont-Commit",
+  "page": "tdaa_cont.jsp",
+  "type": "M",
+  "bean": "tdaa_tdaaService",
+  "method": "doCommit",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdio_cont-tc03Store_new-Query",
+  "page": "tdio_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdio_cont-tc03Store-Save",
+  "page": "tdio_cont.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdio_cont-tc03Store_Form-Del",
+  "page": "tdio_cont.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-b1e29c1de5714354b5dbc9e157872a36",
+  "page": "tdiw_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-3e6e79c35b0f4713bd5a8046b169d25b",
+  "page": "tdiw_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-26f2b364799842588b187e82d4beb77d",
+  "page": "tdiw_dialog_addmodify.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-0b280d12ad4b4d9f863402ac1ecee592",
+  "page": "tdiw_dialog_addmodify.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdil_cont-tc02Store_new-Q",
+  "page": "tdil_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdil_cont-tc02Store-Save",
+  "page": "tdil_cont.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdil_cont-tc02Store_Form-Del",
+  "page": "tdil_cont.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdir_cont-tc03Store-Q",
+  "page": "tdir_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdim_cont-tc02Store_new-Query",
+  "page": "tdim_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdim_cont-tc02Store-Save",
+  "page": "tdim_cont.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdim_cont-tc02Store_Form-Del",
+  "page": "tdim_cont.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdis_cont-tc04Store-Q",
+  "page": "tdis_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-319992e09e47431190f4a55f6d04dbc0",
+  "page": "tdiu_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-83ee8bc92db2468a8a1af86343f5cf8d",
+  "page": "tdiu_cont.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-9ca1ad3b314f4cb7b5db4fcc08066a20",
+  "page": "tdit_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-7c237fc26a6342fc98966f92b38aec60",
+  "page": "tdit_cont.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-9e803f44e8564eff9b99ad414e333c6b",
+  "page": "tdix_dialog.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-ea143cb5a32f48288ab1b6effc573f9c",
+  "page": "tdix_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-104b582980df44339a065937d1f594e8",
+  "page": "tdiv_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-f7f486d9b45844c899359e2e22182568",
+  "page": "tdiv_cont.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-a7e07973764549e49c7ff812819e380d",
+  "page": "tdic_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-1f5d7e326a8b45b6bc97c7b94dfa85d3",
+  "page": "tdic_cont.jsp",
+  "type": "M",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdip_cont-tc04Store_new-Query",
+  "page": "tdip_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-cf26c434ea45471c8eac93b3028ca922",
+  "page": "tdip_dialog_update.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-09cae331c8154ee49d34302fde2f5528",
+  "page": "tdip_dialog_update.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "update",
+  "metadataValidate": true
+ },
+ {
+  "code": "REQ-tdiq_cont-tc02Store-Q",
+  "page": "tdiq_cont.jsp",
+  "type": "Q",
+  "bean": "LemisBusinessMgrPoJo",
+  "method": "query",
+  "metadataValidate": true
  },
  {
   "code": "REQ-azbb_cont-ac01Store-query",

@@ -7,3 +7,6 @@ local.properties
 work/
 # az 种子数据 440MB, 用 scripts/db/DumpSeed 重新导出
 rcpq-web/src/main/resources/db/V5__az_seed_data.sql
+# 全量 schema 与种子(可由 scripts/gen_full_ddl.py + DumpSeed 重新生成)
+rcpq-web/src/main/resources/db/V6__full_schema.sql
+rcpq-web/src/main/resources/db/V6b__views_fix.sql
