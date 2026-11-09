@@ -11,3 +11,4 @@ rcpq-web/src/main/resources/db/V5__az_seed_data.sql
 rcpq-web/src/main/resources/db/V6__full_schema.sql
 rcpq-web/src/main/resources/db/V6b__views_fix.sql
 rcpq-web/src/main/resources/db/V7__full_seed.sql
+work/seed_tj0*.sql
