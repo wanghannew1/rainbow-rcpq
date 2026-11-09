@@ -14,6 +14,7 @@ import com.jlrc.rcpq.service.td.TdbeTdblCases
 import com.jlrc.rcpq.service.td.TdboAjaxCase
 import com.jlrc.rcpq.service.td.TdbfAuditCases
 import com.jlrc.rcpq.service.td.TdcAhCases
+import com.jlrc.rcpq.service.td.TdcBatchCases
 import com.jlrc.rcpq.service.td.TdcjCases
 import com.jlrc.rcpq.service.td.TdckCases
 import com.jlrc.rcpq.service.xa.XabUnitCases
@@ -47,6 +48,7 @@ class InteractionGatewayController(
     private val tdckCases: TdckCases,
     private val tdcjCases: TdcjCases,
     private val tdcAhCases: TdcAhCases,
+    private val tdcBatchCases: TdcBatchCases,
     private val xadCodeCases: XadCodeCases,
 ) {
     @GetMapping("/{code}")
@@ -173,6 +175,45 @@ class InteractionGatewayController(
                     return mapOf("interaction" to code, "doSave" to r)
                 }
             }
+        }
+
+        // td/c 7d: 批删克隆家族(tdca/tdcae/tdcaj) + tdcl AA97 保存
+        if (spec.bean?.endsWith("tdcaService") == true && spec.method in listOf("delete", "delete1")) {
+            val r = tdcBatchCases.delete("tc9w_bp03", mapOf(
+                "aae002" to (body["aae002"]?.toString() ?: return mapOf("error" to "缺少 aae002", "code" to -30001))))
+            return mapOf("interaction" to code, "deleted" to r)
+        }
+        if (spec.bean?.endsWith("tdcaeService") == true && spec.method in listOf("delete", "delete1")) {
+            val r = if (spec.method == "delete") tdcBatchCases.delete("tc9u_bp02", mapOf(
+                "aae002" to (body["aae002"]?.toString() ?: return mapOf("error" to "缺少 aae002", "code" to -30001)),
+                "aaa100" to (body["aaa100"]?.toString() ?: return mapOf("error" to "缺少 aaa100", "code" to -30001)),
+                "aaa030" to (body["aaa030"]?.toString() ?: return mapOf("error" to "缺少 aaa030", "code" to -30001))))
+            else tdcBatchCases.delete("tc9u_bp03", mapOf(
+                "aae002" to (body["aae002"]?.toString() ?: return mapOf("error" to "缺少 aae002", "code" to -30001)),
+                "aaa020" to (body["aaa020"]?.toString() ?: return mapOf("error" to "缺少 aaa020", "code" to -30001)),
+                "aaa030" to (body["aaa030"]?.toString() ?: return mapOf("error" to "缺少 aaa030", "code" to -30001))))
+            return mapOf("interaction" to code, "deleted" to r)
+        }
+        if (spec.bean?.endsWith("tdcajService") == true) {
+            when (spec.method) {
+                "delete", "delete1" -> {
+                    val r = tdcBatchCases.delete("tc9w_bp02", mapOf(
+                        "aae002" to (body["aae002"]?.toString() ?: return mapOf("error" to "缺少 aae002", "code" to -30001)),
+                        "aaa030" to (body["aaa030"]?.toString() ?: return mapOf("error" to "缺少 aaa030", "code" to -30001)),
+                        "aaa020" to (body["aaa020"]?.toString() ?: return mapOf("error" to "缺少 aaa020", "code" to -30001))))
+                    return mapOf("interaction" to code, "deleted" to r)
+                }
+                "doSave" -> {
+                    val tc9u = body["tc9u"] as? Map<String, Any?>
+                        ?: return mapOf("error" to "缺少 tc9u", "code" to -30001)
+                    return mapOf("interaction" to code, "doSave" to tdcBatchCases.doSaveTc9u(tc9u))
+                }
+            }
+        }
+        if (spec.bean?.endsWith("TdclService") == true && spec.method == "update") {
+            val aa97 = body["aa97"] as? Map<String, Any?>
+                ?: return mapOf("error" to "缺少 aa97", "code" to -30001)
+            return mapOf("interaction" to code, "saved" to tdcBatchCases.saveAa97(aa97))
         }
 
         // td/c 7c: 三份 tdcahService 合并路由(ah→bp01/ay→bp04/bp→bp09)
