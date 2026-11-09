@@ -5,6 +5,8 @@ import com.jlrc.rcpq.service.InteractionContext
 import com.jlrc.rcpq.service.MetadataRegistry
 import com.jlrc.rcpq.service.QueryExecutor
 import com.jlrc.rcpq.service.UpdateExecutor
+import com.jlrc.rcpq.service.xa.XabUnitCases
+import com.jlrc.rcpq.service.xa.XadCodeCases
 import com.jlrc.rcpq.service.MetadataValidator
 import org.springframework.web.bind.annotation.*
 
@@ -22,6 +24,8 @@ class InteractionGatewayController(
     private val metadataRegistry: MetadataRegistry,
     private val queryExecutor: QueryExecutor,
     private val updateExecutor: UpdateExecutor,
+    private val xabUnitCases: XabUnitCases,
+    private val xadCodeCases: XadCodeCases,
 ) {
     @GetMapping("/{code}")
     fun dispatch(
@@ -47,12 +51,17 @@ class InteractionGatewayController(
                     "pageSize" to r.pageSize,
                 )
             }
+            "doQuery" -> mapOf(
+                "interaction" to spec.code,
+                "routedTo" to "${spec.bean}.${spec.method}",
+                "codes" to xadCodeCases.queryCodes(params["category"] ?: "健康状况"),
+            )
             else -> {
                 val ctx = InteractionContext(params.toMutableMap())
                 val result = when (spec.method) {
                     "update" -> dispatcher.update(ctx)
                     "count" -> dispatcher.count(ctx)
-                    else -> ctx // TODO: 自定义用例路由(XabUnitService.doDelete 等)接 Spring bean 名映射
+                    else -> ctx
                 }
                 mapOf(
                     "interaction" to spec.code,
@@ -84,11 +93,21 @@ class InteractionGatewayController(
     fun update(@PathVariable code: String, @RequestBody body: Map<String, Any?>): Map<String, Any?> {
         val spec = registry.resolve(code)
             ?: return mapOf("error" to "未知交互码: $code", "code" to -30010)
-        if (spec.method != "update") return mapOf("error" to "非保存交互: ${spec.method}", "code" to -30001)
         val store = storeOf(code)
         @Suppress("UNCHECKED_CAST")
         val rows = (body["rows"] as? List<Map<String, Any?>>)
             ?: return mapOf("error" to "缺少 rows 数组", "code" to -30001)
+        if (spec.bean == "XaabService" && spec.method == "doUpdate") {
+            val saved = xabUnitCases.saveUnit(rows.first())
+            return mapOf("interaction" to code, "store" to store, "saved" to saved)
+        }
+        if (spec.bean == "XaabService" && spec.method == "doDelete") {
+            val id = rows.first()["id"]?.toString()
+                ?: return mapOf("error" to "缺少 id", "code" to -30001)
+            val r = xabUnitCases.deleteUnit(id)
+            return mapOf("interaction" to code, "store" to store, "deleted" to r)
+        }
+        if (spec.method != "update") return mapOf("error" to "非保存交互: ${spec.method}", "code" to -30001)
         return try {
             val r = updateExecutor.execute(store, rows)
             mapOf("interaction" to code, "store" to store,
