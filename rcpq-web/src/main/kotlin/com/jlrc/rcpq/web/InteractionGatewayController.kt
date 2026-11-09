@@ -13,6 +13,7 @@ import com.jlrc.rcpq.service.td.TdbdStateMachineCases
 import com.jlrc.rcpq.service.td.TdbeTdblCases
 import com.jlrc.rcpq.service.td.TdboAjaxCase
 import com.jlrc.rcpq.service.td.TdbfAuditCases
+import com.jlrc.rcpq.service.td.TdcjCases
 import com.jlrc.rcpq.service.td.TdckCases
 import com.jlrc.rcpq.service.xa.XabUnitCases
 import com.jlrc.rcpq.service.xa.XadCodeCases
@@ -43,6 +44,7 @@ class InteractionGatewayController(
     private val tdbfAuditCases: TdbfAuditCases,
     private val tdboAjaxCase: TdboAjaxCase,
     private val tdckCases: TdckCases,
+    private val tdcjCases: TdcjCases,
     private val xadCodeCases: XadCodeCases,
 ) {
     @GetMapping("/{code}")
@@ -167,6 +169,26 @@ class InteractionGatewayController(
                         ?: return mapOf("error" to "缺少 tc9w", "code" to -30001)
                     val r = tdckCases.doSave(tc9w)
                     return mapOf("interaction" to code, "doSave" to r)
+                }
+            }
+        }
+
+        // td/c/j 补贴确认路由
+        if (spec.bean?.endsWith("tdcjService") == true) {
+            when (spec.method) {
+                "saveNobt" -> {
+                    val ids = (body["ids"] as? List<*>)?.mapNotNull { it?.toString()?.toLongOrNull() }
+                        ?: return mapOf("error" to "缺少 ids", "code" to -30001)
+                    return mapOf("interaction" to code, "saveNobt" to tdcjCases.saveNobt(ids))
+                }
+                "saveConfirm" -> {
+                    val ids = (body["ids"] as? List<*>)?.mapNotNull { it?.toString()?.toLongOrNull() }
+                        ?: return mapOf("error" to "缺少 ids", "code" to -30001)
+                    return mapOf("interaction" to code, "saveConfirm" to tdcjCases.saveConfirm(ids))
+                }
+                "AllConfirm" -> {
+                    val year = body["year"]?.toString() ?: return mapOf("error" to "缺少 year", "code" to -30001)
+                    return mapOf("interaction" to code, "allConfirm" to tdcjCases.allConfirm(year))
                 }
             }
         }
