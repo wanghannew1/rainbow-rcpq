@@ -138,7 +138,8 @@ class TdbdStateMachineCases(
 
     // ---------- doJbbg 基本信息变更(9 表广播) ----------
 
-    private val JBGG_TABLES = listOf("ac01", "tc90", "tc90_list", "tc9w", "tc9u", "tc9e", "tc9t", "tc9v", "tc93")
+    private val JBGG_TABLES = listOf("ac01", "tc90", "tc90_list")
+    private val JBGG_TABLES_ID_ONLY = listOf("tc9w", "tc9u", "tc9e", "tc9t", "tc9v", "tc93")
 
     @Transactional
     fun doJbbg(tc92Row: Map<String, Any?>, tb91Row: Map<String, Any?>): Map<String, Any?> {
@@ -150,10 +151,14 @@ class TdbdStateMachineCases(
         val idBefore = em.createQuery("select t.aac002 from AC01 t where t.aac001=:i", String::class.java)
             .setParameter("i", aac001).singleResult
         if (tc92.aac002 != null && tc92.aac002 != idBefore) {
+            // 原文: AC01/TC90/TC90_LIST 更新3列; TC9* 系只更新 aac002
             for (tb in JBGG_TABLES) {
                 updated += jdbcTemplate.update(
                     "UPDATE $tb SET aac002=?, aac004=?, aac006=? WHERE aac001=?",
                     tc92.aac002, tc92.aac004, tc92.aac006, aac001)
+            }
+            for (tb in JBGG_TABLES_ID_ONLY) {
+                updated += jdbcTemplate.update("UPDATE $tb SET aac002=? WHERE aac001=?", tc92.aac002, aac001.toString())
             }
         }
         // 姓名变更(广播 aac003)
