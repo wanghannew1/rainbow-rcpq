@@ -13,6 +13,7 @@ import com.jlrc.rcpq.service.td.TdbdStateMachineCases
 import com.jlrc.rcpq.service.td.TdbeTdblCases
 import com.jlrc.rcpq.service.td.TdboAjaxCase
 import com.jlrc.rcpq.service.td.TdbfAuditCases
+import com.jlrc.rcpq.service.td.TdcAhCases
 import com.jlrc.rcpq.service.td.TdcjCases
 import com.jlrc.rcpq.service.td.TdckCases
 import com.jlrc.rcpq.service.xa.XabUnitCases
@@ -45,6 +46,7 @@ class InteractionGatewayController(
     private val tdboAjaxCase: TdboAjaxCase,
     private val tdckCases: TdckCases,
     private val tdcjCases: TdcjCases,
+    private val tdcAhCases: TdcAhCases,
     private val xadCodeCases: XadCodeCases,
 ) {
     @GetMapping("/{code}")
@@ -169,6 +171,32 @@ class InteractionGatewayController(
                         ?: return mapOf("error" to "缺少 tc9w", "code" to -30001)
                     val r = tdckCases.doSave(tc9w)
                     return mapOf("interaction" to code, "doSave" to r)
+                }
+            }
+        }
+
+        // td/c 7c: 三份 tdcahService 合并路由(ah→bp01/ay→bp04/bp→bp09)
+        if (spec.bean?.endsWith("tdcahService") == true) {
+            val page = spec.page
+            when (spec.method) {
+                "delete" -> {
+                    val r = tdcAhCases.delete(page,
+                        body["aae002"]?.toString() ?: return mapOf("error" to "缺少 aae002", "code" to -30001),
+                        body["aaa030"]?.toString() ?: return mapOf("error" to "缺少 aaa030", "code" to -30001),
+                        body["aaa020"]?.toString() ?: return mapOf("error" to "缺少 aaa020", "code" to -30001))
+                    return mapOf("interaction" to code, "deleted" to r)
+                }
+                "delete1" -> {
+                    val r = tdcAhCases.delete1(page,
+                        body["aae002"]?.toString() ?: return mapOf("error" to "缺少 aae002", "code" to -30001),
+                        body["aaa030"]?.toString() ?: return mapOf("error" to "缺少 aaa030", "code" to -30001),
+                        body["aaa020"]?.toString() ?: "")
+                    return mapOf("interaction" to code, "deleted" to r)
+                }
+                "doSave" -> {
+                    val tc9w1 = body["tc9w1"] as? Map<String, Any?>
+                        ?: return mapOf("error" to "缺少 tc9w1", "code" to -30001)
+                    return mapOf("interaction" to code, "doSave" to tdcAhCases.doSave(tc9w1))
                 }
             }
         }
