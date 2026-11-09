@@ -5,3 +5,5 @@ build/
 *.iml
 local.properties
 work/
+# az 种子数据 440MB, 用 scripts/db/DumpSeed 重新导出
+rcpq-web/src/main/resources/db/V5__az_seed_data.sql

@@ -4,14 +4,16 @@ public class DumpSeed {
     public static void main(String[] a) throws Exception {
         if (System.getenv("ORA_PASS") == null || System.getenv("ORA_PASS").isEmpty()) { System.err.println("请设置 ORA_PASS"); System.exit(2); }
         Class.forName("oracle.jdbc.driver.OracleDriver");
-        String[] tables = {"AA01", "AA10", "AA12", "SYS_QUESTION"};
+        String tbl = System.getProperty("tables", "AA01,AA10,AA12,SYS_QUESTION");
+        String[] tables = tbl.split(",");
+        String outfile = System.getProperty("out", "V3__xa_seed_data.sql");
         SimpleDateFormat ts = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         File dir = new File(new File(repoRoot(), "rcpq-web/src/main/resources"), "db");
         dir.mkdirs();
-        Writer w = new OutputStreamWriter(new FileOutputStream(new File(dir, "V3__xa_seed_data.sql")), "UTF-8");
+        Writer w = new OutputStreamWriter(new FileOutputStream(new File(dir, outfile)), "UTF-8");
         Connection c = conn(System.getenv().getOrDefault("ORA_HOST", "172.16.0.60"), System.getenv().getOrDefault("ORA_SVC", "orcl"),
             System.getenv().getOrDefault("ORA_USER", "ccrcpq"), System.getenv("ORA_PASS"));
-        w.write("-- V3: xa 种子数据(备份库全量导出)\n-- AA01/AA10/AA12/SYS_QUESTION\n\n");
+        w.write("-- 种子数据(备份库全量导出) " + outfile + "\n-- " + String.join(",", tables) + "\n\n");
         for (String tb : tables) {
             Statement s = c.createStatement();
             ResultSet r = s.executeQuery("select * from " + tb);

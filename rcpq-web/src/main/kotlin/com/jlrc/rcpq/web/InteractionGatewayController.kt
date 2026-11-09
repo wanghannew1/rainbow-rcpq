@@ -5,6 +5,7 @@ import com.jlrc.rcpq.service.InteractionContext
 import com.jlrc.rcpq.service.MetadataRegistry
 import com.jlrc.rcpq.service.QueryExecutor
 import com.jlrc.rcpq.service.UpdateExecutor
+import com.jlrc.rcpq.service.az.AzCases
 import com.jlrc.rcpq.service.xa.XabUnitCases
 import com.jlrc.rcpq.service.xa.XadCodeCases
 import com.jlrc.rcpq.service.MetadataValidator
@@ -25,6 +26,7 @@ class InteractionGatewayController(
     private val queryExecutor: QueryExecutor,
     private val updateExecutor: UpdateExecutor,
     private val xabUnitCases: XabUnitCases,
+    private val azCases: AzCases,
     private val xadCodeCases: XadCodeCases,
 ) {
     @GetMapping("/{code}")
@@ -106,6 +108,32 @@ class InteractionGatewayController(
                 ?: return mapOf("error" to "缺少 id", "code" to -30001)
             val r = xabUnitCases.deleteUnit(id)
             return mapOf("interaction" to code, "store" to store, "deleted" to r)
+        }
+        // az 自定义用例路由 (bean.method → AzCases)
+        val azRoute = when ("${spec.bean}.${spec.method}") {
+            "azaa_azaaService.update" -> { val r = azCases.saveUnitTree(rows.first()); return mapOf("interaction" to code, "saved" to r) }
+            "azaa_azaaService.doSave" -> { val r = azCases.saveContact(rows.first()); return mapOf("interaction" to code, "saved" to r) }
+            "azab_azabService.update" -> { val r = azCases.auditUnitUpdate(rows.first()); return mapOf("interaction" to code, "audited" to r) }
+            "AzbaSave.save" -> { val r = azCases.savePerson(rows.first()); return mapOf("interaction" to code, "saved" to r) }
+            "AzbaService.changeJbxx" -> {
+                val r = azCases.changeJbxx(rows.first())
+                return mapOf("interaction" to code, "changeJbxx" to r)
+            }
+            "AzbaService.doUpdate" -> { val r = azCases.updateLb(rows.first()); return mapOf("interaction" to code, "saved" to r) }
+            "azbb_azbbService.update" -> { val r = azCases.auditPersonUpdate(rows.first()); return mapOf("interaction" to code, "audited" to r) }
+            "azbd.del" -> {
+                val id = rows.first()["aac001"] ?: return mapOf("error" to "缺少 aac001", "code" to -30001)
+                val r = azCases.deletePerson(mapOf("aac001" to id))
+                return mapOf("interaction" to code, "deleted" to r)
+            }
+            "azbe.save" -> {
+                val r = azCases.mergePerson(
+                    (body["h1Aac001"] ?: return mapOf("error" to "缺少 h1Aac001")).toString().toLong(),
+                    (body["h2Aac001"] ?: return mapOf("error" to "缺少 h2Aac001")).toString().toLong(),
+                    (body["key"] ?: rows.firstOrNull()?.get("aac001") ?: return mapOf("error" to "缺少 key")).toString().toLong())
+                return mapOf("interaction" to code, "merged" to r)
+            }
+            else -> null
         }
         if (spec.method != "update") return mapOf("error" to "非保存交互: ${spec.method}", "code" to -30001)
         return try {

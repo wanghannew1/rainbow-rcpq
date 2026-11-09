@@ -15,11 +15,18 @@ import re
 RES = "/home/ubuntu/github/rainbowpq/src/main/resources"
 OUT = os.path.join(os.path.dirname(__file__), "..", "rcpq-entity/src/main/kotlin/com/jlrc/rcpq/entity")
 
+_B = f"{RES}/com/neusoft/lemis/apps/entities/baseDB"
 HBM = {
-    "AA01": f"{RES}/com/neusoft/lemis/apps/entities/baseDB/A/AA01.hbm.xml",
-    "AA10": f"{RES}/com/neusoft/lemis/apps/entities/baseDB/A/AA10.hbm.xml",
-    "AA12": f"{RES}/com/neusoft/lemis/apps/entities/baseDB/A/AA12.hbm.xml",
-    "SYS_QUESTION": f"{RES}/com/neusoft/lemis/apps/entities/baseDB/S/SYS_QUESTION.hbm.xml",
+    # xa 试点
+    "AA01": f"{_B}/A/AA01.hbm.xml", "AA10": f"{_B}/A/AA10.hbm.xml",
+    "AA12": f"{_B}/A/AA12.hbm.xml", "SYS_QUESTION": f"{_B}/S/SYS_QUESTION.hbm.xml",
+    # az 波次(单位/人员主档 + 合同同步目标)
+    "AB01": f"{_B}/A/AB01.hbm.xml", "AB06": f"{_B}/A/AB06.hbm.xml",
+    "AB07": f"{_B}/A/AB07.hbm.xml", "SYS_FILE": f"{_B}/S/SYS_FILE.hbm.xml",
+    "AC01": f"{_B}/A/AC01.hbm.xml", "AC01_LB": f"{_B}/A/AC01_LB.hbm.xml",
+    "AC06": f"{_B}/A/AC06.hbm.xml", "AC0B": f"{_B}/A/AC0B.hbm.xml",
+    "AC0D": f"{_B}/A/AC0D.hbm.xml", "CC0P": f"{_B}/C/CC0P.hbm.xml",
+    "TC90": f"{_B}/T/TC90.hbm.xml", "TC90_LIST": f"{_B}/T/TC90_LIST.hbm.xml",
 }
 
 TYPE_MAP = {
