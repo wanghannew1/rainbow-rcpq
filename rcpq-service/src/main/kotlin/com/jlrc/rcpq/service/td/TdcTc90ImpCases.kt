@@ -330,11 +330,11 @@ class TdcTc90ImpCases(
                        aae011, aae017, aae036, aae019, aae020, aae022,
                        aac005, aac024, aac011, aac017, aac181, aac180, aac182, aae00a, aae00d, bbb001)
                        VALUES (?, ?, ?, ?, ?, substr(?,1,10)::date, substr(?,1,2),
-                       ?, ?, ?, ?, ?, substr(?,1,2), substr(?,1,2), substr(?,1,2)::numeric, '0', '员工合同导入',
+                       ?, ?, ?, ?, ?::numeric, substr(?,1,2), substr(?,1,2), substr(?,1,2), '0', '员工合同导入',
                        ?, ?, now(), ?, ?, ?,
                        substr(?,1,2), substr(?,1,2), substr(?,1,2), substr(?,1,1), substr(?,1,8)::date, ?, ?, ?, ?, ?)""",
                     ace100N, aac001, aac002, aac003, str("aac004"),
-                    (str("aac006_") ?: str("aac006") ?: "").replace("-", "").take(10),
+                    replace((str("aac006_") ?: str("aac006") ?: ""), "-", ""),
                     str("aac009_"),
                     str("aab299"), str("bab305"), str("aae005"), str("aae006"), str("aae008"),
                     str("aae005"), str("aac013_"), str("aae00p_"),
