@@ -7,6 +7,7 @@ import com.jlrc.rcpq.service.QueryExecutor
 import com.jlrc.rcpq.service.UpdateExecutor
 import com.jlrc.rcpq.service.az.AzCases
 import com.jlrc.rcpq.service.td.TdaProtocolCases
+import com.jlrc.rcpq.service.td.TdbContractCases
 import com.jlrc.rcpq.service.xa.XabUnitCases
 import com.jlrc.rcpq.service.xa.XadCodeCases
 import com.jlrc.rcpq.service.MetadataValidator
@@ -29,6 +30,7 @@ class InteractionGatewayController(
     private val xabUnitCases: XabUnitCases,
     private val azCases: AzCases,
     private val tdaCases: TdaProtocolCases,
+    private val tdbCases: TdbContractCases,
     private val xadCodeCases: XadCodeCases,
 ) {
     @GetMapping("/{code}")
@@ -98,6 +100,21 @@ class InteractionGatewayController(
         val spec = registry.resolve(code)
             ?: return mapOf("error" to "未知交互码: $code", "code" to -30010)
         val store = storeOf(code)
+        // td/b/a 合同用例路由
+        if (spec.bean?.endsWith("tdbaService") == true && spec.method == "update") {
+            val tc90 = (body["tc90"] as? Map<String, Any?>) ?: return mapOf("error" to "缺少 tc90", "code" to -30001)
+            val tb91 = (body["tb91"] as? Map<String, Any?>) ?: return mapOf("error" to "缺少 tb91", "code" to -30001)
+            val tc9e = body["tc9e"] as? Map<String, Any?>
+            val r = tdbCases.saveContract(tc90, tb91, tc9e)
+            return mapOf("interaction" to code, "saved" to r)
+        }
+        if (spec.bean?.endsWith("tdbaService") == true && spec.method == "doCommit") {
+            val tc90 = (body["tc90"] as? Map<String, Any?>) ?: return mapOf("error" to "缺少 tc90", "code" to -30001)
+            val tb91 = (body["tb91"] as? Map<String, Any?>) ?: return mapOf("error" to "缺少 tb91", "code" to -30001)
+            val r = tdbCases.commitContract(tc90, tb91)
+            return mapOf("interaction" to code, "committed" to r)
+        }
+
         // td/a 协议用例路由
         if (spec.bean?.endsWith("tdaaService") == true && spec.method == "doSave") {
             val tb90 = (body["tb90"] as? Map<String, Any?>) ?: return mapOf("error" to "缺少 tb90", "code" to -30001)
