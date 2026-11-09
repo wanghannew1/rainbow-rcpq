@@ -15,4 +15,7 @@ data class InteractionSpec(
     val method: String,
     /** 是否启用元数据校验（对应 metadata_validate） */
     val metadataValidate: Boolean = false,
+    /** 页面携带的 store 清单（旧页面 XML datastores 权威回填，scripts/patch_interaction_stores.py）。
+     *  哈希交互码无码内 store 段，通用分发按此解析。 */
+    val stores: List<String> = emptyList(),
 )

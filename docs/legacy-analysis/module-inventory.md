@@ -22,7 +22,7 @@
 | **td/n** 到期提醒 | 合同/协议到期 + 退休年龄预警 | 19 | 19 | **0** | 1 | 0 | ★ | 纯通用 |
 | **wts** 外网申报 | 单位外网申报（含 GIS） | 18 | — | — | — | — | — | ⛔ D4 暂不迁移 |
 
-另：`a`（1 孤儿页 ab_cont.jsp，待甄别归属）、公共基础设施（`apps.sc` 查询服务、`apps.servlet` 下载、`apps.common` 工具含 IOUtil 导出、ajax 通道、scheduler、log）随各模块按需实现。
+另：`a` 的"孤儿页 ab_cont.jsp"已甄别为 glob 误报（实为 xaab/azab/tddab_cont.jsp，均已注册路由，见 5f 甄别结论）；公共基础设施（`apps.sc` 查询服务、`apps.servlet` 下载、`apps.common` 工具含 IOUtil 导出、ajax 通道、scheduler、log）随各模块按需实现。
 
 **关键发现——5 个零自定义模块**（td/g、td/h、td/i、td/l、td/n，共 114 页/185 交互/**0 行 Java**）：
 GenericCrudDispatcher + 元数据即可整体吃下，零业务代码成本，但它们的 datastore 元数据必须先行迁移。
@@ -54,7 +54,7 @@ td/n 到期提醒（只读预警，随时可插队）
 | **2** | **az（a+b 合并）** | 主档前置依赖；规模小（24 页/37 交互/1215 行 Java/**0 过程**）；6 个自定义用例是与 xa 同量级的显式用例移植 | 变更审核链（PRC_单位/个人信息变更 → Kotlin）、人员合并/删除审计 |
 | **3** | **td/g** | 零自定义模块首次实战：验证通用分发器吃下"非 xa 元数据"；顺手补 Excel 导入（EasyExcel 替代 IOUtil） | 元数据迁移质量（8 store）+ EasyExcel 通道 |
 | ✅ 4 | **td/a** | 已完成(2026-11-09)：saveAgreement/commitAgreement(TB93批次 02/1)/continueAgreement(批次迁移+8字段同步) 三链路实测 | 协议号序列接续(61856-61858)、TB93 迁移与字段同步 ✓ |
-| 🔵 5 | **td/b** | **5a✅ 新建合同三路径实测；5b✅ 变更审计(TdbcChangeCases: TC92→TC90 十八字段回填+TC92_LIST 逐字段审计含 AA10 中文翻译+TC90_LIST 历史行同步；原码 get(0) 循环 bug 修正；JPA 受管实例快照陷阱修正——原值快照须在 merge 前取)；5c✅ 状态机(TdbdStateMachineCases 8 方法；doJbbg 9 表广播实测 updatedRows=25 精确闭合，TC9\* 系 aac001 列类型两簇 varchar(tc9w/u)/numeric(tc9e/t/v/93) 分簇绑定)；5d✅ 审核(TdbeTdblCases.transferApply + TdbfAuditCases 6 方法：doXinqCommit 变更列逐列 TC90_BG/doXinqCancle/doRenewCancle 删新行+旧行按 atb900 清单复活/doJsdyCancle/terminateCancel TC9E+AC10(aac109='2') 清理/reCommit——全部实测；**PRC_GENERATE_TFMX 备份库源码整块被注释禁用，运行时空操作恒返回 appCode=1，按可观测行为等价为 no-op**，"PRC_GENERATE_TFMX 决策点"就此关闭)；5e✅ 调转(tdbl archiveForTransfer 归档行 8 字段对齐批次，l/s 双份复制合并实现)**；剩余 5f=o~t 碎片 | 5d/5e 冒烟 12/12 过；测试 12/12 绿 ✓ |
+| 🔵 5 | **td/b** | **5a✅ 新建合同三路径实测；5b✅ 变更审计(TdbcChangeCases: TC92→TC90 十八字段回填+TC92_LIST 逐字段审计含 AA10 中文翻译+TC90_LIST 历史行同步；原码 get(0) 循环 bug 修正；JPA 受管实例快照陷阱修正——原值快照须在 merge 前取)；5c✅ 状态机(TdbdStateMachineCases 8 方法；doJbbg 9 表广播实测 updatedRows=25 精确闭合，TC9\* 系 aac001 列类型两簇 varchar(tc9w/u)/numeric(tc9e/t/v/93) 分簇绑定)；5d✅ 审核(TdbeTdblCases.transferApply + TdbfAuditCases 6 方法：doXinqCommit 变更列逐列 TC90_BG/doXinqCancle/doRenewCancle 删新行+旧行按 atb900 清单复活/doJsdyCancle/terminateCancel TC9E+AC10(aac109='2') 清理/reCommit——全部实测；**PRC_GENERATE_TFMX 备份库源码整块被注释禁用，运行时空操作恒返回 appCode=1，按可观测行为等价为 no-op**，"PRC_GENERATE_TFMX 决策点"就此关闭)；5e✅ 调转(tdbl archiveForTransfer 归档行 8 字段对齐批次，l/s 双份复制合并实现)；5f✅ 碎片(o/p/q/r/t 六页泛型路由全量实测+tdboAjax 44L 移植(AJAX-bean 名通道)+孤儿页甄别=ab_cont.jsp 裸名不存在(xaab/azab/tddab 均已注册，glob 误报))** | **遗留 td/p-imp 独立小波：tdbp 四个导入弹窗直调 PKG_派遣批量导入 5 对校验/提交过程(备份库源码 8593 行，单过程最大 1420 行)，须按 PL/SQL 重镇对待**；测试 12/12 绿 ✓ |
 | 🔵 6 | td/l | 基建就绪(路由注册/表已建/V7 种子灌库中)，验收待灌库后 | 只读元数据查询 |
 | **7** | **td/c** | 页面最多但 Java 仅 746 行——大半是元数据驱动标准 CRUD；按时期/类型分 4-5 个批次迁元数据 | 53 子模块 datastore 批量迁移工具化 |
 | **8** | **td/d** | 存储过程重镇（8 个），工资计算 PRC_SALARYCOMPUTE 是行为对照的重头戏 | 工资计算结果逐条对照 |
@@ -89,9 +89,9 @@ td/n 到期提醒（只读预警，随时可插队）
 | 5c | td/b/c | 合同变更+逐字段审计(AA10对照) | 11/19/3 | TdbcService(317) | 0 | 审计逻辑是对照重点 |
 | **5d** | **td/b/d** | **状态机：新建/续签/终止/变更/调转/补缴/审核** | 14/33/**8** | **tdbdService(689L,8方法)** | 3 | **最大单体，独立一波** |
 | 5e | td/b/f + td/b/e | 审核/提交/撤销 + 单位间转移 | 13/36/8 | tdbf(163)+tdbe(64) | 4 | PRC_GENERATE_TFMX 决策点 |
-| 5f | td/b/l + td/b/s + b/o,p,q,r,t | 结算单元调转(TC90→TC90_LIST) + 6个零自定义碎片页 | 15/18/3 | tdblService(219) | 1 | tdblService 在 l/s 两处复用，合并实现 |
+| 5f | td/b/l + td/b/s + b/o,p,q,r,t | 结算单元调转(TC90→TC90_LIST) + 6个碎片页(o 含 tdboAjax 自定义；**p 的 4 导入弹窗直调 PKG_派遣批量导入 8593 行 PL/SQL → 独立 td/p-imp 波**) | 15/18/3 | tdblService(219)+tdboAjax(44) | 1+1 | tdblService 在 l/s 两处复用，合并实现；"零自定义"口径修正：ajax/导入过程不计入 service 行数但确为自定义 |
 
-孤儿页 `ab_cont.jsp` 落在 td/b 下（1页0交互），波次 5f 顺路甄别。
+孤儿页甄别结论(2026-11-09 波次5f)：旧 webapp **不存在裸名 `ab_cont.jsp`**——存在的是带模块前缀的 `xaab_cont.jsp`(3交互)/`azab_cont.jsp`(2交互)/`tddab_cont.jsp`(2交互)，三者交互均已在路由注册表内，无需迁移；原盘点为 `*ab_cont.jsp` glob 误报。
 
 ### 6.2 td/c → 4 个子波（120页/202交互/23自定义/746行，约 77 表）
 

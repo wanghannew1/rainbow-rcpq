@@ -28,13 +28,19 @@ class UpdateExecutor(
     @PersistenceContext
     lateinit var em: EntityManager
 
-    /** store 名 → 实体类。试点 4 表硬映射；后续由生成器产出映射清单 */
-    private val entityClassByTable = mapOf(
-        "AA01" to com.jlrc.rcpq.entity.AA01::class.java,
-        "AA10" to com.jlrc.rcpq.entity.AA10::class.java,
-        "AA12" to com.jlrc.rcpq.entity.AA12::class.java,
-        "SYS_QUESTION" to com.jlrc.rcpq.entity.SYS_QUESTION::class.java,
-    )
+    /** 表名 → 实体类。@Entity 全量扫描(519 实体与表同名生成；视图实体仅查询通道使用) */
+    private val entityClassByTable: Map<String, Class<*>> by lazy {
+        val scanner = org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider(false)
+        scanner.addIncludeFilter(
+            org.springframework.core.type.filter.AnnotationTypeFilter(jakarta.persistence.Entity::class.java))
+        val map = mutableMapOf<String, Class<*>>()
+        for (bd in scanner.findCandidateComponents("com.jlrc.rcpq.entity")) {
+            val cls = Class.forName(bd.beanClassName)
+            val table = cls.getAnnotation(jakarta.persistence.Table::class.java)?.name ?: cls.simpleName
+            map[table.uppercase()] = cls
+        }
+        map
+    }
 
     data class UpdateResult(var inserted: Int = 0, var updated: Int = 0, var deleted: Int = 0)
 
@@ -56,7 +62,7 @@ class UpdateExecutor(
                     result.inserted++
                 }
                 "modified" -> {
-                    val id = pkValue(fields, pkNames)
+                    val id = pkValue(entityClass, fields, pkNames)
                         ?: throw IllegalArgumentException("修改行缺少主键: $fields")
                     val current = em.find(entityClass, id)
                         ?: throw IllegalArgumentException("修改行不存在: $id")
@@ -65,7 +71,7 @@ class UpdateExecutor(
                     result.updated++
                 }
                 "deleted" -> {
-                    val id = pkValue(fields, pkNames)
+                    val id = pkValue(entityClass, fields, pkNames)
                         ?: throw IllegalArgumentException("删除行缺少主键: $fields")
                     val current = em.find(entityClass, id)
                         ?: throw IllegalArgumentException("删除行不存在: $id")
@@ -78,18 +84,15 @@ class UpdateExecutor(
         return result
     }
 
-    /** 从行数据中提取主键值（单主键直接取；复合主键转 @IdClass） */
-    private fun pkValue(fields: Map<String, Any?>, pkNames: List<String>): Any? {
+    /** 从行数据中提取主键值（单主键直接取；复合主键转实体 @IdClass，按元数据顺序） */
+    private fun pkValue(entityClass: Class<*>, fields: Map<String, Any?>, pkNames: List<String>): Any? {
         if (pkNames.isEmpty()) return null
         val vals = pkNames.mapNotNull { fields[it] }
         if (vals.size != pkNames.size) return null
-        return if (pkNames.size == 1) vals[0] else newIdClass(vals)
-    }
-
-    private fun newIdClass(vals: List<Any?>): Any {
-        // AA10Id(aaa100, aaa102) — 复合键构造按元数据顺序
-        val cls = Class.forName("com.jlrc.rcpq.entity.AA10Id")
-        val ctor = cls.constructors.first()
+        if (pkNames.size == 1) return vals[0]
+        val idCls = entityClass.getAnnotation(jakarta.persistence.IdClass::class.java)?.value
+            ?: throw IllegalArgumentException("复合主键但实体无 @IdClass: ${entityClass.simpleName}")
+        val ctor = idCls.java.constructors.first()
         return ctor.newInstance(*vals.toTypedArray())
     }
 }

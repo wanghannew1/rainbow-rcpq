@@ -11,6 +11,7 @@ import com.jlrc.rcpq.service.td.TdbContractCases
 import com.jlrc.rcpq.service.td.TdbcChangeCases
 import com.jlrc.rcpq.service.td.TdbdStateMachineCases
 import com.jlrc.rcpq.service.td.TdbeTdblCases
+import com.jlrc.rcpq.service.td.TdboAjaxCase
 import com.jlrc.rcpq.service.td.TdbfAuditCases
 import com.jlrc.rcpq.service.xa.XabUnitCases
 import com.jlrc.rcpq.service.xa.XadCodeCases
@@ -39,6 +40,7 @@ class InteractionGatewayController(
     private val tdbdCases: TdbdStateMachineCases,
     private val tdbeTdblCases: TdbeTdblCases,
     private val tdbfAuditCases: TdbfAuditCases,
+    private val tdboAjaxCase: TdboAjaxCase,
     private val xadCodeCases: XadCodeCases,
 ) {
     @GetMapping("/{code}")
@@ -48,7 +50,7 @@ class InteractionGatewayController(
     ): Map<String, Any?> {
         val spec = registry.resolve(code)
             ?: return mapOf("error" to "未知交互码: $code", "code" to -30010)
-        val store = storeOf(code)
+        val store = resolveStore(code, spec, params["store"])
         return when (spec.method) {
             "query" -> {
                 val meta = metadataRegistry.meta(store)
@@ -90,6 +92,17 @@ class InteractionGatewayController(
     private fun storeOf(code: String): String =
         code.split("-").let { if (it.size >= 3) it[it.size - 2] else "" }
 
+    /**
+     * store 解析链: 显式 ?store= 参数 > 码内 store 段 > 页面 XML datastores 回填清单首项。
+     * 哈希交互码(354/683)无码内段，靠回填清单路由（对应旧 DataCenter 携带命名 store 语义）。
+     */
+    private fun resolveStore(code: String, spec: com.jlrc.rcpq.service.model.InteractionSpec, explicit: String?): String {
+        if (!explicit.isNullOrBlank()) return explicit
+        val fromCode = storeOf(code)
+        if (fromCode.isNotBlank()) return fromCode
+        return spec.stores.firstOrNull() ?: ""
+    }
+
     private fun pksOf(meta: MetadataRegistry.StoreMeta): List<String> =
         meta.columns.filter { it.primaryKey }.map { it.name }
 
@@ -107,7 +120,7 @@ class InteractionGatewayController(
     fun update(@PathVariable code: String, @RequestBody body: Map<String, Any?>): Map<String, Any?> {
         val spec = registry.resolve(code)
             ?: return mapOf("error" to "未知交互码: $code", "code" to -30010)
-        val store = storeOf(code)
+        val store = resolveStore(code, spec, body["store"]?.toString())
         // td/b/a 合同用例路由
         if (spec.bean?.endsWith("tdbaService") == true && spec.method == "update") {
             val tc90 = (body["tc90"] as? Map<String, Any?>) ?: return mapOf("error" to "缺少 tc90", "code" to -30001)
@@ -121,6 +134,17 @@ class InteractionGatewayController(
             val tb91 = (body["tb91"] as? Map<String, Any?>) ?: return mapOf("error" to "缺少 tb91", "code" to -30001)
             val r = tdbCases.commitContract(tc90, tb91)
             return mapOf("interaction" to code, "committed" to r)
+        }
+
+        // td/b/o 起始日期变更 ajax 直调（旧 SimpleAjax bean 名通道）
+        if (spec.bean?.endsWith("tdboAjax") == true && spec.method == "doAjax") {
+            val atc900 = (body["atc900"] ?: return mapOf("error" to "缺少 atc900", "code" to -30001))
+                .toString().toLongOrNull() ?: return mapOf("error" to "atc900 非数值", "code" to -30001)
+            val r = tdboAjaxCase.doAjax(
+                atc900,
+                body["atc90d"]?.toString() ?: return mapOf("error" to "缺少 atc90d", "code" to -30001),
+                body["atc90dOld"]?.toString() ?: "")
+            return mapOf("interaction" to code, "ajax" to r)
         }
 
         // td/b/e 转移申请 + td/b/l 调转归档路由
