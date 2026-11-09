@@ -13,3 +13,4 @@ rcpq-web/src/main/resources/db/V6b__views_fix.sql
 rcpq-web/src/main/resources/db/V7__full_seed.sql
 work/seed_tj0*.sql
 scripts/__pycache__/
+work/seed_tc91*.sql
