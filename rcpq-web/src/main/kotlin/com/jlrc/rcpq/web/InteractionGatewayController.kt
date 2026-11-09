@@ -11,6 +11,7 @@ import com.jlrc.rcpq.service.td.TdbContractCases
 import com.jlrc.rcpq.service.td.TdbcChangeCases
 import com.jlrc.rcpq.service.td.TdbdStateMachineCases
 import com.jlrc.rcpq.service.td.TdbeTdblCases
+import com.jlrc.rcpq.service.td.TdbfAuditCases
 import com.jlrc.rcpq.service.xa.XabUnitCases
 import com.jlrc.rcpq.service.xa.XadCodeCases
 import com.jlrc.rcpq.service.MetadataValidator
@@ -37,6 +38,7 @@ class InteractionGatewayController(
     private val tdbcChangeCases: TdbcChangeCases,
     private val tdbdCases: TdbdStateMachineCases,
     private val tdbeTdblCases: TdbeTdblCases,
+    private val tdbfAuditCases: TdbfAuditCases,
     private val xadCodeCases: XadCodeCases,
 ) {
     @GetMapping("/{code}")
@@ -137,6 +139,40 @@ class InteractionGatewayController(
                 ?: return mapOf("error" to "缺少 atc900s", "code" to -30001)
             val r = tdbeTdblCases.archiveForTransfer(atc900s, body["atb930"]?.toString() ?: "", body["tb91"] as? Map<String, Any?>)
             return mapOf("interaction" to code, "archived" to r)
+        }
+
+        // td/b/f 审核处理路由 (6 方法)
+        if (spec.bean?.endsWith("tdbfService") == true) {
+            val tc90 = body["tc90"] as? Map<String, Any?>
+            val tb91 = body["tb91"] as? Map<String, Any?> ?: return mapOf("error" to "缺少 tb91", "code" to -30001)
+            when (spec.method) {
+                "doXinqCommit" -> {
+                    val r = tdbfAuditCases.doXinqCommit(tc90 ?: return mapOf("error" to "缺少 tc90", "code" to -30001), tb91)
+                    return mapOf("interaction" to code, "doXinqCommit" to r)
+                }
+                "doXinqCancle" -> {
+                    val r = tdbfAuditCases.doXinqCancle(tc90 ?: return mapOf("error" to "缺少 tc90", "code" to -30001), tb91)
+                    return mapOf("interaction" to code, "doXinqCancle" to r)
+                }
+                "doRenewCancle" -> {
+                    val r = tdbfAuditCases.doRenewCancle(tb91)
+                    return mapOf("interaction" to code, "doRenewCancle" to r)
+                }
+                "doJsdyCancle" -> {
+                    val r = tdbfAuditCases.doJsdyCancle(tb91)
+                    return mapOf("interaction" to code, "doJsdyCancle" to r)
+                }
+                "terminateCancel" -> {
+                    val tc9e = body["tc9e"] as? Map<String, Any?> ?: return mapOf("error" to "缺少 tc9e", "code" to -30001)
+                    val r = tdbfAuditCases.terminateCancel(tc90 ?: return mapOf("error" to "缺少 tc90", "code" to -30001), tb91, tc9e)
+                    return mapOf("interaction" to code, "terminateCancel" to r)
+                }
+                "reCommit" -> {
+                    val tc9e = body["tc9e"] as? Map<String, Any?> ?: return mapOf("error" to "缺少 tc9e", "code" to -30001)
+                    val r = tdbfAuditCases.reCommit(tc90 ?: return mapOf("error" to "缺少 tc90", "code" to -30001), tb91, tc9e)
+                    return mapOf("interaction" to code, "reCommit" to r)
+                }
+            }
         }
 
         // td/b/d 状态机路由 (8 方法)

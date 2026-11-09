@@ -11,7 +11,14 @@ class MetadataRegistryTest {
     fun `xa 9 个 store 元数据可加载`() {
         val reg = MetadataRegistry(ObjectMapper())
         reg.load()
-        assertEquals(9, reg.size())
+        // 全量迁移后注册表为 560 store；本测试钉 xa 试点 9 store 全部可解析（原意）
+        val xaStores = listOf(
+            "aa01Store", "aa10Store_Query", "aa10Store_QueryList", "aa12Store", "aa12Store_M",
+            "sys_questionStore", "sys_questionStore_List", "sys_questionStore_Query", "sys_questionStore_dispose",
+        )
+        assertEquals(9, xaStores.size)
+        assertTrue(reg.size() >= 9)
+        for (s in xaStores) assertNotNull(reg.meta(s), "缺少 xa store: $s")
     }
 
     @Test
