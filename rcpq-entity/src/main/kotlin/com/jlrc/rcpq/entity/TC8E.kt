@@ -75,4 +75,6 @@ open class TC8E {
     @Column(name = "BAZ002")
     var baz002: Long? = null
 
+    @Column(name = "ATB860")
+    var atb860: BigDecimal? = null
 }

@@ -192,4 +192,6 @@ open class TC30_BP01 {
     @Column(name = "ABP999")
     var abp999: String? = null
 
+    @Column(name = "AAC001")
+    var aac001: BigDecimal? = null
 }

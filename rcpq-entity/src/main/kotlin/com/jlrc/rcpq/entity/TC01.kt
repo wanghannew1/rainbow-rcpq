@@ -156,4 +156,6 @@ open class TC01 {
     @Column(name = "DAA002")
     var daa002: BigDecimal? = null
 
+    @Column(name = "DNYS")
+    var dnys: BigDecimal? = null
 }

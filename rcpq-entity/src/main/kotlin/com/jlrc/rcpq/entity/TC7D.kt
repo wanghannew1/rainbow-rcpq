@@ -75,4 +75,12 @@ open class TC7D {
     @Column(name = "AAE100")
     var aae100: String? = null
 
+    @Column(name = "ATC700")
+    var atc700: BigDecimal? = null
+    @Column(name = "ATC7D4")
+    var atc7d4: BigDecimal? = null
+    @Column(name = "ATC7D5")
+    var atc7d5: String? = null
+    @Column(name = "ATC7D6")
+    var atc7d6: String? = null
 }

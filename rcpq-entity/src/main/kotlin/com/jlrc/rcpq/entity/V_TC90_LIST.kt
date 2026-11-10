@@ -553,4 +553,6 @@ open class V_TC90_LIST {
     @Column(name = "IFBJBX")
     var ifbjbx: String? = null
 
+    @Column(name = "ZZZ011")
+    var zzz011: String? = null
 }

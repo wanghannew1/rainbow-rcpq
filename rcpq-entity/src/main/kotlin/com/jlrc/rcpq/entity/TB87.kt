@@ -66,4 +66,6 @@ open class TB87 {
     @Column(name = "BAZ002")
     var baz002: Long? = null
 
+    @Column(name = "ATB860")
+    var atb860: BigDecimal? = null
 }

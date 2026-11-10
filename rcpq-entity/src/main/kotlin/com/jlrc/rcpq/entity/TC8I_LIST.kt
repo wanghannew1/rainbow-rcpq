@@ -63,4 +63,6 @@ open class TC8I_LIST {
     @Column(name = "AAE022")
     var aae022: String? = null
 
+    @Column(name = "MONEY")
+    var money: BigDecimal? = null
 }

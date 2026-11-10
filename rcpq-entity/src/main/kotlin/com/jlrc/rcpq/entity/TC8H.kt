@@ -87,4 +87,8 @@ open class TC8H {
     @Column(name = "ATC8H6")
     var atc8h6: BigDecimal? = null
 
+    @Column(name = "ATC8H7")
+    var atc8h7: BigDecimal? = null
+    @Column(name = "ATC8H8")
+    var atc8h8: BigDecimal? = null
 }

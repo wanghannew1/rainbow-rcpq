@@ -105,4 +105,10 @@ open class TC7F {
     @Column(name = "ATC7FE")
     var atc7fe: String? = null
 
+    @Column(name = "ATC700")
+    var atc700: BigDecimal? = null
+    @Column(name = "ATC7FG")
+    var atc7fg: String? = null
+    @Column(name = "ATC7FH")
+    var atc7fh: BigDecimal? = null
 }

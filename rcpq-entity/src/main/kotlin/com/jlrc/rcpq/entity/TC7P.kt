@@ -126,4 +126,6 @@ open class TC7P {
     @Column(name = "ATC7O0")
     var atc7o0: Long? = null
 
+    @Column(name = "ATC700")
+    var atc700: BigDecimal? = null
 }

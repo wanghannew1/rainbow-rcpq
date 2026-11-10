@@ -91,6 +91,8 @@ open class TJ0E1 {
     @Column(name = "ATJ0AA")
     var atj0aa: String? = null
 
+    @Column(name = "AAC001")
+    var aac001: BigDecimal? = null
 }
 data class TJ0E1Id(
     val aae002: Long? = null,

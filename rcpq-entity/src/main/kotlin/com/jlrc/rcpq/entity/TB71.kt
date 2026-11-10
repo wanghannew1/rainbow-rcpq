@@ -45,4 +45,6 @@ open class TB71 {
     @Column(name = "AAE022")
     var aae022: String? = null
 
+    @Column(name = "ATB700")
+    var atb700: BigDecimal? = null
 }

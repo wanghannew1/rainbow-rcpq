@@ -117,4 +117,6 @@ open class TC12 {
     @Column(name = "AAE022")
     var aae022: String? = null
 
+    @Column(name = "ATB110")
+    var atb110: BigDecimal? = null
 }

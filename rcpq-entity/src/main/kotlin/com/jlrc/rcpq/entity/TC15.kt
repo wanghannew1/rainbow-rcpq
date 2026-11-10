@@ -81,4 +81,6 @@ open class TC15 {
     @Column(name = "AAE022")
     var aae022: String? = null
 
+    @Column(name = "ATC130")
+    var atc130: BigDecimal? = null
 }

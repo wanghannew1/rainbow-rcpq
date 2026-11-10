@@ -78,4 +78,6 @@ open class TC21 {
     @Column(name = "ATC10A")
     var atc10a: String? = null
 
+    @Column(name = "ATC200")
+    var atc200: BigDecimal? = null
 }

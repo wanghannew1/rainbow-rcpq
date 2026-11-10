@@ -54,4 +54,6 @@ open class TC7H {
     @Column(name = "AAE022")
     var aae022: String? = null
 
+    @Column(name = "ATC700")
+    var atc700: BigDecimal? = null
 }

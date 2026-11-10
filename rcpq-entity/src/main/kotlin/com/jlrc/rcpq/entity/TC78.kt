@@ -75,4 +75,6 @@ open class TC78 {
     @Column(name = "AAE122")
     var aae122: String? = null
 
+    @Column(name = "ATC700")
+    var atc700: BigDecimal? = null
 }

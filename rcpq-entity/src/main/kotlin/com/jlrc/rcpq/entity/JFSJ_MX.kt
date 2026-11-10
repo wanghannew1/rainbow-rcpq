@@ -138,4 +138,6 @@ open class JFSJ_MX {
     @Column(name = "AAA303")
     var aaa303: BigDecimal? = null
 
+    @Column(name = "ATC933")
+    var atc933: BigDecimal? = null
 }

@@ -99,4 +99,16 @@ open class TC08 {
     @Column(name = "AAA021")
     var aaa021: String? = null
 
+    @Column(name = "AAA401")
+    var aaa401: String? = null
+    @Column(name = "AAA402")
+    var aaa402: String? = null
+    @Column(name = "AAA403")
+    var aaa403: String? = null
+    @Column(name = "AAA404")
+    var aaa404: String? = null
+    @Column(name = "AAA405")
+    var aaa405: String? = null
+    @Column(name = "AAA407")
+    var aaa407: String? = null
 }

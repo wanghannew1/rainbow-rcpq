@@ -211,4 +211,6 @@ open class V_AB01_TB90 {
     @Column(name = "AAA221")
     var aaa221: String? = null
 
+    @Column(name = "AAZ011")
+    var aaz011: String? = null
 }

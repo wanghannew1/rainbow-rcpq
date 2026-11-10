@@ -66,4 +66,6 @@ open class TB16 {
     @Column(name = "AAE022")
     var aae022: String? = null
 
+    @Column(name = "ATB150")
+    var atb150: BigDecimal? = null
 }

@@ -201,4 +201,6 @@ open class TC95 {
     @Column(name = "AAE022")
     var aae022: String? = null
 
+    @Column(name = "ATC900")
+    var atc900: BigDecimal? = null
 }

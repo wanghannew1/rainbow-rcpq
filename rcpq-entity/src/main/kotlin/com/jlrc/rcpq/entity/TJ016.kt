@@ -61,4 +61,6 @@ open class TJ016 {
     @Column(name = "ATJ016F")
     var atj016f: Long? = null
 
+    @Column(name = "AAE011")
+    var aae011: String? = null
 }

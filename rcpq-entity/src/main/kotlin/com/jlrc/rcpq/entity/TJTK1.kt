@@ -81,4 +81,6 @@ open class TJTK1 {
     @Column(name = "AAE022")
     var aae022: String? = null
 
+    @Column(name = "AAC180")
+    var aac180: String? = null
 }

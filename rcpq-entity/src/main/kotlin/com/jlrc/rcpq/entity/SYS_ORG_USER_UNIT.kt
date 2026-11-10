@@ -34,4 +34,6 @@ open class SYS_ORG_USER_UNIT {
     @Column(name = "TELEPHONE")
     var telephone: String? = null
 
+    @Column(name = "ISLEADER")
+    var isleader: String? = null
 }

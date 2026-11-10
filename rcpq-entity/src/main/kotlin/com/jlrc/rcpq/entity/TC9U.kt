@@ -258,4 +258,6 @@ open class TC9U {
     @Column(name = "JYNUM")
     var jynum: String? = null
 
+    @Column(name = "ATC9V1")
+    var atc9v1: String? = null
 }

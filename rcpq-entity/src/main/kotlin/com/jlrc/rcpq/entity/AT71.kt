@@ -48,4 +48,6 @@ open class AT71 {
     @Column(name = "ATC713")
     var atc713: String? = null
 
+    @Column(name = "ATC700")
+    var atc700: BigDecimal? = null
 }

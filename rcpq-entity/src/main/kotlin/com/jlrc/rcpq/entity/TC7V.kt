@@ -180,4 +180,6 @@ open class TC7V {
     @Column(name = "CAE022")
     var cae022: String? = null
 
+    @Column(name = "ATC700")
+    var atc700: BigDecimal? = null
 }

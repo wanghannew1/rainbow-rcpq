@@ -202,4 +202,18 @@ open class TC93_CHECK {
     @Column(name = "AAE022")
     var aae022: String? = null
 
+    @Column(name = "AAE211")
+    var aae211: String? = null
+    @Column(name = "AAE214")
+    var aae214: String? = null
+    @Column(name = "AAE217")
+    var aae217: String? = null
+    @Column(name = "AAE219")
+    var aae219: String? = null
+    @Column(name = "AAE220")
+    var aae220: String? = null
+    @Column(name = "AAE222")
+    var aae222: String? = null
+    @Column(name = "AAE236")
+    var aae236: LocalDateTime? = null
 }

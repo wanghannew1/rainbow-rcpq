@@ -114,4 +114,6 @@ open class TC06_BP {
     @Column(name = "AAE022")
     var aae022: String? = null
 
+    @Column(name = "ATB90S")
+    var atb90s: String? = null
 }

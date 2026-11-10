@@ -84,4 +84,6 @@ open class TC72 {
     @Column(name = "AAE013")
     var aae013: String? = null
 
+    @Column(name = "ATC700")
+    var atc700: BigDecimal? = null
 }

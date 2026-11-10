@@ -48,4 +48,6 @@ open class TB90_CONTACTS {
     @Column(name = "AAE022")
     var aae022: String? = null
 
+    @Column(name = "ATB900")
+    var atb900: BigDecimal? = null
 }

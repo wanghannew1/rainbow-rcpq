@@ -93,4 +93,22 @@ open class TC7B {
     @Column(name = "ATC7BA")
     var atc7ba: String? = null
 
+    @Column(name = "AAC004")
+    var aac004: String? = null
+    @Column(name = "ATC700")
+    var atc700: BigDecimal? = null
+    @Column(name = "ATC7BB")
+    var atc7bb: String? = null
+    @Column(name = "ATC7BC")
+    var atc7bc: String? = null
+    @Column(name = "ATC7BD")
+    var atc7bd: String? = null
+    @Column(name = "ATC7BE")
+    var atc7be: String? = null
+    @Column(name = "ATC7BF")
+    var atc7bf: String? = null
+    @Column(name = "ATC7BG")
+    var atc7bg: String? = null
+    @Column(name = "ATC7BH")
+    var atc7bh: String? = null
 }

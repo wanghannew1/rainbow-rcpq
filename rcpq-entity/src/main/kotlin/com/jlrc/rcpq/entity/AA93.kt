@@ -54,4 +54,6 @@ open class AA93 {
     @Column(name = "AAE013")
     var aae013: String? = null
 
+    @Column(name = "AAA935")
+    var aaa935: String? = null
 }

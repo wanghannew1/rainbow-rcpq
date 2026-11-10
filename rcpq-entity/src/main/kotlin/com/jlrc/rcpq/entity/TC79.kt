@@ -63,4 +63,6 @@ open class TC79 {
     @Column(name = "ATB702")
     var atb702: String? = null
 
+    @Column(name = "ATC700")
+    var atc700: BigDecimal? = null
 }

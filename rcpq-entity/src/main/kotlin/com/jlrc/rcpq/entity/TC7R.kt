@@ -87,4 +87,6 @@ open class TC7R {
     @Column(name = "AAC006")
     var aac006: LocalDate? = null
 
+    @Column(name = "ATC700")
+    var atc700: BigDecimal? = null
 }

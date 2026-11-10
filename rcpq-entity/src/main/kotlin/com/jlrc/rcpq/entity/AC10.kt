@@ -225,4 +225,6 @@ open class AC10 {
     @Column(name = "AAC110")
     var aac110: String? = null
 
+    @Column(name = "DAA002")
+    var daa002: BigDecimal? = null
 }

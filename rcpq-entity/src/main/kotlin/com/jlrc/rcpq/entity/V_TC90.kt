@@ -538,4 +538,8 @@ open class V_TC90 {
     @Column(name = "AAC008")
     var aac008: String? = null
 
+    @Column(name = "AAA030")
+    var aaa030: BigDecimal? = null
+    @Column(name = "AAA031")
+    var aaa031: String? = null
 }

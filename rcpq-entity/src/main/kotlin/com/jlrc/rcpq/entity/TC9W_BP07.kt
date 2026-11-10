@@ -78,4 +78,8 @@ open class TC9W_BP07 {
     @Column(name = "AAE022")
     var aae022: String? = null
 
+    @Column(name = "AAC003")
+    var aac003: String? = null
+    @Column(name = "ABPZZZ")
+    var abpzzz: String? = null
 }

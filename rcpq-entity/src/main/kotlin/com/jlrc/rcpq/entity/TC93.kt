@@ -549,4 +549,6 @@ open class TC93 {
     @Column(name = "ATC30H")
     var atc30h: BigDecimal? = null
 
+    @Column(name = "ATC30I")
+    var atc30i: BigDecimal? = null
 }

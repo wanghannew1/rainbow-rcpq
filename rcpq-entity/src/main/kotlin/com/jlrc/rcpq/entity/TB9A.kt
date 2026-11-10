@@ -72,4 +72,6 @@ open class TB9A {
     @Column(name = "AAEA22")
     var aaea22: String? = null
 
+    @Column(name = "ATB9A2")
+    var atb9a2: String? = null
 }

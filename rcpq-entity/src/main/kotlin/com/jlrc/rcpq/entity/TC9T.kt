@@ -213,4 +213,6 @@ open class TC9T {
     @Column(name = "ATC9TF")
     var atc9tf: String? = null
 
+    @Column(name = "AAA308")
+    var aaa308: BigDecimal? = null
 }

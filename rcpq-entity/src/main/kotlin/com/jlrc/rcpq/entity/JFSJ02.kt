@@ -177,4 +177,6 @@ open class JFSJ02 {
     @Column(name = "AAE013")
     var aae013: String? = null
 
+    @Column(name = "JFXZ")
+    var jfxz: String? = null
 }

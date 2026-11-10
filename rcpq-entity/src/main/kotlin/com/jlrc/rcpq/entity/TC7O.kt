@@ -153,4 +153,6 @@ open class TC7O {
     @Column(name = "ATC7OR")
     var atc7or: String? = null
 
+    @Column(name = "ATC700")
+    var atc700: BigDecimal? = null
 }

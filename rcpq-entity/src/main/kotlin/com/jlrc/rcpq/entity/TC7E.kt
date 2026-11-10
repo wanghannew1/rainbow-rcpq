@@ -96,4 +96,6 @@ open class TC7E {
     @Column(name = "ATC7EC")
     var atc7ec: String? = null
 
+    @Column(name = "ATC700")
+    var atc700: BigDecimal? = null
 }

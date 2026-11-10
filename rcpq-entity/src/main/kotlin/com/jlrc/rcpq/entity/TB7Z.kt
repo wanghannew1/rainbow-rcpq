@@ -72,4 +72,6 @@ open class TB7Z {
     @Column(name = "ATB7Z3")
     var atb7z3: BigDecimal? = null
 
+    @Column(name = "ATB700")
+    var atb700: BigDecimal? = null
 }

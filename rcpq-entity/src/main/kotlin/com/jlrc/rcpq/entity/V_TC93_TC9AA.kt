@@ -44,6 +44,12 @@ open class V_TC93_TC9AA {
     @Column(name = "LX")
     var lx: String? = null
 
+    @Column(name = "ATC93W21")
+    var atc93w21: BigDecimal? = null
+    @Column(name = "ATC93W33")
+    var atc93w33: BigDecimal? = null
+    @Column(name = "ATC93W4")
+    var atc93w4: BigDecimal? = null
 }
 data class V_TC93_TC9AAId(
     val aae002: Long? = null,
