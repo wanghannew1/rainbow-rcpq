@@ -50,9 +50,10 @@ class InsuranceCalcEngine(
         var atb90sDw: BigDecimal = ZERO, var atb90sGr: BigDecimal = ZERO,
         var bba001: BigDecimal = ZERO, var bba002: BigDecimal = ZERO, var bba003: BigDecimal = ZERO,
         var bba004: BigDecimal = ZERO, var bba005: BigDecimal = ZERO, var atb90t: BigDecimal = ZERO,
+        var atb90nIsNull: Boolean = false,
         var bba000: BigDecimal = ZERO,
         var baa001: BigDecimal = ZERO, var baa002: BigDecimal = ZERO, var baa003: BigDecimal = ZERO,
-        var daa001: BigDecimal = ZERO, var daa002: BigDecimal = ZERO, var baa000: BigDecimal = ZERO,
+        var daa001: BigDecimal = ZERO, var daa002: BigDecimal? = null, var baa000: BigDecimal = ZERO, // P9: TC01 初始化含 DAA001:=0 但无 DAA002 — 未进大额段/医保覆盖块时 daa002 保持 NULL
         var caa001: BigDecimal = ZERO, var caa002: BigDecimal = ZERO,
         var bba200: BigDecimal = ZERO, var baa200: BigDecimal = ZERO, var atc9eh: BigDecimal = ZERO,
         var jslb: String? = null,
@@ -288,9 +289,12 @@ class InsuranceCalcEngine(
         val f = tj("tj0f1", listOf("aaa305", "bba004"))
         if (f != null && f.atc900 != null) {
             (f.vals["aaa305"] as? BigDecimal)?.let { r.aaa305 = it }
-            // 旧 bug 忠实: 单位工伤比例读 TJ0B1.ATB90N
+            // 旧 bug 忠实: 单位工伤比例读 TJ0B1.ATB90N; NULL/无行 → 覆盖块将 NULL 写回(P6 同族: atb90nIsNull)
+            r.atb90nIsNull = true
             jdbcTemplate.query("SELECT atb90n FROM tj0b1 WHERE atj000='1' AND aae013='1' AND aae002=? AND atc900=?",
-                { rs, _ -> rs.getString("atb90n") }, ym, tc90.l("atc900")).firstOrNull()?.let { r.atb90n = pct(it) }
+                { rs, _ -> rs.getString("atb90n") }, ym, tc90.l("atc900")).firstOrNull()?.let {
+                    it?.let { v -> r.atb90n = pct(v); r.atb90nIsNull = false }
+                }
             // 旧 bug 忠实: NVL(TJ0B1.BBA004,0)+累计值+TJ0F1.BBA004(TJ0B1 双计); P6: F 值 NULL → 表达式 NULL → 覆盖块 NVL→0 不覆盖
             val fVal = f.vals["bba004"] as? BigDecimal
             if (fVal == null) r.bba004IsNull = true
@@ -509,7 +513,9 @@ class InsuranceCalcEngine(
                 else { out.daa001 = zj.daa001; out.daa002 = BigDecimal.ZERO }
             }
             if (!zj.bba004IsNull && zj.bba004 > BigDecimal.ZERO) {
-                out.aaa305 = zj.aaa305; out.atb90n = zj.atb90n; out.bba004 = zj.bba004
+                out.aaa305 = zj.aaa305
+                if (zj.atb90nIsNull) out.atb90nIsNull = true else out.atb90n = zj.atb90n
+                out.bba004 = zj.bba004
             }
             if (zj.caa001.add(zj.caa002) > BigDecimal.ZERO) {
                 out.aaa303 = zj.aaa303; out.atb90sDw = zj.atb90sDw; out.atb90sGr = zj.atb90sGr
