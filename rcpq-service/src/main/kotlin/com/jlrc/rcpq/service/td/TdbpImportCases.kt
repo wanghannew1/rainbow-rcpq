@@ -1753,6 +1753,831 @@ class TdbpImportCases(
                 "aae00d=?, aae00a=COALESCE(?, aae00a), aae00h=?, aae00i=? WHERE aac001=?",
             rec["acc030"], acc0m1, aae00n, rec["aae007"], rec["aae00d"], aae00a, rec["aae00h"], rec["aae00i"], aac001)
     }
+
+    // ============ 其余 9 对（已收官模块导入弹窗缺口, 2026-11-10 补缺） ============
+
+    /**
+     * F_PARSE_MONEY（小写金额→中文大写）规格重写。
+     * ROUND(x,2) 按 '9999999999999.99' 格式化(≥1e13 → '#' 越界消息);
+     * 自右向左 数字→汉字+位名(分角拾佰仟万亿), '.'→'元';
+     * transType=0 零头压缩(依原 REPLACE 顺序); 去首部 元/零/角/分, 首字'整'→'零元整'。NULL 入→NULL。
+     */
+    fun parseMoney(lower: BigDecimal?, transType: Int): String? {
+        if (lower == null) return null
+        val r = lower.setScale(2, java.math.RoundingMode.HALF_UP)
+        if (r.abs() >= BigDecimal("10000000000000"))
+            return "转换金额超过计算范围(计算范围为:计算范围为: 0 - 9,999,999,999,999.99)"
+        val s = r.toPlainString()
+        val digits = mapOf('0' to "零", '1' to "壹", '2' to "贰", '3' to "叁", '4' to "肆",
+            '5' to "伍", '6' to "陆", '7' to "柒", '8' to "捌", '9' to "玖")
+        fun unit(i: Int): String? = when (i) {
+            1 -> "分"; 2 -> "角"; 3, 4 -> null; 5 -> "拾"; 6 -> "佰"; 7 -> "仟"; 8 -> "万"
+            9 -> "拾"; 10 -> "佰"; 11 -> "仟"; 12 -> "亿"; 13 -> "拾"; 14 -> "佰"; 15 -> "仟"; 16 -> "万"
+            else -> null
+        }
+        var upper = ""
+        for (i in 1..s.length) {
+            val ch = s[s.length - i]
+            val num = if (ch == '.') "元" else digits[ch] ?: ""
+            upper = num + (unit(i) ?: "") + upper
+        }
+        if (transType == 0) {
+            for (rep in listOf("零拾" to "零", "零佰" to "零", "零仟" to "零", "零零零" to "零", "零零" to "零",
+                    "零角零分" to "整", "零分" to "整", "零角" to "零", "零亿零万零元" to "亿元", "亿零万零元" to "亿元",
+                    "零亿零万" to "亿", "零万零元" to "万元", "万零元" to "万元", "零亿" to "亿", "零万" to "万",
+                    "零元" to "元", "零零" to "零")) {
+                upper = upper.replace(rep.first, rep.second)
+            }
+        }
+        upper = upper.trimStart('元', '零', '角', '分')
+        if (upper.startsWith("整")) upper = "零元整"
+        return upper
+    }
+
+    /** 批级列清洗（银行三表同构） */
+    private fun cleanAbp(table: String, ace100: String, cols: List<String>) {
+        val sets = cols.joinToString(",") { "$it=replace(replace(replace(replace($it,chr(13),''),chr(10),''),chr(9),''),' ','')" }
+        jdbcTemplate.update("UPDATE $table SET $sets WHERE ace100=?", ace100.toLong())
+    }
+
+    /** 校验/提交完成汇总消息 */
+    private fun summary(table: String, ace100: String, passState: String, doneWord: String, okWord: String, failWord: String): String {
+        val st = jdbcTemplate.queryForMap(
+            "SELECT COUNT(1) total, COALESCE(SUM(CASE WHEN ace10a=? THEN 1 ELSE 0 END),0) ok, " +
+                "COALESCE(SUM(CASE WHEN ace10a<>? THEN 1 ELSE 0 END),0) bad FROM $table WHERE ace100=?",
+            passState, passState, ace100.toLong())
+        return "$doneWord，共导入【${st["total"]}】条数据，其中【${st["ok"]}】条数据$okWord，【${st["bad"]}】条数据$failWord！"
+    }
+
+    private fun bankTable(style: String): String = when (style) {
+        "gh" -> "tb97_bp"; "jh" -> "tb97_bp01"; else -> "tb97_bp02"
+    }
+
+    /**
+     * 银行到账校验共享体（签名无 PRM_AAE011）。
+     * 工行: abp001 含'.'→Excel 串行日期(1900-01-01+serial-2), 否则 yyyy-mm-dd; 回写归一化 abp001。
+     * 建行/吉林: TO_DATE(SUBSTR(abp001,1,8)); 不回写 abp001。
+     * 列位移: 工行 户名=abp002/金额=abp005/备注=abp004; 建行/吉林 户名=abp003/金额=abp002/备注=abp005。
+     */
+    private fun bankArrivalCheck(ace100: String, table: String, style: String): Map<String, Any?> {
+        cleanAbp(table, ace100, listOf("abp001", "abp002", "abp003", "abp004", "abp005"))
+        val rows = jdbcTemplate.query(
+            "SELECT id FROM $table WHERE (ace10a IS NULL OR ace10a IN ('0','2','3')) AND ace100=?",
+            { rs, _ -> rs.getLong("id") }, ace100.toLong())
+        val nameCol = if (style == "gh") "abp002" else "abp003"
+        val amtCol = if (style == "gh") "abp005" else "abp002"
+        for (id in rows) {
+            var nOk = 3
+            var msg: String? = null
+            val rec = loadRow(table, id)
+            val raw1 = str(rec["abp001"])
+            var dDate: LocalDate? = null
+            if (raw1 == null) {
+                nOk = 2; msg = (msg ?: "") + "到账日期必须填写|"
+            } else if (style == "gh") {
+                dDate = if (raw1.indexOf('.') > 0) {
+                    try {
+                        LocalDate.of(1900, 1, 1).plusDays((num(raw1) ?: BigDecimal(-1)).toLong() - 2)
+                    } catch (e: Exception) { null }
+                } else day(raw1)
+                if (dDate == null) { nOk = 2; msg = (msg ?: "") + "到账日期格式不正确|" }
+            } else {
+                dDate = day(raw1.take(8))
+                if (dDate == null) { nOk = 2; msg = (msg ?: "") + "到账日期格式不正确|" }
+            }
+            if (rec[nameCol] == null) { nOk = 2; msg = (msg ?: "") + "对方户名必须填写|" }
+            if (rec[amtCol] == null) {
+                nOk = 2; msg = (msg ?: "") + "金额必须填写|"
+            } else if (num(rec[amtCol]) == null) {
+                nOk = 2; msg = (msg ?: "") + "金额格式不正确|"
+            }
+            if (style == "gh") {
+                jdbcTemplate.update(
+                    "UPDATE $table SET abp001=?, ace10a=?, ace10b=? WHERE id=?",
+                    dDate?.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")), nOk.toString(), msg, id)
+            } else {
+                mark(table, id, nOk.toString(), msg)
+            }
+        }
+        return mapOf("appCode" to 1,
+            "errMsg" to summary(table, ace100, "3", "校验完成", "符合要求", "不符合要求"))
+    }
+
+    /** 银行到账提交共享体（atb976='1'/dstatus='1'/aae114='1'/atc900=-1 哨兵; 吉林多 ATB97Y/Z） */
+    private fun bankArrivalCommit(ace100: String, table: String, style: String, aae011: String): Map<String, Any?> {
+        val u = user(aae011)
+            ?: return mapOf("appCode" to -1, "errMsg" to "查询经办人信息出错，请将错误信息发给维护工程师")
+        bankArrivalCheck(ace100, table, style)
+        val rows = jdbcTemplate.query(
+            "SELECT id FROM $table WHERE ace10a='3' AND ace100=?", { rs, _ -> rs.getLong("id") }, ace100.toLong())
+        val nameCol = if (style == "gh") "abp002" else "abp003"
+        val amtCol = if (style == "gh") "abp005" else "abp002"
+        val remarkCol = if (style == "gh") "abp004" else "abp005"
+        for (id in rows) {
+            var nOk = 1
+            var msg: String? = null
+            val rec = loadRow(table, id)
+            try {
+                val amt = num(rec[amtCol])
+                if (rec[amtCol] != null && amt == null) { nOk = 2; throw RuleException("记录到账信息失败|invalid number") }
+                val atb970 = jdbcTemplate.queryForObject("SELECT nextval('seq_tb97_atb970')", Long::class.java)!!
+                val atb974 = (if (style == "gh") day(str(rec["abp001"])) else day(str(rec["abp001"])?.take(8)))
+                    ?.let { java.sql.Date.valueOf(it) }
+                try {
+                    if (style == "jlyh") {
+                        jdbcTemplate.update(
+                            "INSERT INTO tb97 (atb970, atb974, aab004, atb971, atb972, atb973_1, atb973, aae013, " +
+                                "atb976, dstatus, aae114, atc900, aae111, aae117, aae136, aae119, aae120, aae122, " +
+                                "aae011, aae017, aae036, aae019, aae020, aae022, atb97y, atb97z) " +
+                                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,now(),?,?,?,?,?,now(),?,?,?,?,?)",
+                            atb970, atb974, str(rec[nameCol]), amt, BigDecimal.ZERO, BigDecimal.ZERO, amt,
+                            str(rec[remarkCol]), "1", "1", "1", -1L,
+                            str(u["aae011"]), str(u["aae017"]), str(u["aae019"]), str(u["aae020"]), str(u["aae022"]),
+                            str(u["aae011"]), str(u["aae017"]), str(u["aae019"]), str(u["aae020"]), str(u["aae022"]),
+                            "吉林银行", str(rec["abp004"])?.take(100))
+                    } else {
+                        jdbcTemplate.update(
+                            "INSERT INTO tb97 (atb970, atb974, aab004, atb971, atb972, atb973_1, atb973, aae013, " +
+                                "atb976, dstatus, aae114, atc900, aae111, aae117, aae136, aae119, aae120, aae122, " +
+                                "aae011, aae017, aae036, aae019, aae020, aae022) " +
+                                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,now(),?,?,?,?,?,now(),?,?,?)",
+                            atb970, atb974, str(rec[nameCol]), amt, BigDecimal.ZERO, BigDecimal.ZERO, amt,
+                            str(rec[remarkCol]), "1", "1", "1", -1L,
+                            str(u["aae011"]), str(u["aae017"]), str(u["aae019"]), str(u["aae020"]), str(u["aae022"]),
+                            str(u["aae011"]), str(u["aae017"]), str(u["aae019"]), str(u["aae020"]), str(u["aae022"]))
+                    }
+                } catch (e: Exception) {
+                    nOk = 2; throw RuleException("记录到账信息失败|" + (e.message ?: ""))
+                }
+                mark(table, id, nOk.toString(), msg)
+            } catch (e: RuleException) {
+                fail(e, table, id, nOk, msg)
+            }
+        }
+        return mapOf("appCode" to 1,
+            "errMsg" to summary(table, ace100, "1", "提交完成", "成功", "失败"))
+    }
+
+    @Transactional
+    fun checkGhArrival(ace100: String): Map<String, Any?> = bankArrivalCheck(ace100, "tb97_bp", "gh")
+
+    @Transactional
+    fun commitGhArrival(ace100: String, aae011: String): Map<String, Any?> = bankArrivalCommit(ace100, "tb97_bp", "gh", aae011)
+
+    @Transactional
+    fun checkJhArrival(ace100: String): Map<String, Any?> = bankArrivalCheck(ace100, "tb97_bp01", "jh")
+
+    @Transactional
+    fun commitJhArrival(ace100: String, aae011: String): Map<String, Any?> = bankArrivalCommit(ace100, "tb97_bp01", "jh", aae011)
+
+    @Transactional
+    fun checkJlyhArrival(ace100: String): Map<String, Any?> = bankArrivalCheck(ace100, "tb97_bp02", "jlyh")
+
+    @Transactional
+    fun commitJlyhArrival(ace100: String, aae011: String): Map<String, Any?> = bankArrivalCommit(ace100, "tb97_bp02", "jlyh", aae011)
+
+    // ---------- 发票(TB99_BP → TB99) ----------
+
+    @Transactional
+    fun checkInvoice(ace100: String): Map<String, Any?> {
+        cleanAbp("tb99_bp", ace100, (1..11).map { "abp0" + "%02d".format(it) } + listOf("aae013"))
+        val rows = jdbcTemplate.query(
+            "SELECT id FROM tb99_bp WHERE (ace10a IS NULL OR ace10a IN ('0','2','3')) AND ace100=?",
+            { rs, _ -> rs.getLong("id") }, ace100.toLong())
+        val amtCols = listOf("abp004", "abp005", "abp006", "abp007", "abp008", "abp009", "abp010", "abp011")
+        val amtNames = listOf("人事代理服务费", "劳务派遣员工工资", "劳务派遣员工工资(保险费)", "劳务派遣服务费",
+            "人事代理管理费", "劳务派遣管理费", "考试费", "外包服务费")
+        for (id in rows) {
+            var nOk = 3
+            var msg: String? = null
+            val rec = loadRow("tb99_bp", id)
+            try {
+                if (rec["abp001"] == null) { nOk = 2; msg = (msg ?: "") + "发票抬头名称必须填写|" }
+                codeItem("ATB991", str(rec["abp002"]), "借发票/到账发票", "1").let { (c, v, m) ->
+                    nOk = c; msg = (msg ?: "") + (m ?: ""); rec["abp002"] = v
+                }
+                if (nOk != 3) throw RuleException()
+                codeItem("ATB992", str(rec["abp003"]), "专票/普票", "1").let { (c, v, m) ->
+                    nOk = c; msg = (msg ?: "") + (m ?: ""); rec["abp003"] = v
+                }
+                if (nOk != 3) throw RuleException()
+                var total = BigDecimal.ZERO
+                for ((i, col) in amtCols.withIndex()) {
+                    if (rec[col] != null && num(rec[col]) == null) { nOk = 2; msg = (msg ?: "") + "${amtNames[i]}格式不正确|" }
+                    total = total.add(num(rec[col]) ?: BigDecimal.ZERO)
+                }
+                if (total.compareTo(BigDecimal.ZERO) == 0) { nOk = 2; msg = (msg ?: "") + "至少需要填写一项项目金额|" }
+                if (msg != null && msg!!.isNotEmpty() && nOk == 2) throw RuleException()
+                mark("tb99_bp", id, nOk.toString(), msg)
+            } catch (e: RuleException) {
+                fail(e, "tb99_bp", id, nOk, msg)
+            }
+        }
+        return mapOf("appCode" to 1,
+            "errMsg" to summary("tb99_bp", ace100, "3", "校验完成", "符合要求", "不符合要求"))
+    }
+
+    @Transactional
+    fun commitInvoice(ace100: String, aae011: String): Map<String, Any?> {
+        val u = user(aae011)
+            ?: return mapOf("appCode" to -1, "errMsg" to "查询经办人信息出错，请将错误信息发给维护工程师")
+        checkInvoice(ace100)
+        val rows = jdbcTemplate.query(
+            "SELECT id FROM tb99_bp WHERE ace10a='3' AND ace100=?", { rs, _ -> rs.getLong("id") }, ace100.toLong())
+        for (id in rows) {
+            var nOk = 1
+            var msg: String? = null
+            val rec = loadRow("tb99_bp", id)
+            try {
+                val atb990 = jdbcTemplate.queryForObject("SELECT nextval('seq_tb99_atb990')", Long::class.java)!!
+                val atb991 = codeItem("ATB991", str(rec["abp002"]), "借发票/到账发票", "1")
+                if (atb991.first != 3) { nOk = atb991.first; msg = (msg ?: "") + (atb991.third ?: ""); throw RuleException() }
+                val atb992 = codeItem("ATB992", str(rec["abp003"]), "专票/普票", "1")
+                if (atb992.first != 3) { nOk = atb992.first; msg = (msg ?: "") + (atb992.third ?: ""); throw RuleException() }
+                // 忠实乱序映射: abp004→_1 abp005→_2 abp007→_3 abp006→_8 abp008→_4 abp009→_5 abp010→_6 abp011→_7
+                val a1 = num(rec["abp004"]) ?: BigDecimal.ZERO; val a2 = num(rec["abp005"]) ?: BigDecimal.ZERO
+                val a3 = num(rec["abp007"]) ?: BigDecimal.ZERO; val a8 = num(rec["abp006"]) ?: BigDecimal.ZERO
+                val a4 = num(rec["abp008"]) ?: BigDecimal.ZERO; val a5 = num(rec["abp009"]) ?: BigDecimal.ZERO
+                val a6 = num(rec["abp010"]) ?: BigDecimal.ZERO; val a7 = num(rec["abp011"]) ?: BigDecimal.ZERO
+                var atb993: String? = null
+                fun tick(v: BigDecimal, code: String) {
+                    if (v > BigDecimal.ZERO) {
+                        atb993 = if (atb993 == null) code
+                        else if (atb993!!.indexOf(code) < 0) atb993 + "," + code else atb993
+                    }
+                }
+                tick(a1, "1"); tick(a2, "2"); tick(a3, "3"); tick(a4, "4")
+                tick(a5, "5"); tick(a6, "6"); tick(a7, "7"); tick(a8, "8")
+                val total = a1.add(a2).add(a3).add(a4).add(a5).add(a6).add(a7).add(a8)
+                try {
+                    jdbcTemplate.update(
+                        "INSERT INTO tb99 (atb990, aaa030, aaa031, atb99y, atb991, atb992, atb994_1, atb994_2, " +
+                            "atb994_3, atb994_8, atb994_4, atb994_5, atb994_6, atb994_7, atb993, atb994, atb99z, " +
+                            "dstatus, aae013, aae011, aae017, aae036, aae019, aae020, aae022) " +
+                            "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,now(),?,?,?)",
+                        atb990, rec["aaa030"], rec["aaa031"], rec["abp001"], atb991.second, atb992.second,
+                        a1, a2, a3, a8, a4, a5, a6, a7, atb993, total, "1", "0", rec["aae013"],
+                        str(u["aae011"]), str(u["aae017"]), str(u["aae019"]), str(u["aae020"]), str(u["aae022"]))
+                } catch (e: Exception) {
+                    nOk = 2; throw RuleException("记录发票信息失败|" + (e.message ?: ""))
+                }
+                mark("tb99_bp", id, nOk.toString(), msg)
+            } catch (e: RuleException) {
+                fail(e, "tb99_bp", id, nOk, msg)
+            }
+        }
+        return mapOf("appCode" to 1,
+            "errMsg" to summary("tb99_bp", ace100, "1", "提交完成", "成功", "失败"))
+    }
+
+    // ---------- 补偿金(TD04_BP → TD04; 含 F_PARSE_MONEY 大写回写) ----------
+
+    @Transactional
+    fun checkCompensation(ace100: String): Map<String, Any?> {
+        jdbcTemplate.update(
+            "UPDATE td04_bp SET aac003=replace(replace(replace(replace(aac003,chr(13),''),chr(10),''),chr(9),''),' ',''), " +
+                "aac002=replace(replace(replace(replace(aac002,chr(13),''),chr(10),''),chr(9),''),' ','') WHERE ace100=?",
+            ace100.toLong())
+        val rows = jdbcTemplate.query(
+            "SELECT id FROM td04_bp WHERE (ace10a IS NULL OR ace10a IN ('0','2','3')) AND ace100=?",
+            { rs, _ -> rs.getLong("id") }, ace100.toLong())
+        for (id in rows) {
+            var nOk = 3
+            var msg: String? = null
+            val rec = loadRow("td04_bp", id)
+            try {
+                val tc90 = jdbcTemplate.query(
+                    "SELECT * FROM tc90 WHERE atc900=(SELECT max(atc900) FROM tc90 WHERE atb930=? AND aac003=? AND aac002=?)",
+                    { rs, _ -> tc90Row(rs) }, rec["atb930"], rec["aac003"], rec["aac002"]).firstOrNull()
+                if (tc90 == null || tc90["atc900"] == null)
+                    throw RuleException("根据姓名和身份证未查询到合同信息|", 2)
+                val atc900 = (tc90["atc900"] as Number).toLong()
+                codeItem("ATD049", str(rec["atd049"]), "单位是否提前通知", "1").let { (c, v, m) ->
+                    nOk = c; msg = (msg ?: "") + (m ?: ""); rec["atd049"] = v
+                }
+                if (nOk != 3) throw RuleException()
+                codeItem("ATD04C", str(rec["atd04c"]), "收取方式", "1").let { (c, v, m) ->
+                    nOk = c; msg = (msg ?: "") + (m ?: ""); rec["atd04c"] = v
+                }
+                if (nOk != 3) throw RuleException()
+                if (rec["atd041"] != null) {
+                    if (num(rec["atd041"]) == null) { nOk = 2; msg = (msg ?: "") + "近12个月收入格式不正确|" }
+                } else { nOk = 2; msg = (msg ?: "") + "近12个月收入必须填写|" }
+                if (rec["atd045"] != null && num(rec["atd045"]) == null) { nOk = 2; msg = (msg ?: "") + "平均月收入格式不正确|" }
+                if (rec["atd042"] != null) {
+                    if (num(rec["atd042"]) == null) { nOk = 2; msg = (msg ?: "") + "补偿月数格式不正确|" }
+                } else { nOk = 2; msg = (msg ?: "") + "补偿月数必须填写|" }
+                if (rec["atd04a"] != null && num(rec["atd04a"]) == null) { nOk = 2; msg = (msg ?: "") + "待通知金格式不正确|" }
+                if (rec["atd043"] != null) {
+                    if (num(rec["atd043"]) == null) { nOk = 2; msg = (msg ?: "") + "经济补偿金合计格式不正确|"; throw RuleException() }
+                } else { nOk = 2; msg = (msg ?: "") + "经济补偿金合计必须填写|"; throw RuleException() }
+                val atd04b = parseMoney(num(rec["atd043"]), 0)
+                if (rec["aae002"] != null) {
+                    if (day(str(rec["aae002"]) + "01") == null) { nOk = 2; msg = (msg ?: "") + "费用结算年月格式不正确|"; throw RuleException() }
+                } else { nOk = 2; msg = (msg ?: "") + "费用结算年月必须填写|"; throw RuleException() }
+                if (jdbcTemplate.queryForObject(
+                        "SELECT COUNT(1) FROM td04 WHERE aae002=? AND atc900=?",
+                        Int::class.java, num(rec["aae002"]), atc900) > 0)
+                    throw RuleException("已导入，不允许重复导入|", 2)
+                jdbcTemplate.update(
+                    "UPDATE td04_bp SET atd04b=?, ace10a=?, ace10b=? WHERE id=?", atd04b, nOk.toString(), msg, id)
+            } catch (e: RuleException) {
+                fail(e, "td04_bp", id, nOk, msg)
+            }
+        }
+        return mapOf("appCode" to 1,
+            "errMsg" to summary("td04_bp", ace100, "3", "校验完成", "符合要求", "不符合要求"))
+    }
+
+    @Transactional
+    fun commitCompensation(ace100: String, aae011: String): Map<String, Any?> {
+        val u = user(aae011)
+            ?: return mapOf("appCode" to -1, "errMsg" to "查询经办人信息出错，请将错误信息发给维护工程师")
+        checkCompensation(ace100)
+        val rows = jdbcTemplate.query(
+            "SELECT id FROM td04_bp WHERE ace10a='3' AND ace100=?", { rs, _ -> rs.getLong("id") }, ace100.toLong())
+        for (id in rows) {
+            var nOk = 1
+            var msg: String? = null
+            val rec = loadRow("td04_bp", id)
+            try {
+                val tc90 = jdbcTemplate.query(
+                    "SELECT * FROM tc90 WHERE atc900=(SELECT max(atc900) FROM tc90 WHERE atb930=? AND aac003=? AND aac002=?)",
+                    { rs, _ -> tc90Row(rs) }, rec["atb930"], rec["aac003"], rec["aac002"]).firstOrNull()
+                if (tc90 == null || tc90["atc900"] == null) { nOk = 2; throw RuleException("根据姓名和身份证未查询到合同信息|") }
+                val atc900 = (tc90["atc900"] as Number).toLong()
+                val ids = jdbcTemplate.queryForObject(
+                    "SELECT nextval('seq_td04_atd040'), nextval('seq_sys_baz001'), nextval('seq_sys_baz002')",
+                    { rs, _ -> arrayOf(rs.getLong(1), rs.getLong(2), rs.getLong(3)) })!!
+                val atd043 = num(rec["atd043"]) ?: BigDecimal.ZERO
+                val atd04b = parseMoney(atd043, 0)
+                val atd049 = codeItem("ATD049", str(rec["atd049"]), "单位是否提前通知", "1")
+                if (atd049.first != 3) { nOk = atd049.first; msg = (msg ?: "") + (atd049.third ?: ""); throw RuleException() }
+                val atd04c = codeItem("ATD04C", str(rec["atd04c"]), "收取方式", "1")
+                if (atd04c.first != 3) { nOk = atd04c.first; msg = (msg ?: "") + (atd04c.third ?: ""); throw RuleException() }
+                try {
+                    jdbcTemplate.update(
+                        "INSERT INTO td04 (atd040, atc900, aab001, aab004, atb930, atb931, atb90y, aac001, aac003, " +
+                            "aac002, aac004, atc90b, atc90i, atd041, atd045, atd042, atd043, aae002, atc9p4, atd04a, " +
+                            "atd04b, aae114, aae011, aae017, aae036, aae019, aae020, aae022) " +
+                            "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,now(),?,?,?)",
+                        ids[0], atc900, tc90["aab001"], tc90["aab004"], tc90["atb930"], rec["atb931"], null,
+                        tc90["aac001"], tc90["aac003"], tc90["aac002"], tc90["aac004"], tc90["atc90b"], tc90["atc90i"],
+                        num(rec["atd041"]) ?: BigDecimal.ZERO, num(rec["atd045"]) ?: BigDecimal.ZERO,
+                        num(rec["atd042"]) ?: BigDecimal.ZERO, atd043, num(rec["aae002"]) ?: BigDecimal.ZERO,
+                        "0", num(rec["atd04a"]) ?: BigDecimal.ZERO, atd04b, "0",
+                        str(u["aae011"]), str(u["aae017"]), str(u["aae019"]), str(u["aae020"]), str(u["aae022"]))
+                } catch (e: Exception) {
+                    nOk = 2; throw RuleException("记录发票信息失败|" + (e.message ?: ""))
+                }
+                mark("td04_bp", id, nOk.toString(), msg)
+            } catch (e: RuleException) {
+                fail(e, "td04_bp", id, nOk, msg)
+            }
+        }
+        return mapOf("appCode" to 1,
+            "errMsg" to summary("td04_bp", ace100, "1", "提交完成", "成功", "失败"))
+    }
+
+    // ---------- 特殊情况(TC06_BP → TC06; 校验签名含 PRM_AAE002 异动年月 + 三表月确认门槛) ----------
+
+    @Transactional
+    fun checkSpecialCase(ace100: String, aae002: String): Map<String, Any?> {
+        if (jdbcTemplate.queryForObject(
+                "SELECT COUNT(1) FROM tc9w WHERE atc9w8='3' AND aae002=?", Int::class.java, num(aae002)) > 0)
+            return mapOf("appCode" to -1, "errMsg" to "${aae002}社保增减变化已经确认，无法再办理该月的特殊情况登记")
+        if (jdbcTemplate.queryForObject(
+                "SELECT COUNT(1) FROM tc9w1 WHERE atc9w8='3' AND aae002=?", Int::class.java, num(aae002)) > 0)
+            return mapOf("appCode" to -1, "errMsg" to "${aae002}医保增减变化已经确认，无法再办理该月的特殊情况登记")
+        if (jdbcTemplate.queryForObject(
+                "SELECT COUNT(1) FROM tc9u WHERE atc9u8='3' AND aae002=?", Int::class.java, num(aae002)) > 0)
+            return mapOf("appCode" to -1, "errMsg" to "${aae002}公积金增减变化已经确认，无法再办理该月的特殊情况登记")
+        val rows = jdbcTemplate.query(
+            "SELECT id FROM tc06_bp WHERE ace10a IS NULL AND ace100=?", { rs, _ -> rs.getLong("id") }, ace100.toLong())
+        for (id in rows) {
+            var nOk = 3
+            var msg: String? = null
+            val rec = loadRow("tc06_bp", id)
+            try {
+                rec["aac002"] = str(rec["aac002"])?.replace("\r", "")?.replace("\n", "")
+                    ?.replace("\t", "")?.replace("x", "X")?.replace(" ", "")
+                rec["aac003"] = str(rec["aac003"])?.replace("\r", "")?.replace("\n", "")
+                    ?.replace("\t", "")?.replace(" ", "")
+                val parsed = hzCases.parseAac002(str(rec["aac002"]) ?: "")
+                var aac002_18: String? = str(rec["aac002"])
+                if ((parsed[0] as Int) != 1) {
+                    nOk = 2; msg = (msg ?: "") + "公民身份证号码不合法|"
+                } else {
+                    aac002_18 = parsed[3] as String?
+                }
+                val ac01 = jdbcTemplate.query(
+                    "SELECT aac001 FROM ac01 WHERE aac002=? AND aac003=?",
+                    { rs, _ -> rs.getLong("aac001") }, aac002_18, rec["aac003"]).firstOrNull()
+                if (ac01 == null) { nOk = 2; msg = (msg ?: "") + "未查询到基本信息|" }
+                rec["aac001"] = ac01
+                if (ac01 != null && jdbcTemplate.queryForObject(
+                        "SELECT COUNT(1) FROM tc06 WHERE aae002=? AND aac001=?",
+                        Int::class.java, rec["aae002"], ac01) > 0) {
+                    nOk = 2; msg = (msg ?: "") + "${rec["aae002"]}特殊情况已经登记，不允许重复登记|"
+                }
+                codeItem("ATC061", str(rec["atc061"]), "异动原因", "1").let { (c, v, m) ->
+                    nOk = c; msg = (msg ?: "") + (m ?: ""); rec["atc061"] = v
+                }
+                if (rec["atc062"] == null && rec["atc063"] == null && rec["atc064"] == null &&
+                    rec["atc065"] == null && rec["atc066"] == null && rec["atc067"] == null) {
+                    nOk = 2; msg = (msg ?: "") + "【各险种异动情况】至少填写一个|"
+                }
+                for (spec in listOf(Triple("atc062", "ATC062", "养老异动情况"), Triple("atc063", "ATC063", "失业异动情况"),
+                        Triple("atc064", "ATC064", "医保异动情况"), Triple("atc065", "ATC065", "工伤异动情况"),
+                        Triple("atc066", "ATC066", "生育异动情况"), Triple("atc067", "ATC067", "公积金异动情况"))) {
+                    codeItem(spec.second, str(rec[spec.first]), spec.third, "0").let { (c, v, m) ->
+                        nOk = c; msg = (msg ?: "") + (m ?: ""); rec[spec.first] = v
+                    }
+                }
+                for ((col, name) in listOf("atc06a" to "【养老异动截止年月】", "atc06b" to "【失业异动截止年月】",
+                        "atc06c" to "【医保异动截止年月】", "atc06d" to "【工伤异动截止年月】",
+                        "atc06e" to "【生育异动截止年月】", "atc06f" to "【公积金异动截止年月】")) {
+                    if (rec[col] != null && day(str(rec[col]) + "01") == null) { nOk = 2; msg = (msg ?: "") + "${name}格式不正确|" }
+                }
+                for ((col, name) in listOf("aaa301" to "【调整后养老缴费基数】", "aaa302" to "【调整后医保缴费基数】",
+                        "aaa303" to "【调整后公积金缴费基数】", "aaa304" to "【调整后失业缴费基数】",
+                        "aaa305" to "【调整后工伤缴费基数】", "aaa306" to "【调整后生育缴费基数】")) {
+                    if (rec[col] != null && num(rec[col]) == null) { nOk = 2; msg = (msg ?: "") + "${name}格式不正确|" }
+                }
+                if (str(rec["atc061"]) == "02" && rec["atc06c"] == null) {
+                    nOk = 2; msg = (msg ?: "") + "当【异动原因】选择【02-享受生育津贴】时，【医保异动截止年月】不能为空||"
+                }
+                if (str(rec["atc061"]) == "03" && rec["aaa301"] == null) {
+                    nOk = 2; msg = (msg ?: "") + "当【异动原因】选择【03-社保基数调整】时，【调整后养老缴费基数】不能为空||"
+                }
+                if (msg != null && msg!!.isNotEmpty()) { nOk = 2; throw RuleException() }
+                jdbcTemplate.update(
+                    "UPDATE tc06_bp SET aac001=?, aac002=?, aac003=?, ace10a=?, ace10b=? WHERE id=?",
+                    rec["aac001"], aac002_18, rec["aac003"], nOk.toString(), msg, id)
+            } catch (e: RuleException) {
+                fail(e, "tc06_bp", id, nOk, msg)
+            }
+        }
+        return mapOf("appCode" to 1, "errMsg" to null as String?)
+    }
+
+    @Transactional
+    fun commitSpecialCase(ace100: String, aae011: String): Map<String, Any?> {
+        val u = user(aae011)
+            ?: return mapOf("appCode" to -1, "errMsg" to "查询经办人信息出错，请将错误信息发给维护工程师")
+        val rows = jdbcTemplate.query(
+            "SELECT id FROM tc06_bp WHERE ace10a='3' AND ace100=?", { rs, _ -> rs.getLong("id") }, ace100.toLong())
+        for (id in rows) {
+            var nOk = 1
+            var msg: String? = null
+            val rec = loadRow("tc06_bp", id)
+            try {
+                val ids = jdbcTemplate.queryForObject(
+                    "SELECT nextval('seq_tc06_atc060'), nextval('seq_sys_baz001'), nextval('seq_sys_baz002')",
+                    { rs, _ -> arrayOf(rs.getLong(1), rs.getLong(2), rs.getLong(3)) })!!
+                fun ci(aaa100: String, col: String, comm: String): String? =
+                    codeItem(aaa100, str(rec[col]), comm, "0").let { (_, v, m) -> msg = (msg ?: "") + (m ?: ""); v }
+                val atc061 = codeItem("ATC061", str(rec["atc061"]), "异动原因", "1").let { (_, v, m) -> msg = (msg ?: "") + (m ?: ""); v }
+                val atc06a = num(rec["atc06a"])
+                try {
+                    // 忠实 bug: ATC06B-F 与 AAA301-306 全部误用 REC.ATC06A(原样保留)
+                    jdbcTemplate.update(
+                        "INSERT INTO tc06 (atc060, baz001, baz002, aac001, aac002, aac003, atc061, aae002, " +
+                            "atc062, atc063, atc064, atc065, atc066, atc067, atc06a, atc06b, atc06c, atc06d, " +
+                            "atc06e, atc06f, atc06z, aaa301, aaa302, aaa303, aaa304, aaa305, aaa306, " +
+                            "aae011, aae017, aae036, aae019, aae020, aae022) " +
+                            "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,now(),?,?,?)",
+                        ids[0], ids[1], ids[2], rec["aac001"], rec["aac002"], rec["aac003"],
+                        atc061, rec["aae002"],
+                        ci("ATC062", "atc062", "养老异动情况"),
+                        ci("ATC063", "atc063", "失业异动情况"),
+                        ci("ATC064", "atc064", "医保异动情况"),
+                        ci("ATC065", "atc065", "工伤异动情况"),
+                        ci("ATC066", "atc066", "生育异动情况"),
+                        ci("ATC067", "atc067", "公积金异动情况"),
+                        atc06a, atc06a, atc06a, atc06a, atc06a, atc06a, "0",
+                        atc06a, atc06a, atc06a, atc06a, atc06a, atc06a,
+                        str(u["aae011"]), str(u["aae017"]), str(u["aae019"]), str(u["aae020"]), str(u["aae022"]))
+                } catch (e: Exception) {
+                    nOk = 0; throw RuleException("插入合同信息出错" + (e.message ?: ""))
+                }
+                jdbcTemplate.update("UPDATE tc06_bp SET ace10a='1' WHERE id=?", id)
+            } catch (e: RuleException) {
+                fail(e, "tc06_bp", id, nOk, msg)
+            }
+        }
+        return mapOf("appCode" to 1, "errMsg" to null as String?)
+    }
+
+    // ---------- 生育补贴(TC04_BP → TC04; 医保编号匹配+MAX 回退; '0' 所属期→当月) ----------
+
+    @Transactional
+    fun checkMaternity(ace100: String): Map<String, Any?> {
+        val rows = jdbcTemplate.query(
+            "SELECT id FROM tc04_bp WHERE (ace10a IS NULL OR ace10a IN ('0','2','3')) AND ace100=?",
+            { rs, _ -> rs.getLong("id") }, ace100.toLong())
+        for (id in rows) {
+            var nOk = 3
+            var msg: String? = null
+            val rec = loadRow("tc04_bp", id)
+            try {
+                rec["aaa005"] = str(rec["aaa005"])?.replace("\r", "")?.replace("\n", "")
+                    ?.replace("\t", "")?.replace(" ", "")
+                val primary = jdbcTemplate.query(
+                    "SELECT * FROM tc90 WHERE aae00p IN ('1','5','7') AND aae100='1' AND (atb90r='3' OR atc90pa='0') AND aaa005=?",
+                    { rs, _ -> tc90Row(rs) }, rec["aaa005"])
+                val tc90: Map<String, Any?>
+                if (primary.isEmpty()) {
+                    val fb = jdbcTemplate.query(
+                        "SELECT * FROM tc90 WHERE atc900=(SELECT max(atc900) FROM tc90 WHERE aae00p IN ('1','5','7') AND aaa005=?)",
+                        { rs, _ -> tc90Row(rs) }, rec["aaa005"]).firstOrNull()
+                    if (fb == null || fb["atc900"] == null) { nOk = 2; msg = "未查询到派遣劳动合同"; throw RuleException() }
+                    tc90 = fb
+                } else if (primary.size > 1) {
+                    nOk = 2; msg = "查询到多条有效派遣劳动合同"; throw RuleException()
+                } else tc90 = primary[0]
+                rec["atc900"] = tc90["atc900"]
+                val atc900 = (tc90["atc900"] as Number).toLong()
+                if (jdbcTemplate.queryForObject(
+                        "SELECT COUNT(1) FROM tc04 WHERE aae002=? AND atc900=?",
+                        Int::class.java, num(rec["aae002"]), atc900) > 0) {
+                    nOk = 2; msg = "当前费款所属期已经拨付，不允许重复拨付"; throw RuleException()
+                }
+                if (rec["aae002"] != null) {
+                    strictNum(rec["aae002"]) // 忠实: 原 NO_DATA_FOUND 句柄空转, 乱值上抛整批 -1
+                } else { nOk = 2; msg = (msg ?: "") + "【费款所属期】不能为空|" }
+                if (rec["atc042"] != null) {
+                    if (day(rec["atc041"]) == null) { nOk = 2; msg = (msg ?: "") + "【发生日期】格式不正确|" }
+                } else { nOk = 2; msg = (msg ?: "") + "【发生日期】不能为空|" }
+                if (rec["atc042"] != null) {
+                    strictNum(str(rec["atc042"])?.replace(",", ""))
+                } else { nOk = 2; msg = (msg ?: "") + "【生育补助金】不能为空|" }
+                if (nOk == 3) {
+                    // 原 SET ROW = REC(全行回写): 差异列为 aaa005(清洗)/atc900/ace10a
+                    jdbcTemplate.update(
+                        "UPDATE tc04_bp SET aaa005=?, atc900=?, ace10a='3' WHERE id=?",
+                        rec["aaa005"], rec["atc900"], id)
+                } else throw RuleException()
+            } catch (e: RuleException) {
+                fail(e, "tc04_bp", id, nOk, msg)
+            }
+        }
+        return mapOf("appCode" to 1, "errMsg" to null as String?)
+    }
+
+    @Transactional
+    fun commitMaternity(ace100: String, aae011: String): Map<String, Any?> {
+        val u = user(aae011)
+            ?: return mapOf("appCode" to -1, "errMsg" to "为查询到经办人信息")
+        val rows = jdbcTemplate.query(
+            "SELECT id FROM tc04_bp WHERE ace10a='3' AND ace100=?", { rs, _ -> rs.getLong("id") }, ace100.toLong())
+        for (id in rows) {
+            var nOk = 1
+            var msg: String? = null
+            val rec = loadRow("tc04_bp", id)
+            try {
+                val tc90 = jdbcTemplate.query(
+                    "SELECT * FROM tc90 WHERE atc900=?", { rs, _ -> tc90Row(rs) }, rec["atc900"]).firstOrNull()
+                if (tc90 == null || tc90["atc900"] == null) { nOk = 0; msg = "未查询到合同信息"; throw RuleException() }
+                val ids = jdbcTemplate.queryForObject(
+                    "SELECT nextval('seq_tc04_atc040'), nextval('seq_sys_baz001'), nextval('seq_sys_baz002')",
+                    { rs, _ -> arrayOf(rs.getLong(1), rs.getLong(2), rs.getLong(3)) })!!
+                val atb931 = jdbcTemplate.query(
+                    "SELECT atb931 FROM tb93 WHERE atb930=?", { rs, _ -> rs.getString("atb931") },
+                    (tc90["atb930"] as Number).toLong()).firstOrNull()
+                // tc04.aae002 numeric — '0'→当月, 其余经校验为可数值化(varchar bp 列 → num 转换)
+                val aae002 = if (str(rec["aae002"]) == "0") BigDecimal(curYmStatic()) else num(rec["aae002"])
+                val atc042 = strictNum(str(rec["atc042"])?.replace(",", ""))
+                val atc041 = day(rec["atc041"])
+                try {
+                    jdbcTemplate.update(
+                        "INSERT INTO tc04 (atc040, baz001, baz002, atb930, atb931, atc900, aac001, aac003, aac002, " +
+                            "aac004, aac006, aae002, aae013, atc041, atc042, atc90c, atc90d, atc042_dw, atc042_gr, " +
+                            "aae214, aae011, aae017, aae036, aae019, aae020, aae022) " +
+                            "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,now(),?,?,?)",
+                        ids[0], ids[1], ids[2], tc90["atb930"], atb931, tc90["atc900"], tc90["aac001"],
+                        tc90["aac003"], tc90["aac002"], tc90["aac004"], tc90["aac006"], aae002, rec["aae013"],
+                        atc041?.let { java.sql.Date.valueOf(it) }, atc042, tc90["atc90c"], tc90["atc90d"],
+                        BigDecimal.ZERO, BigDecimal.ZERO, "0",
+                        str(u["aae011"]), str(u["aae017"]), str(u["aae019"]), str(u["aae020"]), str(u["aae022"]))
+                } catch (e: org.springframework.dao.DuplicateKeyException) {
+                    nOk = 0; msg = "当前费款所属期已经拨付，不允许重复拨付"; throw RuleException()
+                } catch (e: Exception) {
+                    nOk = 0; msg = "插入工资基数表失败," + (e.message ?: ""); throw RuleException()
+                }
+                jdbcTemplate.update("UPDATE tc04_bp SET ace10a='1' WHERE id=?", id)
+            } catch (e: RuleException) {
+                fail(e, "tc04_bp", id, nOk, msg)
+            }
+        }
+        return mapOf("appCode" to 1, "errMsg" to null as String?)
+    }
+
+    // ---------- 保险补贴(TC07_BP → TC07; 提交走 V_TC90_TB90_TB93 视图; 已有手补行→UPDATE 覆盖) ----------
+
+    @Transactional
+    fun checkInsuranceSubsidy(ace100: String, aae011: String): Map<String, Any?> {
+        jdbcTemplate.update(
+            "UPDATE tc07_bp SET aac002=replace(replace(replace(replace(replace(aac002,chr(13),''),chr(10),''),chr(9),''),'x','X'),' ',''), " +
+                "aac003=replace(replace(replace(replace(aac003,chr(13),''),chr(10),''),chr(9),''),' ','') WHERE ace100=?",
+            ace100.toLong())
+        val rows = jdbcTemplate.query(
+            "SELECT id FROM tc07_bp WHERE (ace10a IS NULL OR ace10a IN ('0','2','3')) AND ace100=?",
+            { rs, _ -> rs.getLong("id") }, ace100.toLong())
+        for (id in rows) {
+            var nOk = 3
+            var msg: String? = null
+            val rec = loadRow("tc07_bp", id)
+            try {
+                val tc90 = jdbcTemplate.query(
+                    "SELECT * FROM tc90 WHERE atc900=(SELECT max(atc900) FROM tc90 WHERE atb930=? AND aac003=? AND aac002=?)",
+                    { rs, _ -> tc90Row(rs) }, rec["atb930"], rec["aac003"], rec["aac002"]).firstOrNull()
+                if (tc90 == null || tc90["atc900"] == null) { nOk = 2; throw RuleException("未匹配到合同|") }
+                if (rec["bba200"] == null && rec["baa200"] == null) { nOk = 2; throw RuleException("单位险金合计和个人险金合计必须填写一个|") }
+                if (rec["bba200"] != null && num(rec["bba200"]) == null) { nOk = 2; msg = (msg ?: "") + "单位险金合计格式不正确|"; throw RuleException() }
+                if (rec["baa200"] != null && num(rec["baa200"]) == null) { nOk = 2; msg = (msg ?: "") + "个人险金合计格式不正确|"; throw RuleException() }
+                mark("tc07_bp", id, nOk.toString(), msg)
+            } catch (e: RuleException) {
+                fail(e, "tc07_bp", id, nOk, msg)
+            }
+        }
+        return mapOf("appCode" to 1, "errMsg" to null as String?)
+    }
+
+    @Transactional
+    fun commitInsuranceSubsidy(ace100: String, aae011: String): Map<String, Any?> {
+        val u = user(aae011)
+            ?: return mapOf("appCode" to -1, "errMsg" to "查询经办人信息出错，请将错误信息发给维护工程师")
+        checkInsuranceSubsidy(ace100, aae011)
+        val rows = jdbcTemplate.query(
+            "SELECT id FROM tc07_bp WHERE ace10a='3' AND ace100=?", { rs, _ -> rs.getLong("id") }, ace100.toLong())
+        for (id in rows) {
+            var nOk = 1
+            var msg: String? = null
+            val rec = loadRow("tc07_bp", id)
+            try {
+                val v = jdbcTemplate.query(
+                    "SELECT * FROM v_tc90_tb90_tb93 WHERE atc900=(SELECT max(atc900) FROM tc90 WHERE atb930=? AND aac003=? AND aac002=?)",
+                    { rs, _ -> tc90Row(rs) }, rec["atb930"], rec["aac003"], rec["aac002"]).firstOrNull()
+                if (v == null || v["atc900"] == null) { nOk = 2; throw RuleException("未匹配到合同|") }
+                val atc900 = (v["atc900"] as Number).toLong()
+                val baa200 = num(rec["baa200"]) ?: BigDecimal.ZERO
+                val bba200 = num(rec["bba200"]) ?: BigDecimal.ZERO
+                if (baa200.compareTo(BigDecimal.ZERO) != 0 || bba200.compareTo(BigDecimal.ZERO) != 0) {
+                    if (jdbcTemplate.queryForObject(
+                            "SELECT COUNT(1) FROM tc07 WHERE datasource='10' AND aae002=? AND atc900=?",
+                            Int::class.java, rec["aae002"], atc900) > 0) {
+                        jdbcTemplate.update(
+                            "UPDATE tc07 SET baa200=?, bba200=?, atc07z='0' WHERE datasource='10' AND aae002=? AND atc900=?",
+                            baa200, bba200, rec["aae002"], atc900)
+                    } else {
+                        val atc070 = jdbcTemplate.queryForObject("SELECT nextval('seq_tc07_atc070')", Long::class.java)!!
+                        try {
+                            jdbcTemplate.update(
+                                "INSERT INTO tc07 (atc070, aae002, aae003, atc900, aac001, atc071, atc072, atc073, " +
+                                    "datasource, atc07z, aac003, aac002, aac009, atb930, atb931, atb900, aab001, aab004, " +
+                                    "aaa030, aaa031, baa200, bba200, aae011, aae017, aae036, aae019, aae020, aae022) " +
+                                    "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,now(),?,?,?)",
+                                atc070, rec["aae002"], rec["aae002"], atc900, v["aac001"], "1", "90", "5",
+                                "10", "0", v["aac003"], v["aac002"], v["aac009"], v["atb930"], v["atb931"],
+                                v["atb900"], v["aab001"], v["aab004"], v["aaa030"], v["aaa031"], baa200, bba200,
+                                str(u["aae011"]), str(u["aae017"]), str(u["aae019"]), str(u["aae020"]), str(u["aae022"]))
+                        } catch (e: Exception) {
+                            nOk = 2; throw RuleException("记录补退信息失败|" + (e.message ?: ""))
+                        }
+                    }
+                }
+                mark("tc07_bp", id, nOk.toString(), msg)
+            } catch (e: RuleException) {
+                fail(e, "tc07_bp", id, nOk, msg)
+            }
+        }
+        return mapOf("appCode" to 1, "errMsg" to null as String?)
+    }
+
+    // ---------- 意外险(TC05_BP → TC05; TB93 按名称 + TB9B 保单 + 结算月已结算门槛) ----------
+
+    @Transactional
+    fun checkAccident(ace100: String, aae011: String): Map<String, Any?> {
+        jdbcTemplate.update(
+            "UPDATE tc05_bp SET aac002=replace(replace(replace(replace(replace(aac002,chr(13),''),chr(10),''),chr(9),''),'x','X'),' ',''), " +
+                "aac003=replace(replace(replace(replace(aac003,chr(13),''),chr(10),''),chr(9),''),' ',''), " +
+                "atb9b1=replace(replace(replace(replace(atb9b1,chr(13),''),chr(10),''),chr(9),''),' ','') WHERE ace100=?",
+            ace100.toLong())
+        val rows = jdbcTemplate.query(
+            "SELECT id FROM tc05_bp WHERE (ace10a IS NULL OR ace10a IN ('0','2','3')) AND ace100=?",
+            { rs, _ -> rs.getLong("id") }, ace100.toLong())
+        for (id in rows) {
+            var nOk = 3
+            var msg: String? = null
+            val rec = loadRow("tc05_bp", id)
+            try {
+                val tb93 = jdbcTemplate.query(
+                    "SELECT * FROM tb93 WHERE atb931=?", { rs, _ -> tc90Row(rs) }, rec["atb931"]).firstOrNull()
+                if (tb93 == null || tb93["atb930"] == null) { nOk = 2; throw RuleException("根据结算单元名称未匹配到信息|") }
+                val tc90 = jdbcTemplate.query(
+                    "SELECT * FROM tc90 WHERE atc900=(SELECT max(atc900) FROM tc90 WHERE " +
+                        "(atb90r='3' OR atc90av >= ? OR aac008 LIKE '%80%' OR atc90p='0' OR atc90pa='0' OR atc90w='0') " +
+                        "AND atb930=? AND aac003=? AND aac002=?)",
+                    { rs, _ -> tc90Row(rs) }, java.math.BigDecimal(curYmStatic()),
+                    tb93["atb930"], rec["aac003"], rec["aac002"]).firstOrNull()
+                if (tc90 == null || tc90["atc900"] == null) { nOk = 2; throw RuleException("根据姓名和身份证号码未匹配到合同|") }
+                val tb9b = jdbcTemplate.query(
+                    "SELECT * FROM tb9b WHERE atb9b1=?", { rs, _ -> tc90Row(rs) }, rec["atb9b1"]).firstOrNull()
+                if (tb9b == null || tb9b["atb9b0"] == null) { nOk = 2; throw RuleException("根据保险合同编号未匹配到保险合同|") }
+                codeItem("ATC054", str(rec["atc054"]), "费用承担方式", "1").let { (c, v, m) ->
+                    nOk = c; msg = (msg ?: "") + (m ?: ""); rec["atc054"] = v
+                }
+                if (nOk != 3) throw RuleException()
+                var dKsrq: LocalDate? = null
+                if (rec["atc051"] == null) { nOk = 2; msg = (msg ?: "") + "意外险开始日期必须填写|" }
+                else { dKsrq = day(rec["atc051"]); if (dKsrq == null) { nOk = 2; msg = (msg ?: "") + "意外险开始日期格式不正确|" } }
+                var dJsrq: LocalDate? = null
+                if (rec["atc052"] == null) { nOk = 2; msg = (msg ?: "") + "意外险结束日期必须填写|" }
+                else { dJsrq = day(rec["atc052"]); if (dJsrq == null) { nOk = 2; msg = (msg ?: "") + "意外险结束日期格式不正确|" } }
+                if (dKsrq != null && dJsrq != null && dKsrq.isAfter(dJsrq)) {
+                    nOk = 2; msg = (msg ?: "") + "意外险开始日期和结束日期逻辑关系不正确|"
+                }
+                if (rec["atc053"] == null) { nOk = 2; msg = (msg ?: "") + "意外险额度必须填写|" }
+                else if (num(rec["atc053"]) == null) { nOk = 2; msg = (msg ?: "") + "意外险额度格式不正确|" }
+                if (rec["aae002"] == null) { nOk = 2; msg = (msg ?: "") + "费用结算年月必须填写|" }
+                else {
+                    if (day(str(rec["aae002"]) + "01") == null) { nOk = 2; msg = (msg ?: "") + "费用结算年月格式不正确|" }
+                    if (jdbcTemplate.queryForObject(
+                            "SELECT COUNT(1) FROM tc93 WHERE aae214='1' AND atc931=? AND atc937='1' AND atb930=?",
+                            Int::class.java, num(rec["aae002"]), tb93["atb930"]) > 0) {
+                        nOk = 2; msg = (msg ?: "") + "该年月工资已结算，请选择其他年月|"
+                    }
+                }
+                mark("tc05_bp", id, nOk.toString(), msg)
+            } catch (e: RuleException) {
+                fail(e, "tc05_bp", id, nOk, msg)
+            }
+        }
+        return mapOf("appCode" to 1, "errMsg" to null as String?)
+    }
+
+    @Transactional
+    fun commitAccident(ace100: String, aae011: String): Map<String, Any?> {
+        val u = user(aae011)
+            ?: return mapOf("appCode" to -1, "errMsg" to "查询经办人信息出错，请将错误信息发给维护工程师")
+        checkAccident(ace100, aae011)
+        val rows = jdbcTemplate.query(
+            "SELECT id FROM tc05_bp WHERE ace10a='3' AND ace100=?", { rs, _ -> rs.getLong("id") }, ace100.toLong())
+        for (id in rows) {
+            var nOk = 1
+            var msg: String? = null
+            val rec = loadRow("tc05_bp", id)
+            try {
+                val tb93 = jdbcTemplate.query(
+                    "SELECT * FROM tb93 WHERE atb931=?", { rs, _ -> tc90Row(rs) }, rec["atb931"]).firstOrNull()
+                if (tb93 == null || tb93["atb930"] == null) { nOk = 2; throw RuleException("根据结算单元名称未匹配到信息|") }
+                val tc90 = jdbcTemplate.query(
+                    "SELECT * FROM tc90 WHERE atc900=(SELECT max(atc900) FROM tc90 WHERE " +
+                        "(atb90r='3' OR atc90av >= ? OR aac008 LIKE '%80%' OR atc90p='0' OR atc90pa='0' OR atc90w='0') " +
+                        "AND atb930=? AND aac003=? AND aac002=?)",
+                    { rs, _ -> tc90Row(rs) }, java.math.BigDecimal(curYmStatic()),
+                    tb93["atb930"], rec["aac003"], rec["aac002"]).firstOrNull()
+                if (tc90 == null || tc90["atc900"] == null) { nOk = 2; throw RuleException("根据姓名和身份证号码未匹配到合同|") }
+                val tb9b = jdbcTemplate.query(
+                    "SELECT * FROM tb9b WHERE atb9b1=?", { rs, _ -> tc90Row(rs) }, rec["atb9b1"]).firstOrNull()
+                if (tb9b == null || tb9b["atb9b0"] == null) { nOk = 2; throw RuleException("根据保险合同编号未匹配到保险合同|") }
+                val atc900 = (tc90["atc900"] as Number).toLong()
+                val aab001 = (tc90["aab001"] as Number).toLong()
+                // AA03×AB01 取单位险金户头(多行→原 TOO_MANY_ROWS 上抛整批)
+                val heads = jdbcTemplate.query(
+                    "SELECT a.aaa030, a.aaa031 FROM aa03 a, ab01 b WHERE a.aaa030 = b.aaa030 AND b.aab001=?",
+                    { rs, _ -> Pair(rs.getLong("aaa030"), rs.getString("aaa031")) }, aab001)
+                if (heads.size != 1) throw AbortException()
+                val atc050 = jdbcTemplate.queryForObject("SELECT nextval('seq_tc05_atc050')", Long::class.java)!!
+                val atc053 = strictNum(rec["atc053"])
+                val atc054 = codeItem("ATC054", str(rec["atc054"]), "费用承担方式", "1")
+                if (atc054.first != 3) { nOk = atc054.first; msg = (msg ?: "") + (atc054.third ?: ""); throw RuleException() }
+                try {
+                    jdbcTemplate.update(
+                        "INSERT INTO tc05 (atc050, atb9b0, atc900, atb930, atb931, atb900, aab001, aab004, " +
+                            "aaa030, aaa031, aac001, aac003, aac002, atc051, atc052, atc053, atc054, atc05z, " +
+                            "aae013, aae100, aae002, aae011, aae017, aae036, aae019, aae020, aae022) " +
+                            "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,now(),?,?,?)",
+                        atc050, tb9b["atb9b0"], atc900, tc90["atb930"],
+                        jdbcTemplate.query("SELECT atb931 FROM tb93 WHERE atb930=?",
+                            { rs, _ -> rs.getString("atb931") }, (tc90["atb930"] as Number).toLong()).firstOrNull(),
+                        tc90["atb900"], tc90["aab001"], tc90["aab004"], heads[0].first, heads[0].second,
+                        tc90["aac001"], tc90["aac003"], tc90["aac002"],
+                        day(rec["atc051"])?.let { java.sql.Date.valueOf(it) },
+                        day(rec["atc052"])?.let { java.sql.Date.valueOf(it) },
+                        atc053, atc054.second, "0", null, "1", num(rec["aae002"]),
+                        str(u["aae011"]), str(u["aae017"]), str(u["aae019"]), str(u["aae020"]), str(u["aae022"]))
+                } catch (e: Exception) {
+                    nOk = 2; throw RuleException("记录意外险信息失败|" + (e.message ?: ""))
+                }
+                mark("tc05_bp", id, nOk.toString(), msg)
+            } catch (e: RuleException) {
+                fail(e, "tc05_bp", id, nOk, msg)
+            }
+        }
+        return mapOf("appCode" to 1, "errMsg" to null as String?)
+    }
 }
 
 /** ---------- /proc 注册面（PKG_派遣批量导入.* 十一个 + PKG_IMP.PRC_AC01_GX_IMP） ---------- */
@@ -1878,5 +2703,179 @@ class TdbpAc01GxProc(private val c: TdbpImportCases) : ProcHandler {
     override fun handle(params: Map<String, Any?>): Map<String, Any?> {
         val ace100 = params["ace100"]?.toString() ?: return mapOf("appCode" to -1, "errMsg" to "缺少 ace100")
         return c.commitAc01GxImport(ace100)
+    }
+}
+
+@Component
+class TdbpCheckGhProc(private val c: TdbpImportCases) : ProcHandler {
+    override fun procName() = "PKG_派遣批量导入.PRC_工行到账导入校验"
+    override fun handle(params: Map<String, Any?>): Map<String, Any?> {
+        val ace100 = params["ace100"]?.toString() ?: return mapOf("appCode" to -1, "errMsg" to "缺少 ace100")
+        return c.checkGhArrival(ace100)
+    }
+}
+
+@Component
+class TdbpCommitGhProc(private val c: TdbpImportCases) : ProcHandler {
+    override fun procName() = "PKG_派遣批量导入.PRC_工行到账导入提交"
+    override fun handle(params: Map<String, Any?>): Map<String, Any?> {
+        val ace100 = params["ace100"]?.toString() ?: return mapOf("appCode" to -1, "errMsg" to "缺少 ace100")
+        val aae011 = params["aae011"]?.toString() ?: return mapOf("appCode" to -1, "errMsg" to "缺少 aae011")
+        return c.commitGhArrival(ace100, aae011)
+    }
+}
+
+@Component
+class TdbpCheckJhProc(private val c: TdbpImportCases) : ProcHandler {
+    override fun procName() = "PKG_派遣批量导入.PRC_建行到账导入校验"
+    override fun handle(params: Map<String, Any?>): Map<String, Any?> {
+        val ace100 = params["ace100"]?.toString() ?: return mapOf("appCode" to -1, "errMsg" to "缺少 ace100")
+        return c.checkJhArrival(ace100)
+    }
+}
+
+@Component
+class TdbpCommitJhProc(private val c: TdbpImportCases) : ProcHandler {
+    override fun procName() = "PKG_派遣批量导入.PRC_建行到账导入提交"
+    override fun handle(params: Map<String, Any?>): Map<String, Any?> {
+        val ace100 = params["ace100"]?.toString() ?: return mapOf("appCode" to -1, "errMsg" to "缺少 ace100")
+        val aae011 = params["aae011"]?.toString() ?: return mapOf("appCode" to -1, "errMsg" to "缺少 aae011")
+        return c.commitJhArrival(ace100, aae011)
+    }
+}
+
+@Component
+class TdbpCheckJlyhProc(private val c: TdbpImportCases) : ProcHandler {
+    override fun procName() = "PKG_派遣批量导入.PRC_吉林银行到账导入校验"
+    override fun handle(params: Map<String, Any?>): Map<String, Any?> {
+        val ace100 = params["ace100"]?.toString() ?: return mapOf("appCode" to -1, "errMsg" to "缺少 ace100")
+        return c.checkJlyhArrival(ace100)
+    }
+}
+
+@Component
+class TdbpCommitJlyhProc(private val c: TdbpImportCases) : ProcHandler {
+    override fun procName() = "PKG_派遣批量导入.PRC_吉林银行到账导入提交"
+    override fun handle(params: Map<String, Any?>): Map<String, Any?> {
+        val ace100 = params["ace100"]?.toString() ?: return mapOf("appCode" to -1, "errMsg" to "缺少 ace100")
+        val aae011 = params["aae011"]?.toString() ?: return mapOf("appCode" to -1, "errMsg" to "缺少 aae011")
+        return c.commitJlyhArrival(ace100, aae011)
+    }
+}
+
+@Component
+class TdbpCheckInvoiceProc(private val c: TdbpImportCases) : ProcHandler {
+    override fun procName() = "PKG_派遣批量导入.PRC_发票导入校验"
+    override fun handle(params: Map<String, Any?>): Map<String, Any?> {
+        val ace100 = params["ace100"]?.toString() ?: return mapOf("appCode" to -1, "errMsg" to "缺少 ace100")
+        return c.checkInvoice(ace100)
+    }
+}
+
+@Component
+class TdbpCommitInvoiceProc(private val c: TdbpImportCases) : ProcHandler {
+    override fun procName() = "PKG_派遣批量导入.PRC_发票导入提交"
+    override fun handle(params: Map<String, Any?>): Map<String, Any?> {
+        val ace100 = params["ace100"]?.toString() ?: return mapOf("appCode" to -1, "errMsg" to "缺少 ace100")
+        val aae011 = params["aae011"]?.toString() ?: return mapOf("appCode" to -1, "errMsg" to "缺少 aae011")
+        return c.commitInvoice(ace100, aae011)
+    }
+}
+
+@Component
+class TdbpCheckCompensationProc(private val c: TdbpImportCases) : ProcHandler {
+    override fun procName() = "PKG_派遣批量导入.PRC_补偿金导入校验"
+    override fun handle(params: Map<String, Any?>): Map<String, Any?> {
+        val ace100 = params["ace100"]?.toString() ?: return mapOf("appCode" to -1, "errMsg" to "缺少 ace100")
+        return c.checkCompensation(ace100)
+    }
+}
+
+@Component
+class TdbpCommitCompensationProc(private val c: TdbpImportCases) : ProcHandler {
+    override fun procName() = "PKG_派遣批量导入.PRC_补偿金导入提交"
+    override fun handle(params: Map<String, Any?>): Map<String, Any?> {
+        val ace100 = params["ace100"]?.toString() ?: return mapOf("appCode" to -1, "errMsg" to "缺少 ace100")
+        val aae011 = params["aae011"]?.toString() ?: return mapOf("appCode" to -1, "errMsg" to "缺少 aae011")
+        return c.commitCompensation(ace100, aae011)
+    }
+}
+
+@Component
+class TdbpCommitSpecialProc(private val c: TdbpImportCases) : ProcHandler {
+    override fun procName() = "PKG_派遣批量导入.PRC_特殊情况导入提交"
+    override fun handle(params: Map<String, Any?>): Map<String, Any?> {
+        val ace100 = params["ace100"]?.toString() ?: return mapOf("appCode" to -1, "errMsg" to "缺少 ace100")
+        val aae011 = params["aae011"]?.toString() ?: return mapOf("appCode" to -1, "errMsg" to "缺少 aae011")
+        return c.commitSpecialCase(ace100, aae011)
+    }
+}
+
+@Component
+class TdbpCheckMaternityProc(private val c: TdbpImportCases) : ProcHandler {
+    override fun procName() = "PKG_派遣批量导入.PRC_生育补贴校验"
+    override fun handle(params: Map<String, Any?>): Map<String, Any?> {
+        val ace100 = params["ace100"]?.toString() ?: return mapOf("appCode" to -1, "errMsg" to "缺少 ace100")
+        return c.checkMaternity(ace100)
+    }
+}
+
+@Component
+class TdbpCommitMaternityProc(private val c: TdbpImportCases) : ProcHandler {
+    override fun procName() = "PKG_派遣批量导入.PRC_生育补贴提交"
+    override fun handle(params: Map<String, Any?>): Map<String, Any?> {
+        val ace100 = params["ace100"]?.toString() ?: return mapOf("appCode" to -1, "errMsg" to "缺少 ace100")
+        val aae011 = params["aae011"]?.toString() ?: return mapOf("appCode" to -1, "errMsg" to "缺少 aae011")
+        return c.commitMaternity(ace100, aae011)
+    }
+}
+
+@Component
+class TdbpCheckSubsidyProc(private val c: TdbpImportCases) : ProcHandler {
+    override fun procName() = "PKG_派遣批量导入.PRC_保险补贴导入校验"
+    override fun handle(params: Map<String, Any?>): Map<String, Any?> {
+        val ace100 = params["ace100"]?.toString() ?: return mapOf("appCode" to -1, "errMsg" to "缺少 ace100")
+        val aae011 = params["aae011"]?.toString() ?: return mapOf("appCode" to -1, "errMsg" to "缺少 aae011")
+        return c.checkInsuranceSubsidy(ace100, aae011)
+    }
+}
+
+@Component
+class TdbpCommitSubsidyProc(private val c: TdbpImportCases) : ProcHandler {
+    override fun procName() = "PKG_派遣批量导入.PRC_保险补贴导入提交"
+    override fun handle(params: Map<String, Any?>): Map<String, Any?> {
+        val ace100 = params["ace100"]?.toString() ?: return mapOf("appCode" to -1, "errMsg" to "缺少 ace100")
+        val aae011 = params["aae011"]?.toString() ?: return mapOf("appCode" to -1, "errMsg" to "缺少 aae011")
+        return c.commitInsuranceSubsidy(ace100, aae011)
+    }
+}
+
+@Component
+class TdbpCheckAccidentProc(private val c: TdbpImportCases) : ProcHandler {
+    override fun procName() = "PKG_派遣批量导入.PRC_意外险导入校验"
+    override fun handle(params: Map<String, Any?>): Map<String, Any?> {
+        val ace100 = params["ace100"]?.toString() ?: return mapOf("appCode" to -1, "errMsg" to "缺少 ace100")
+        val aae011 = params["aae011"]?.toString() ?: return mapOf("appCode" to -1, "errMsg" to "缺少 aae011")
+        return c.checkAccident(ace100, aae011)
+    }
+}
+
+@Component
+class TdbpCommitAccidentProc(private val c: TdbpImportCases) : ProcHandler {
+    override fun procName() = "PKG_派遣批量导入.PRC_意外险导入提交"
+    override fun handle(params: Map<String, Any?>): Map<String, Any?> {
+        val ace100 = params["ace100"]?.toString() ?: return mapOf("appCode" to -1, "errMsg" to "缺少 ace100")
+        val aae011 = params["aae011"]?.toString() ?: return mapOf("appCode" to -1, "errMsg" to "缺少 aae011")
+        return c.commitAccident(ace100, aae011)
+    }
+}
+
+@Component
+class TdbpCheckSpecialProc(private val c: TdbpImportCases) : ProcHandler {
+    override fun procName() = "PKG_派遣批量导入.PRC_特殊情况导入校验"
+    override fun handle(params: Map<String, Any?>): Map<String, Any?> {
+        val ace100 = params["ace100"]?.toString() ?: return mapOf("appCode" to -1, "errMsg" to "缺少 ace100")
+        val aae002 = params["aae002"]?.toString() ?: return mapOf("appCode" to -1, "errMsg" to "缺少 aae002")
+        return c.checkSpecialCase(ace100, aae002)
     }
 }
