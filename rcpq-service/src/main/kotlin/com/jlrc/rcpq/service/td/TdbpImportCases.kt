@@ -2455,6 +2455,140 @@ class TdbpImportCases(
         return mapOf("appCode" to 1, "errMsg" to null as String?)
     }
 
+    // ---------- PKG_IMP.PRC_CHECK_TC93 / PRC_COMMIT_TC93（tddg 工资核对导入; 内联 PRC_SALARYCOMPUTE_SH） ----------
+
+    /**
+     * CHECK_TC93(ace100, atb930, atc931 工资年月, atc932 社保年月, atc937 次第):
+     * TC93_BP1(ace10a IS NULL) 行逐条 —— TC93 五键匹配(atb930+atc937+atc931+atc932+aac002+aac003);
+     * atc93p='0' → '工资信息不需要审核'; 需审核时三项金额比对(本次工资总额/年终奖/经济补偿金;
+     * 年终奖含年度一次发放检查: 同 aac002 本年其他 TC93 已有 atc93k>0 且本条>0 → 拒绝)。
+     * 通过 → ace10a='3' + 回填 atc930。无汇总消息。
+     */
+    @Transactional
+    fun checkTc93Import(ace100: String, atb930: String, atc931: String, atc932: String, atc937: String): Map<String, Any?> {
+        val rows = jdbcTemplate.query(
+            "SELECT id FROM tc93_bp1 WHERE ace10a IS NULL AND ace100=?", { rs, _ -> rs.getLong("id") }, ace100.toLong())
+        val curYear = java.time.YearMonth.now().format(DateTimeFormatter.ofPattern("yyyy"))
+        for (id in rows) {
+            var nOk = "3"
+            var msg: String? = null
+            val rec = loadRow("tc93_bp1", id)
+            try {
+                val tc93 = jdbcTemplate.query(
+                    "SELECT * FROM tc93 WHERE atb930=? AND atc937=? AND atc931=? AND atc932=? AND aac002=? AND aac003=?",
+                    { rs, _ -> tc90Row(rs) }, num(atb930), atc937, num(atc931), num(atc932), rec["aac002"], rec["aac003"]
+                ).firstOrNull()
+                if (tc93 == null || tc93["atc930"] == null) { nOk = "2"; msg = (msg ?: "") + "无对应工资信息|" }
+                if (tc93 != null && tc93["atc930"] != null) {
+                    if (str(tc93["atc93p"]) == "0") {
+                        jdbcTemplate.update(
+                            "UPDATE tc93_bp1 SET ace10a='2', ace10b=? WHERE id=?", (msg ?: "") + "工资信息不需要审核", id)
+                        continue
+                    }
+                    // 本次工资总额: 原比较为 (系统值 IS NULL) OR (系统值 <> 导入数值) — 系统为空即败
+                    val aa = num(rec["atc93aa"]) ?: run {
+                        nOk = "2"; msg = (msg ?: "") + "【本次工资总额】格式不正确|"; null
+                    }
+                    if (aa != null && (tc93["atc93aa"] == null || num(tc93["atc93aa"])!!.compareTo(aa) != 0)) {
+                        nOk = "2"; msg = (msg ?: "") + "【本次工资总额】不一致,系统金额为【${str(tc93["atc93aa"]) ?: "0"}】|"
+                    }
+                    // 本次年终奖 + 年度一次发放检查
+                    val k = num(rec["atc93k"]) ?: run {
+                        nOk = "2"; msg = (msg ?: "") + "【本次年终奖】格式不正确|"; null
+                    }
+                    if (k != null) {
+                        if ((num(tc93["atc93k"]) ?: BigDecimal.ZERO).compareTo(k) != 0) {
+                            nOk = "2"; msg = (msg ?: "") + "【本次年终奖】不一致,系统年终奖为【${str(tc93["atc93k"]) ?: "0"}】|"
+                        }
+                        val sysK = jdbcTemplate.queryForObject(
+                            "SELECT COALESCE(SUM(COALESCE(atc93k,0)),0) FROM tc93 WHERE aac002=? " +
+                                "AND substring(aae001::text from 1 for 4)=? AND atc900<>?",
+                            BigDecimal::class.java, tc93["aac002"], curYear, tc93["atc900"])
+                        if (k > BigDecimal.ZERO && sysK > BigDecimal.ZERO) {
+                            nOk = "2"; msg = (msg ?: "") + "该年度年终奖已经发放过一次，无法继续发放"
+                        }
+                    }
+                    // 本次经济补偿金
+                    val m = num(rec["atc93m"]) ?: run {
+                        nOk = "2"; msg = (msg ?: "") + "【本次经济补偿金】格式不正确|"; null
+                    }
+                    if (m != null && (num(tc93["atc93m"]) ?: BigDecimal.ZERO).compareTo(m) != 0) {
+                        nOk = "2"; msg = (msg ?: "") + "【本次经济补偿金】不一致,系统金额为【${str(tc93["atc93m"]) ?: "0"}】|"
+                    }
+                    if (nOk == "2") mark("tc93_bp1", id, "2", msg)
+                    else jdbcTemplate.update(
+                        "UPDATE tc93_bp1 SET ace10a='3', atc930=? WHERE id=?", tc93["atc930"], id)
+                } else {
+                    mark("tc93_bp1", id, "2", msg)
+                }
+            } catch (e: RuleException) {
+                fail(e, "tc93_bp1", id, 2, msg)
+            }
+        }
+        return mapOf("appCode" to 1, "errMsg" to null as String?)
+    }
+
+    /**
+     * 内联 PRC_SALARYCOMPUTE_SH（独立过程, 备份库实测: 主体 AC10 生成 + PKG_RCPQ_HM 调用整块注释禁用,
+     * 活代码 = TC93/TC90 行必须存在 + 按 aae001+atb930 全量置 atc93p='0' + 确认人字段; 空壳第七例同族）。
+     */
+    private fun salaryComputeSh(atc930: Long, aae011: String, aae017: String, aae019: String, aae020: String, aae022: String) {
+        val tc93 = jdbcTemplate.query(
+            "SELECT * FROM tc93 WHERE atc930=?", { rs, _ -> tc90Row(rs) }, atc930).firstOrNull()
+            ?: throw AbortException()
+        jdbcTemplate.query(
+            "SELECT 1 FROM tc90 WHERE atc900=?", { rs, _ -> 1 }, (tc93["atc900"] as Number?)?.toLong() ?: -1L).firstOrNull()
+            ?: throw AbortException()
+        jdbcTemplate.update(
+            "UPDATE tc93 SET atc93p='0', aae211=?, aae217=?, aae236=now(), aae219=?, aae220=?, aae222=? " +
+                "WHERE aae001=? AND atb930=?",
+            aae011, aae017, aae019, aae020, aae022, tc93["aae001"], tc93["atb930"])
+    }
+
+    /**
+     * COMMIT_TC93(ace100, atc932, atc931, 经办×5): AA99(aaa991='1') 最低工资 80% 门槛
+     * (仅 atc937='1' 且 atc93l=0 且导入额<80% → 行败 '工资核对正确,但是工资总额小于最低工资的80%');
+     * 通过 → salaryComputeSh → 失败行 '0'+msg, 成功 TC93.atc93p='0'+行 '1'。
+     */
+    @Transactional
+    fun commitTc93Import(
+        ace100: String, atc932: String, atc931: String,
+        aae011: String, aae017: String, aae019: String, aae020: String, aae022: String,
+    ): Map<String, Any?> {
+        val minWage = try {
+            val v = jdbcTemplate.queryForObject(
+                "SELECT round(aaa992*0.8, 2) FROM aa99 WHERE aaa996<=? AND aaa997>=? AND aaa991='1'",
+                BigDecimal::class.java, num(atc931), num(atc931))
+            v ?: BigDecimal.ZERO
+        } catch (e: Exception) { BigDecimal.ZERO }
+        val rows = jdbcTemplate.query(
+            "SELECT id FROM tc93_bp1 WHERE ace10a='3' AND ace100=?", { rs, _ -> rs.getLong("id") }, ace100.toLong())
+        for (id in rows) {
+            val rec = loadRow("tc93_bp1", id)
+            val atc930 = (rec["atc930"] as Number?)?.toLong()
+            if (atc930 == null) { mark("tc93_bp1", id, "0", null); continue }
+            val tc93 = jdbcTemplate.query(
+                "SELECT atc900, atc937 FROM tc93 WHERE atc930=?", { rs, _ -> tc90Row(rs) }, atc930).firstOrNull()
+            if (tc93 == null) { mark("tc93_bp1", id, "0", null); continue }
+            try {
+                if (str(tc93["atc937"]) == "1") {
+                    val aa = num(rec["atc93aa"]) ?: BigDecimal.ZERO
+                    if (minWage > BigDecimal.ZERO && (num(tc93["atc93l"]) ?: BigDecimal.ZERO) == BigDecimal.ZERO &&
+                        aa < minWage) throw RuleException()
+                }
+                salaryComputeSh(atc930, aae011, aae017, aae019, aae020, aae022)
+                jdbcTemplate.update("UPDATE tc93 SET atc93p='0' WHERE atc930=?", atc930)
+                mark("tc93_bp1", id, "1", null)
+            } catch (e: RuleException) {
+                mark("tc93_bp1", id, "0", "工资核对正确,但是工资总额小于最低工资的80%")
+            } catch (e: AbortException) {
+                // 原 OTHERS → 整批 -1
+                return mapOf("appCode" to -1, "errMsg" to "工资核对信息提交出错，错误信息：结算工资信息出错，请将错误信息发给维护工程师")
+            }
+        }
+        return mapOf("appCode" to 1, "errMsg" to null as String?)
+    }
+
     // ---------- 意外险(TC05_BP → TC05; TB93 按名称 + TB9B 保单 + 结算月已结算门槛) ----------
 
     @Transactional
@@ -2879,3 +3013,27 @@ class TdbpCheckSpecialProc(private val c: TdbpImportCases) : ProcHandler {
         return c.checkSpecialCase(ace100, aae002)
     }
 }
+
+@Component
+class TdImpCheckTc93Proc(private val c: TdbpImportCases) : ProcHandler {
+    override fun procName() = "PKG_IMP.PRC_CHECK_TC93"
+    override fun handle(params: Map<String, Any?>): Map<String, Any?> {
+        for (k in listOf("ace100", "atb930", "atc931", "atc932", "atc937"))
+            if (params[k] == null) return mapOf("appCode" to -1, "errMsg" to "缺少 $k")
+        return c.checkTc93Import(params["ace100"]!!.toString(), params["atb930"]!!.toString(), params["atc931"]!!.toString(),
+            params["atc932"]!!.toString(), params["atc937"]!!.toString())
+    }
+}
+
+@Component
+class TdImpCommitTc93Proc(private val c: TdbpImportCases) : ProcHandler {
+    override fun procName() = "PKG_IMP.PRC_COMMIT_TC93"
+    override fun handle(params: Map<String, Any?>): Map<String, Any?> {
+        for (k in listOf("ace100", "atc932", "atc931", "aae011", "aae017", "aae019", "aae020", "aae022"))
+            if (params[k] == null) return mapOf("appCode" to -1, "errMsg" to "缺少 $k")
+        return c.commitTc93Import(params["ace100"]!!.toString(), params["atc932"]!!.toString(), params["atc931"]!!.toString(),
+            params["aae011"]!!.toString(), params["aae017"]!!.toString(), params["aae019"]!!.toString(),
+            params["aae020"]!!.toString(), params["aae022"]!!.toString())
+    }
+}
+
