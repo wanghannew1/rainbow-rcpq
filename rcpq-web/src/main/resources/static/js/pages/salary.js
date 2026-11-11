@@ -5,7 +5,7 @@
   const { reactive, ref, computed } = Vue;
   const { api } = WB;
 
-  const salary = reactive({ atc900: "", ym: "202611", atc93aa: "6800", atb930: null,
+  const salary = reactive({ atc900: "", ym: "202611", atc93aa: 6800, atb930: null,
     contract: null, tc930: "", log: "", busy: false });
   const step = computed(() => (salary.atc93p ? 3 : (salary.batchDone ? 2 : (salary.tc930 ? 1 : 0))));
   const batchRows = ref([]);
@@ -20,7 +20,7 @@
     salary.tc930 = ""; salary.batchDone = false; salary.atc93p = null;
     try {
       const setup = await api.wb("/salary-setup", { atc900: Number(salary.atc900),
-        ym: salary.ym, atc93aa: salary.atc93aa, atb930: Number(salary.atb930) });
+        ym: salary.ym, atc93aa: String(salary.atc93aa ?? ""), atb930: Number(salary.atb930) });
       salary.tc930 = setup.atc930;
       salary.log = "① 编制: TC93 atc930=" + salary.tc930 + "  核对批次 " + setup.ace100 + "\n";
       await api.proc("PKG_IMP.PRC_CHECK_TC93", { ace100: String(setup.ace100),
@@ -50,8 +50,12 @@
         <el-step title="③ 提交" :description="salary.atc93p ? 'atc93p=' + salary.atc93p : ''"/>
       </el-steps>
       <el-form inline label-width="110px">
-        <el-form-item label="年月"><el-input v-model="salary.ym" style="width:100px"/></el-form-item>
-        <el-form-item label="本次工资总额"><el-input v-model="salary.atc93aa" style="width:110px"/></el-form-item>
+        <el-form-item label="年月">
+          <el-date-picker v-model="salary.ym" type="month" value-format="YYYYMM"
+                          placeholder="202611" style="width:120px"/></el-form-item>
+        <el-form-item label="本次工资总额">
+          <el-input-number v-model="salary.atc93aa" :min="0" :precision="2" :controls="false"
+                           placeholder="6800" style="width:130px"/></el-form-item>
       </el-form>
       <wb-contract-pick @pick="onPick"/>
       <template v-if="salary.contract">

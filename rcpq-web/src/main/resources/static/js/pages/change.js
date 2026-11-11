@@ -67,8 +67,12 @@
       <el-form inline style="margin-top:8px">
         <el-form-item label="身份证"><el-input v-model="renew.aac002" style="width:170px"/></el-form-item>
         <el-form-item label="姓名"><el-input v-model="renew.aac003" style="width:120px"/></el-form-item>
-        <el-form-item label="新开始"><el-input v-model="renew.atc90c" placeholder="2028-12-01"/></el-form-item>
-        <el-form-item label="新终止"><el-input v-model="renew.atc90d" placeholder="2030-12-01"/></el-form-item>
+        <el-form-item label="新开始">
+          <el-date-picker v-model="renew.atc90c" type="date" value-format="YYYY-MM-DD"
+                          placeholder="2028-12-01" style="width:140px"/></el-form-item>
+        <el-form-item label="新终止">
+          <el-date-picker v-model="renew.atc90d" type="date" value-format="YYYY-MM-DD"
+                          placeholder="2030-12-01" style="width:140px"/></el-form-item>
         <el-form-item><el-button type="primary" :loading="renew.busy" @click="renewRun">校验+提交</el-button></el-form-item>
       </el-form>
       <pre class="log" v-if="renew.log">{{ renew.log }}</pre>
@@ -90,8 +94,12 @@
       <el-form inline style="margin-top:8px">
         <el-form-item label="身份证"><el-input v-model="term.aac002" style="width:170px"/></el-form-item>
         <el-form-item label="姓名"><el-input v-model="term.aac003" style="width:120px"/></el-form-item>
-        <el-form-item label="终止日期"><el-input v-model="term.atc90i" placeholder="2028-12-31"/></el-form-item>
-        <el-form-item label="工资结束年月"><el-input v-model="term.atc90av" placeholder="202812" style="width:110px"/></el-form-item>
+        <el-form-item label="终止日期">
+          <el-date-picker v-model="term.atc90i" type="date" value-format="YYYY-MM-DD"
+                          placeholder="2028-12-31" style="width:140px"/></el-form-item>
+        <el-form-item label="工资结束年月">
+          <el-date-picker v-model="term.atc90av" type="month" value-format="YYYYMM"
+                          placeholder="202812" style="width:120px"/></el-form-item>
         <el-form-item><el-button type="danger" :loading="term.busy" @click="termRun">校验+提交</el-button></el-form-item>
       </el-form>
       <pre class="log" v-if="term.log">{{ term.log }}</pre>

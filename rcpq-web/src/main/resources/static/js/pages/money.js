@@ -4,8 +4,8 @@
   const { reactive, ref, onMounted } = Vue;
   const { api } = WB;
 
-  const arr = reactive({ abp001: api.YMD, abp002: "", abp005: "", log: "", busy: false });
-  const inv = reactive({ invTitle: "", abp004: "", log: "", busy: false });
+  const arr = reactive({ abp001: api.YMD, abp002: "", abp005: null, log: "", busy: false });
+  const inv = reactive({ invTitle: "", abp004: null, log: "", busy: false });
   const arrRows = ref([]); const invRows = ref([]);
   const arrivals = ref([]); const invoices = ref([]);
 
@@ -20,7 +20,7 @@
     arr.busy = true; arr.log = ""; arrRows.value = [];
     try {
       const { ace100: ace } = await api.wb("/arrival-batch",
-        { abp001: arr.abp001, abp002: arr.abp002, abp005: arr.abp005 });
+        { abp001: arr.abp001, abp002: arr.abp002, abp005: String(arr.abp005 ?? "") });
       await api.proc("PKG_派遣批量导入.PRC_工行到账导入校验", { ace100: String(ace) });
       const b = await api.wb("/batch/" + ace);
       arrRows.value = b.rows || [];
@@ -40,7 +40,7 @@
     inv.busy = true; inv.log = ""; invRows.value = [];
     try {
       const { ace100: ace } = await api.wb("/invoice-batch",
-        { abp001: inv.invTitle, abp004: inv.abp004 });
+        { abp001: inv.invTitle, abp004: String(inv.abp004 ?? "") });
       await api.proc("PKG_派遣批量导入.PRC_发票导入校验", { ace100: String(ace) });
       const b = await api.wb("/batch/" + ace);
       invRows.value = b.rows || [];
@@ -61,9 +61,13 @@
     <div class="page">
       <h4>银行到账(工行模板: 日期/户名/金额)</h4>
       <el-form inline>
-        <el-form-item label="到账日期"><el-input v-model="arr.abp001" style="width:130px"/></el-form-item>
+        <el-form-item label="到账日期">
+          <el-date-picker v-model="arr.abp001" type="date" value-format="YYYY-MM-DD"
+                          style="width:140px"/></el-form-item>
         <el-form-item label="对方户名"><el-input v-model="arr.abp002" style="width:220px"/></el-form-item>
-        <el-form-item label="金额"><el-input v-model="arr.abp005" style="width:110px"/></el-form-item>
+        <el-form-item label="金额">
+          <el-input-number v-model="arr.abp005" :min="0" :precision="2" :controls="false"
+                           style="width:130px"/></el-form-item>
         <el-form-item><el-button type="primary" :loading="arr.busy" @click="arriveRun">导入 TB97</el-button></el-form-item>
       </el-form>
       <pre class="log" v-if="arr.log">{{ arr.log }}</pre>
@@ -82,7 +86,9 @@
       <h4>发票(抬头/服务费金额; 固定借发票+普票+人事代理服务费)</h4>
       <el-form inline>
         <el-form-item label="发票抬头"><el-input v-model="inv.invTitle" style="width:220px"/></el-form-item>
-        <el-form-item label="服务费金额"><el-input v-model="inv.abp004" style="width:110px"/></el-form-item>
+        <el-form-item label="服务费金额">
+          <el-input-number v-model="inv.abp004" :min="0" :precision="2" :controls="false"
+                           style="width:130px"/></el-form-item>
         <el-form-item><el-button type="primary" :loading="inv.busy" @click="invoiceRun">导入 TB99</el-button></el-form-item>
       </el-form>
       <pre class="log" v-if="inv.log">{{ inv.log }}</pre>

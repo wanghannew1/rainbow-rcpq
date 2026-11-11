@@ -205,6 +205,17 @@ class WorkbenchController(private val jdbcTemplate: JdbcTemplate) {
         """SELECT account, aae011, aae019, aae017, aae020, aae022
            FROM sys_org_user_unit ORDER BY aae011""")
 
+    /** 码表(AA10): 白名单类别 → "代码-名称"串(库内存储格式, 如 1-派遣) */
+    @GetMapping("/codes")
+    fun codes(@RequestParam category: String): List<Map<String, Any?>> {
+        val allowed = setOf("AAE00P", "ATC90A", "ATC90K", "AAC005", "AAC009",
+            "AAC011", "AAC012", "ATC909", "AAC013")
+        if (category !in allowed) return emptyList()
+        return jdbcTemplate.queryForList(
+            """SELECT aaa102, aaa102||'-'||aaa103 AS item FROM aa10
+               WHERE aaa100=? ORDER BY aaa102""", category)
+    }
+
     /** 最近到账(TB97) */
     @GetMapping("/arrivals")
     fun arrivals(): List<Map<String, Any?>> = jdbcTemplate.queryForList(

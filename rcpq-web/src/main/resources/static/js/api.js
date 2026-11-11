@@ -35,6 +35,17 @@ WB.ui = WB.ui || {};
   /** 交互网关行编辑保存(整行提交) */
   function interaction(code, body) { return post("/interaction/" + encodeURIComponent(code), body); }
 
+  /** 码表缓存: codes('AAE00P') → Promise["1-派遣", ...] */
+  const codeCache = {};
+  function codes(category) {
+    if (!codeCache[category]) {
+      codeCache[category] = wb("/codes?category=" + encodeURIComponent(category))
+        .then(rows => (rows || []).map(r => r.item))
+        .catch(() => []);
+    }
+    return codeCache[category];
+  }
+
   async function loadOpers() {
     try {
       const rows = await wb("/opers");
@@ -67,7 +78,7 @@ WB.ui = WB.ui || {};
     return new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 19);
   }
 
-  WB.api = { store, post, get, proc, wb, interaction, loadOpers, operBae, operAae,
+  WB.api = { store, post, get, proc, wb, interaction, codes, loadOpers, operBae, operAae,
     batchLabel, batchType, contractState, contractStateType, nowLocal,
     YMD: new Date().toISOString().slice(0, 10) };
 })();

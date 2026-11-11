@@ -18,7 +18,9 @@
     <div class="page">
       <el-form inline>
         <el-form-item label="合同号 ATC900"><el-input v-model="calc.atc900" style="width:140px"/></el-form-item>
-        <el-form-item label="所属年月"><el-input v-model="calc.aae002" placeholder="202611" style="width:110px"/></el-form-item>
+        <el-form-item label="所属年月">
+          <el-date-picker v-model="calc.aae002" type="month" value-format="YYYYMM"
+                          placeholder="202611" style="width:120px"/></el-form-item>
         <el-form-item><el-button type="primary" @click="run">计算</el-button></el-form-item>
       </el-form>
       <div v-if="calc.err" class="bad">{{ calc.err }}</div>

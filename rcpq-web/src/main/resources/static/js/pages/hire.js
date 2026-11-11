@@ -8,11 +8,12 @@
   const hire = reactive({
     aac002: "", aac003: "", aae00p: "1-派遣",
     aab001: null, atb900: null, atb930: null,
-    atc90a: "1-固定期限", atc90c: api.YMD, atc90d: "", atc905: "6800",
-    aae002: "202611", aaa301: "", aaa100: "220100000000-吉林省长春市", aaa203: "202611",
-    aae005: "", atc90ax: "", atc90b: "", atb90a: "", atb90b: "0",
+    atc90a: "1-固定期限", atc90c: api.YMD, atc90d: "", atc905: 6800,
+    aae002: "202611", aaa301: null, aaa100: "220100000000-吉林省长春市", aaa203: "202611",
+    aae005: "", atc90ax: "", atc90b: "", atb90a: null, atb90b: 0,
     log: "", busy: false,
   });
+  const ygCodes = ref([]); const htCodes = ref([]);
   const units = ref([]); const agreements = ref([]); const settleUnits = ref([]);
   const baseErr = ref(""); const batchRows = ref([]); const batchTable = ref("");
 
@@ -39,6 +40,8 @@
 
   async function hireOnMount() {
     await loadBase();
+    ygCodes.value = await api.codes("AAE00P");
+    htCodes.value = await api.codes("ATC90A");
     if (baseErr.value) setTimeout(() => { if (baseErr.value || !units.value.length) loadBase(); }, 2000);
   }
 
@@ -57,10 +60,12 @@
         aac002: hire.aac002, aac003: hire.aac003, aae00p: hire.aae00p,
         atb930: hire.atb930, atb900: hire.atb900, aab001: hire.aab001,
         atc90a: hire.atc90a, atc90c: hire.atc90c, atc90d: hire.atc90d || null,
-        atc905: hire.atc905, aae002: hire.aae002, aaa401: "1-是", aaa100: hire.aaa100,
-        aaa203: hire.aaa203, aaa301: hire.aaa301 || null,
+        atc905: String(hire.atc905 ?? ""), aae002: hire.aae002, aaa401: "1-是", aaa100: hire.aaa100,
+        aaa203: hire.aaa203,
+        aaa301: hire.aaa301 == null ? null : String(hire.aaa301),
         aae005: hire.aae005, atc90ax: hire.atc90ax,
-        atc90b: hire.atc90b || hire.atc90c, atb90a: hire.atb90a, atb90b: hire.atb90b || "0",
+        atc90b: hire.atc90b || hire.atc90c,
+        atb90a: String(hire.atb90a ?? ""), atb90b: String(hire.atb90b ?? "0"),
         aab004: unit ? unit.aab004 : "单位名" });
       hire.log = "批次 " + ace + "\n";
       let rejected = false;
@@ -112,22 +117,48 @@
       <h4>② 合同要素</h4>
       <el-form label-width="130px" size="default">
         <el-row :gutter="8">
-          <el-col :span="8"><el-form-item label="身份证 AAC002"><el-input v-model="hire.aac002"/></el-form-item></el-col>
-          <el-col :span="8"><el-form-item label="姓名 AAC003"><el-input v-model="hire.aac003"/></el-form-item></el-col>
-          <el-col :span="8"><el-form-item label="用工性质"><el-input v-model="hire.aae00p"/></el-form-item></el-col>
-          <el-col :span="8"><el-form-item label="合同类别"><el-input v-model="hire.atc90a"/></el-form-item></el-col>
-          <el-col :span="8"><el-form-item label="合同开始"><el-input v-model="hire.atc90c"/></el-form-item></el-col>
-          <el-col :span="8"><el-form-item label="合同终止"><el-input v-model="hire.atc90d" placeholder="2028-11-01"/></el-form-item></el-col>
-          <el-col :span="8"><el-form-item label="合同工资"><el-input v-model="hire.atc905"/></el-form-item></el-col>
-          <el-col :span="8"><el-form-item label="联系电话"><el-input v-model="hire.aae005" placeholder="13000000000"/></el-form-item></el-col>
-          <el-col :span="8"><el-form-item label="身份证有效期"><el-input v-model="hire.atc90ax" placeholder="2035-12-31"/></el-form-item></el-col>
-          <el-col :span="8"><el-form-item label="协议首签日期"><el-input v-model="hire.atc90b" placeholder="默认=合同开始"/></el-form-item></el-col>
-          <el-col :span="8"><el-form-item label="单位服务费/月"><el-input v-model="hire.atb90a" placeholder="150"/></el-form-item></el-col>
-          <el-col :span="8"><el-form-item label="个人服务费/月"><el-input v-model="hire.atb90b" placeholder="0"/></el-form-item></el-col>
-          <el-col :span="8"><el-form-item label="费用开始年月"><el-input v-model="hire.aae002"/></el-form-item></el-col>
-          <el-col :span="8"><el-form-item label="养老基数"><el-input v-model="hire.aaa301" placeholder="6800"/></el-form-item></el-col>
-          <el-col :span="8"><el-form-item label="参保属地"><el-input v-model="hire.aaa100"/></el-form-item></el-col>
-          <el-col :span="8"><el-form-item label="参保年月"><el-input v-model="hire.aaa203"/></el-form-item></el-col>
+          <el-col :span="8"><el-form-item label="身份证 AAC002"><el-input v-model="hire.aac002" maxlength="18" placeholder="18 位"/></el-form-item></el-col>
+          <el-col :span="8"><el-form-item label="姓名 AAC003"><el-input v-model="hire.aac003" maxlength="60"/></el-form-item></el-col>
+          <el-col :span="8"><el-form-item label="用工性质">
+            <el-select v-model="hire.aae00p" style="width:100%">
+              <el-option v-for="c in ygCodes" :key="c" :value="c" :label="c"/>
+            </el-select></el-form-item></el-col>
+          <el-col :span="8"><el-form-item label="合同类别">
+            <el-select v-model="hire.atc90a" style="width:100%">
+              <el-option v-for="c in htCodes" :key="c" :value="c" :label="c"/>
+            </el-select></el-form-item></el-col>
+          <el-col :span="8"><el-form-item label="合同开始">
+            <el-date-picker v-model="hire.atc90c" type="date" value-format="YYYY-MM-DD"
+                            placeholder="2026-11-01" style="width:100%"/></el-form-item></el-col>
+          <el-col :span="8"><el-form-item label="合同终止">
+            <el-date-picker v-model="hire.atc90d" type="date" value-format="YYYY-MM-DD"
+                            placeholder="2028-11-01" style="width:100%"/></el-form-item></el-col>
+          <el-col :span="8"><el-form-item label="合同工资">
+            <el-input-number v-model="hire.atc905" :min="0" :precision="2" :controls="false"
+                             placeholder="6800" style="width:100%"/></el-form-item></el-col>
+          <el-col :span="8"><el-form-item label="联系电话"><el-input v-model="hire.aae005" maxlength="15" placeholder="13000000000"/></el-form-item></el-col>
+          <el-col :span="8"><el-form-item label="身份证有效期">
+            <el-date-picker v-model="hire.atc90ax" type="date" value-format="YYYY-MM-DD"
+                            placeholder="2035-12-31" style="width:100%"/></el-form-item></el-col>
+          <el-col :span="8"><el-form-item label="协议首签日期">
+            <el-date-picker v-model="hire.atc90b" type="date" value-format="YYYY-MM-DD"
+                            placeholder="默认=合同开始" style="width:100%"/></el-form-item></el-col>
+          <el-col :span="8"><el-form-item label="单位服务费/月">
+            <el-input-number v-model="hire.atb90a" :min="0" :precision="2" :controls="false"
+                             placeholder="150" style="width:100%"/></el-form-item></el-col>
+          <el-col :span="8"><el-form-item label="个人服务费/月">
+            <el-input-number v-model="hire.atb90b" :min="0" :precision="2" :controls="false"
+                             placeholder="0" style="width:100%"/></el-form-item></el-col>
+          <el-col :span="8"><el-form-item label="费用开始年月">
+            <el-date-picker v-model="hire.aae002" type="month" value-format="YYYYMM"
+                            placeholder="202611" style="width:100%"/></el-form-item></el-col>
+          <el-col :span="8"><el-form-item label="养老基数">
+            <el-input-number v-model="hire.aaa301" :min="0" :precision="2" :controls="false"
+                             placeholder="6800" style="width:100%"/></el-form-item></el-col>
+          <el-col :span="8"><el-form-item label="参保属地"><el-input v-model="hire.aaa100" placeholder="220100000000-吉林省长春市"/></el-form-item></el-col>
+          <el-col :span="8"><el-form-item label="参保年月">
+            <el-date-picker v-model="hire.aaa203" type="month" value-format="YYYYMM"
+                            placeholder="202611" style="width:100%"/></el-form-item></el-col>
         </el-row>
         <el-button type="primary" :loading="hire.busy" @click="run">③ 生成批次 → 校验 → 提交</el-button>
         <span class="kv">  等价旧系统: tdbp 新签弹窗的校验/提交按钮</span>
@@ -154,7 +185,7 @@
     setup() {
       onMounted(hireOnMount);
       return { hire, units, agreements, settleOptions, baseErr, loadBase,
-        batchRows, batchTable, run, api };
+        ygCodes, htCodes, batchRows, batchTable, run, api };
     },
   };
 })();
