@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>彩虹人才管理系统 · 业务员工作台</title>
+<link rel="stylesheet" href="/vendor/element-plus.css">
+<script src="/vendor/vue.global.prod.js"></script>
+<script src="/vendor/element-plus.full.min.js"></script>
+<style>
+  body { margin: 0; background: #f5f7fa; font-family: system-ui, "Microsoft YaHei", sans-serif; }
+  .page { padding: 16px 24px; max-width: 1080px; }
+  .kv { color: #909399; font-size: 12px; margin-top: 4px; word-break: break-all; }
+  .ok { color: #67c23a; font-weight: 600; }
+  .bad { color: #f56c6c; font-weight: 600; }
+  pre.log { background: #1e1e1e; color: #d4d4d4; padding: 12px; border-radius: 6px;
+            font-size: 12px; max-height: 320px; overflow: auto; white-space: pre-wrap; }
+  h4 { margin: 18px 0 8px; }
+</style>
+</head>
+<body>
+<div id="app">
+  <el-container>
+    <el-header style="background:#2c3e50;color:#fff;display:flex;align-items:center;justify-content:space-between">
+      <b style="font-size:18px">彩虹人才管理系统 · 业务员工作台</b>
+      <span style="font-size:13px;opacity:.8">经办人 <el-input v-model="oper" size="small" style="width:120px" /></span>
+    </el-header>
+    <el-main>
+      <el-tabs v-model="tab">
+        <!-- ============ 险金测算 ============ -->
+        <el-tab-pane label="险金测算" name="calc">
+          <div class="page">
+            <el-form inline>
+              <el-form-item label="合同号 ATC900"><el-input v-model="calc.atc900" style="width:140px"/></el-form-item>
+              <el-form-item label="所属年月"><el-input v-model="calc.aae002" placeholder="202611" style="width:110px"/></el-form-item>
+              <el-form-item><el-button type="primary" @click="calcRun">计算</el-button></el-form-item>
+            </el-form>
+            <el-descriptions v-if="calc.result && calc.result.appCode===1" :column="4" border size="small">
+              <el-descriptions-item v-for="k in calcKeys" :key="k" :label="k">{{ calc.result[k] }}</el-descriptions-item>
+            </el-descriptions>
+            <div v-if="calc.result && calc.result.appCode!==1" class="bad">{{ calc.result.errMsg }}</div>
+          </div>
+        </el-tab-pane>
+
+        <!-- ============ 新签导入 ============ -->
+        <el-tab-pane label="新签导入" name="hire">
+          <div class="page">
+            <h4>① 按模板填写合同要素</h4>
+            <el-form label-width="130px" size="default">
+              <el-row :gutter="8">
+                <el-col :span="8"><el-form-item label="身份证 AAC002"><el-input v-model="hire.aac002"/></el-form-item></el-col>
+                <el-col :span="8"><el-form-item label="姓名 AAC003"><el-input v-model="hire.aac003"/></el-form-item></el-col>
+                <el-col :span="8"><el-form-item label="用工性质"><el-input v-model="hire.aae00p" placeholder="1-派遣"/></el-form-item></el-col>
+                <el-col :span="8"><el-form-item label="结算单元 ATB930"><el-input v-model="hire.atb930" placeholder="37312"/></el-form-item></el-col>
+                <el-col :span="8"><el-form-item label="派遣协议 ATB900"><el-input v-model="hire.atb900" placeholder="58332"/></el-form-item></el-col>
+                <el-col :span="8"><el-form-item label="单位编号 AAB001"><el-input v-model="hire.aab001" placeholder="151"/></el-form-item></el-col>
+                <el-col :span="8"><el-form-item label="合同类别"><el-input v-model="hire.atc90a" placeholder="1-固定期限"/></el-form-item></el-col>
+                <el-col :span="8"><el-form-item label="合同开始"><el-input v-model="hire.atc90c" placeholder="2026-11-01"/></el-form-item></el-col>
+                <el-col :span="8"><el-form-item label="合同终止"><el-input v-model="hire.atc90d" placeholder="2028-11-01"/></el-form-item></el-col>
+                <el-col :span="8"><el-form-item label="合同工资"><el-input v-model="hire.atc905" placeholder="6800"/></el-form-item></el-col>
+                <el-col :span="8"><el-form-item label="费用开始年月"><el-input v-model="hire.aae002" placeholder="202611"/></el-form-item></el-col>
+                <el-col :span="8"><el-form-item label="养老基数"><el-input v-model="hire.aaa301" placeholder="6800"/></el-form-item></el-col>
+                <el-col :span="8"><el-form-item label="参保属地"><el-input v-model="hire.aaa100" placeholder="220100000000-吉林省长春市"/></el-form-item></el-col>
+                <el-col :span="8"><el-form-item label="参保年月"><el-input v-model="hire.aaa203" placeholder="202611"/></el-form-item></el-col>
+              </el-row>
+              <el-button type="primary" :loading="hire.busy" @click="hireRun">② 生成批次 → 校验 → 提交</el-button>
+              <span class="kv">  等价旧系统: tdbp 新签弹窗的校验/提交按钮</span>
+            </el-form>
+            <pre class="log" v-if="hire.log">{{ hire.log }}</pre>
+          </div>
+        </el-tab-pane>
+
+        <!-- ============ 审核台 ============ -->
+        <el-tab-pane label="新签审核台" name="audit">
+          <div class="page">
+            <el-form inline>
+              <el-form-item label="合同号"><el-input v-model="audit.atc900" style="width:140px"/></el-form-item>
+              <el-form-item><el-button @click="auditLoad">查待审行</el-button>
+              <el-button type="success" :disabled="!audit.tc90" @click="auditCommit">审核通过</el-button></el-form-item>
+            </el-form>
+            <el-descriptions v-if="audit.tc90" :column="3" border size="small">
+              <el-descriptions-item label="atc900">{{ audit.tc90.atc900 }}</el-descriptions-item>
+              <el-descriptions-item label="aac003">{{ audit.tc90.aac003 }}</el-descriptions-item>
+              <el-descriptions-item label="atb90r(当前)">{{ audit.tc90.atb90r }}</el-descriptions-item>
+              <el-descriptions-item label="atb910">{{ audit.tb91.atb910 }}</el-descriptions-item>
+              <el-descriptions-item label="atb911 类型">{{ audit.tb91.atb911 }}</el-descriptions-item>
+              <el-descriptions-item label="atb912 标志">{{ audit.tb91.atb912 }}</el-descriptions-item>
+            </el-descriptions>
+            <div class="kv">审核通过 = 行编辑保存: 整行以 atb90r='3'/atb912='3' 提交(doXinqCommit), 审核人 = 当前经办人</div>
+          </div>
+        </el-tab-pane>
+
+        <!-- ============ 工资核对 ============ -->
+        <el-tab-pane label="工资核对" name="salary">
+          <div class="page">
+            <el-steps :active="salaryStep" simple style="margin-bottom:14px">
+              <el-step title="编制 TC93" :description="salary.tc930 ? 'atc930='+salary.tc930 : ''"/>
+              <el-step title="核对批次" :description="salary.ace10a ? 'ace10a='+salary.ace10a : ''"/>
+              <el-step title="提交确认" :description="salary.atc93p!==null ? 'atc93p='+salary.atc93p : ''"/>
+            </el-steps>
+            <el-form inline label-width="110px">
+              <el-form-item label="合同号"><el-input v-model="salary.atc900" style="width:130px"/></el-form-item>
+              <el-form-item label="年月"><el-input v-model="salary.ym" style="width:100px"/></el-form-item>
+              <el-form-item label="本次工资总额"><el-input v-model="salary.atc93aa" style="width:110px"/></el-form-item>
+              <el-form-item label="结算单元"><el-input v-model="salary.atb930" style="width:110px"/></el-form-item>
+            </el-form>
+            <el-button type="primary" :loading="salary.busy" @click="salaryRun">一键: 编制→核对→提交(80%门槛)</el-button>
+            <pre class="log" v-if="salary.log">{{ salary.log }}</pre>
+          </div>
+        </el-tab-pane>
+
+        <!-- ============ 到账 / 发票 ============ -->
+        <el-tab-pane label="到账 / 发票" name="money">
+          <div class="page">
+            <h4>银行到账(工行模板: 日期/户名/金额)</h4>
+            <el-form inline>
+              <el-form-item label="到账日期"><el-input v-model="money.abp001" placeholder="2026-11-20"/></el-form-item>
+              <el-form-item label="对方户名"><el-input v-model="money.abp002" style="width:220px"/></el-form-item>
+              <el-form-item label="金额"><el-input v-model="money.abp005" style="width:110px"/></el-form-item>
+              <el-form-item><el-button type="primary" :loading="money.busy" @click="arriveRun">导入 TB97</el-button></el-form-item>
+            </el-form>
+            <h4>发票(抬头/借或到账/专普票/人事代理服务费)</h4>
+            <el-form inline>
+              <el-form-item label="发票抬头"><el-input v-model="money.invTitle" style="width:220px"/></el-form-item>
+              <el-form-item label="服务费金额"><el-input v-model="money.abp004" style="width:110px"/></el-form-item>
+              <el-form-item><el-button type="primary" :loading="money.busy2" @click="invoiceRun">导入 TB99</el-button></el-form-item>
+            </el-form>
+            <pre class="log" v-if="money.log">{{ money.log }}</pre>
+          </div>
+        </el-tab-pane>
+
+        <!-- ============ 续签 / 终止 ============ -->
+        <el-tab-pane label="续签 / 终止" name="change">
+          <div class="page">
+            <h4>合同续签(批次 TC90_BP3)</h4>
+            <el-form inline>
+              <el-form-item label="身份证"><el-input v-model="renew.aac002" style="width:170px"/></el-form-item>
+              <el-form-item label="姓名"><el-input v-model="renew.aac003" style="width:130px"/></el-form-item>
+              <el-form-item label="新开始"><el-input v-model="renew.atc90c" placeholder="2028-12-01"/></el-form-item>
+              <el-form-item label="新终止"><el-input v-model="renew.atc90d" placeholder="2030-12-01"/></el-form-item>
+              <el-form-item><el-button type="primary" :loading="renew.busy" @click="renewRun">校验+提交</el-button></el-form-item>
+            </el-form>
+            <h4>合同终止(批次 TC90_BP1)</h4>
+            <el-form inline>
+              <el-form-item label="身份证"><el-input v-model="term.aac002" style="width:170px"/></el-form-item>
+              <el-form-item label="姓名"><el-input v-model="term.aac003" style="width:130px"/></el-form-item>
+              <el-form-item label="终止日期"><el-input v-model="term.atc90i" placeholder="2028-12-31"/></el-form-item>
+              <el-form-item label="工资结束年月"><el-input v-model="term.atc90av" placeholder="202812" style="width:110px"/></el-form-item>
+              <el-form-item><el-button type="danger" :loading="term.busy" @click="termRun">校验+提交</el-button></el-form-item>
+            </el-form>
+            <pre class="log" v-if="changeLog">{{ changeLog }}</pre>
+          </div>
+        </el-tab-pane>
+      </el-tabs>
+    </el-main>
+  </el-container>
+</div>
+
+<script>
+const { createApp, reactive, ref, computed } = Vue;
+const app = createApp({
+  setup() {
+    const oper = ref("jiaq");
+    const OPER = { aae011: "jiaq", aae017: "4101", aae019: "贾悫",
+      aae020: "吉林省彩虹人才开发咨询服务有限公司", aae022: "410100000000" };
+    const YMD = new Date().toISOString().slice(0, 10);
+
+    async function post(path, body) {
+      const r = await fetch(path, { method: "POST",
+        headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      return r.json();
+    }
+    function proc(name, body) { return post("/proc/" + encodeURIComponent(name), body); }
+    async function wb(path, body) {
+      const r = await fetch(path, { method: body ? "POST" : "GET",
+        headers: body ? { "Content-Type": "application/json" } : undefined,
+        body: body ? JSON.stringify(body) : undefined });
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      return r.json();
+    }
+
+    // ---- 险金测算 ----
+    const calc = reactive({ atc900: "", aae002: "202611", result: null });
+    const calcKeys = ["aaa301","aaa302","aaa303","bba001","bba002","bba003","bba004","bba005",
+      "baa001","baa002","baa003","caa001","caa002","bba200","baa200","atc9eh"];
+    async function calcRun() {
+      calc.result = await proc("PKG_人才派遣公共.PRC_计算险金",
+        { atc900: calc.atc900, aae002: calc.aae002 || "202611" });
+    }
+
+    // ---- 新签导入 ----
+    const hire = reactive({ aac002: "", aac003: "", aae00p: "1-派遣", atb930: "37312",
+      atb900: "58332", aab001: "151", atc90a: "1-固定期限", atc90c: YMD,
+      atc90d: "", atc905: "6800", aae002: "202611", aaa301: "", aaa100: "220100000000-吉林省长春市",
+      aaa203: "202611", log: "", busy: false });
+    async function hireRun() {
+      hire.busy = true; hire.log = "";
+      try {
+        const { ace100: ace } = await wb("/wb/hire-batch", {
+          aac002: hire.aac002, aac003: hire.aac003, aae00p: hire.aae00p,
+          atb930: Number(hire.atb930), atb900: Number(hire.atb900), aab001: Number(hire.aab001),
+          atc90a: hire.atc90a, atc90c: hire.atc90c, atc90d: hire.atc90d || null,
+          atc905: hire.atc905, aae002: hire.aae002, aaa401: "1-是", aaa100: hire.aaa100,
+          aaa203: hire.aaa203, aaa301: hire.aaa301 || null, aab004: "单位名" });
+        hire.log = "批次 " + ace + "\n";
+        const r1 = await proc("PKG_派遣批量导入.PRC_员工导入校验", { ace100: String(ace), aae011: oper.value });
+        hire.log += "校验: " + (r1.errMsg || "") + "\n";
+        const r2 = await proc("PKG_派遣批量导入.PRC_员工导入提交", { ace100: String(ace), aae011: oper.value });
+        hire.log += "提交: " + (r2.errMsg || "") + "\n转审核台填合同号";
+      } catch (e) { hire.log += "错误: " + e.message; }
+      hire.busy = false;
+    }
+
+    // ---- 审核台 ----
+    const audit = reactive({ atc900: "", tc90: null, tb91: null });
+    async function auditLoad() {
+      const j = await wb("/wb/audit-row/" + audit.atc900);
+      if (!j.tb91) { ElementPlus.ElMessage.warning("无待审行(TB91 20)"); return; }
+      audit.tc90 = j.tc90; audit.tb91 = j.tb91;
+    }
+    async function auditCommit() {
+      const t = { ...audit.tc90, atb90r: "3", bae011: OPER.aae011, bae017: OPER.aae017,
+        bae019: OPER.aae019, bae020: OPER.aae020, bae022: OPER.aae022 };
+      const b = { ...audit.tb91, atb912: "3", bae011: OPER.aae011, bae017: OPER.aae017,
+        bae019: OPER.aae019, bae020: OPER.aae020, bae022: OPER.aae022 };
+      await post("/interaction/REQ-tdbf__dialog_xinqcl-commit", { tc90: t, tb91: b });
+      ElementPlus.ElMessage.success("审核通过, 合同已生效(atb90r=3)");
+      auditLoad();
+    }
+
+    // ---- 工资核对 ----
+    const salary = reactive({ atc900: "", ym: "202611", atc93aa: "6800", atb930: "37312",
+      tc930: "", ace10a: "", atc93p: null, log: "", busy: false });
+    async function salaryRun() {
+      salary.busy = true; salary.log = "";
+      try {
+        const setup = await wb("/wb/salary-setup", { atc900: Number(salary.atc900),
+          ym: salary.ym, atc93aa: salary.atc93aa, atb930: Number(salary.atb930) });
+        salary.tc930 = setup.atc930;
+        salary.log = "编制: TC93 atc930=" + salary.tc930 + "  批次 " + setup.ace100 + "\n";
+        await proc("PKG_IMP.PRC_CHECK_TC93", { ace100: String(setup.ace100), atb930: String(salary.atb930),
+          atc931: salary.ym, atc932: salary.ym, atc937: "1" });
+        const st = await wb("/wb/audit-row/" + salary.atc900); // 占位查询(保持网关活跃)
+        salary.log += "核对批次已提交 CHECK(结果行见数据库 ace10a)\n";
+        await proc("PKG_IMP.PRC_COMMIT_TC93", { ace100: String(setup.ace100), atc932: salary.ym,
+          atc931: salary.ym, ...OPER });
+        salary.log += "提交完成(80% 门槛已判)\n";
+      } catch (e) { salary.log += "错误: " + e.message; }
+      salary.busy = false;
+    }
+
+    // ---- 到账 / 发票 ----
+    const money = reactive({ abp001: YMD, abp002: "", abp005: "", invTitle: "", abp004: "",
+      log: "", busy: false, busy2: false });
+    async function arriveRun() {
+      money.busy = true;
+      try {
+        const { ace100: ace } = await wb("/wb/arrival-batch",
+          { abp001: money.abp001, abp002: money.abp002, abp005: money.abp005 });
+        await proc("PKG_派遣批量导入.PRC_工行到账导入校验", { ace100: String(ace) });
+        await proc("PKG_派遣批量导入.PRC_工行到账导入提交", { ace100: String(ace), aae011: oper.value });
+        money.log = "到账已导入 TB97 (户名 " + money.abp002 + ")\n";
+      } catch (e) { money.log = "错误: " + e.message; }
+      money.busy = false;
+    }
+    async function invoiceRun() {
+      money.busy2 = true;
+      try {
+        const { ace100: ace } = await wb("/wb/invoice-batch",
+          { abp001: money.invTitle, abp004: money.abp004 });
+        await proc("PKG_派遣批量导入.PRC_发票导入校验", { ace100: String(ace) });
+        await proc("PKG_派遣批量导入.PRC_发票导入提交", { ace100: String(ace), aae011: oper.value });
+        money.log = "发票已导入 TB99 (抬头 " + money.invTitle + ")\n";
+      } catch (e) { money.log = "错误: " + e.message; }
+      money.busy2 = false;
+    }
+
+    // ---- 续签 / 终止 ----
+    const renew = reactive({ aac002: "", aac003: "", atc90c: "", atc90d: "", log: "", busy: false });
+    const term = reactive({ aac002: "", aac003: "", atc90i: "", atc90av: "", log: "", busy: false });
+    const changeLog = ref("");
+    async function renewRun() {
+      renew.busy = true;
+      try {
+        const { ace100: ace } = await wb("/wb/renew-batch",
+          { aac002: renew.aac002, aac003: renew.aac003, atc90c: renew.atc90c, atc90d: renew.atc90d });
+        await proc("PKG_派遣批量导入.PRC_员工续签校验", { ace100: String(ace), aae011: oper.value });
+        await proc("PKG_派遣批量导入.PRC_员工续签提交", { ace100: String(ace), aae011: oper.value });
+        changeLog.value = "续签完成: atc90f='2', 签订历史已入 TC90_QDLS";
+      } catch (e) { changeLog.value = "错误: " + e.message; }
+      renew.busy = false;
+    }
+    async function termRun() {
+      term.busy = true;
+      try {
+        const { ace100: ace } = await wb("/wb/terminate-batch",
+          { aac002: term.aac002, aac003: term.aac003, atc90i: term.atc90i, atc90av: term.atc90av });
+        await proc("PKG_派遣批量导入.PRC_员工终止导入校验", { ace100: String(ace), aae011: oper.value });
+        await proc("PKG_派遣批量导入.PRC_员工终止导入提交", { ace100: String(ace), aae011: oper.value });
+        changeLog.value = "终止已提交: 生效合同转审核(TB91 23), 已终审合同直接落报减年月";
+      } catch (e) { changeLog.value = "错误: " + e.message; }
+      term.busy = false;
+    }
+
+    return { oper, tab, calc, calcKeys, calcRun, hire, hireRun, audit, auditLoad, auditCommit,
+      salary, salaryRun, money, arriveRun, invoiceRun, renew, renewRun, term, termRun, changeLog };
+  },
+});
+app.use(ElementPlus);
+app.mount("#app");
+</script>
+</body>
+</html>
