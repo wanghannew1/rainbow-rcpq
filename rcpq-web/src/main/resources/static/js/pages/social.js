@@ -1,5 +1,7 @@
 /* 五险一金报盘: 从员工合同推导社保/医保 报增/报减名册, 列规范=东软名册网格
-   (社保 tc9wStore_grid td/h/y; 医保 tc9w1Store_grid td/c/ay), 导出 .xls 供局网站贴数。
+   (社保 tc9wStore_grid td/h/y; 医保 tc9w1Store_grid td/c/ay), 导出按局方模板
+   (resources/baopan, POI 底稿生成): 社保→参保登记/停保 .xlsx; 医保→新参保/减员
+   申报 .xls 按医保参保属地拆省(2299)/市打包 .zip。
    旧 TC9W/TC9W1 工作表新库为空(报增导入包生产即 INVALID 未移植), 故由合同变化推导。 */
 (() => {
   const { reactive, ref, onMounted } = Vue;
@@ -66,7 +68,7 @@
         </el-form-item>
         <el-form-item>
           <el-button type="primary" :loading="rp.busy" @click="load">生成名册</el-button>
-          <el-button type="success" @click="exportXls">导出报盘 .xls</el-button>
+          <el-button type="success" @click="exportXls">导出报盘文件</el-button>
         </el-form-item>
       </el-form>
       <div v-if="rp.log" class="kv">{{ rp.log }}</div>
@@ -75,8 +77,9 @@
                          :label="c.label" min-width="90" show-overflow-tooltip/>
       </el-table>
       <div class="kv">增员=当月合同开始(atc90c)且生效; 减员=当月合同终止(atc90i)。
-        列规范=东软名册网格(社保 tc9wStore_grid / 医保 tc9w1Store_grid); 导出 .xls 可直接打开,
-        对社保局/医保局网站模板贴数。个人编号由局端分配, 报盘中留空。</div>
+        导出=局方模板底稿生成: 社保增员→企业职工批量参保登记.xlsx, 社保减员→单位职工停保.xlsx;
+        医保按参保属地拆省(2299)/市两文件→打包 zip(001批量新参保 / 批量减员申报.xls)。
+        单位过滤时社保增员模板回填单位编号/名称。个人编号由局端分配, 报盘中留空。</div>
     </div>`,
     setup() { return { rp, cols, rows, units, load, exportXls }; },
   };

@@ -9,7 +9,8 @@ import org.springframework.web.bind.annotation.*
  */
 @RestController
 @RequestMapping("/wb")
-class WorkbenchController(private val jdbcTemplate: JdbcTemplate) {
+class WorkbenchController(private val jdbcTemplate: JdbcTemplate,
+                          private val baopan: BaopanExporter) {
 
     private fun nextval(seq: String) = jdbcTemplate.queryForObject("SELECT nextval('$seq')", Long::class.java)!!
 
@@ -314,7 +315,7 @@ class WorkbenchController(private val jdbcTemplate: JdbcTemplate) {
             ) to ("""SELECT t.aac002, t.aac003, a.aac006 AS csrq, a.aac004 AS xb,
                 COALESCE(NULLIF(t.aac005,''), a.aac005) AS mz, t.atc90c AS cjgzrq,
                 t.aac009 AS hjxz, t.aae005 AS lxdh, t.atc90ax AS zjyxq, t.atc905 AS gz,
-                t.aaa302 AS sbjs, t.aaa100 AS cscd, t.aab004
+                t.aaa302 AS sbjs, COALESCE(t.aaa110, t.aaa100) AS cscd, t.aab004
                 FROM tc90 t LEFT JOIN ac01 a ON a.aac002 = t.aac002
                 WHERE t.atb90r='3' AND to_char(t.atc90c,'YYYYMM')='$ym'$unitFilter
                 ORDER BY t.atc900""")
@@ -358,32 +359,69 @@ class WorkbenchController(private val jdbcTemplate: JdbcTemplate) {
             "rows" to rows, "count" to rows.size)
     }
 
-    /** 名册导出(.xls, Excel 可直接打开; 对局网站模板贴数) */
+    /** 报盘行: 与名册同口径(增=当月合同开始且生效; 减=当月合同终止), 供模板导出 */
+    private fun baopanRows(flow: String, ym: String, aab001: Long?): List<BaopanExporter.Row> {
+        if (flow !in rosterFlows || !Regex("^\\d{6}$").matches(ym)) return emptyList()
+        val unitFilter = if (aab001 != null) " AND t.aab001=$aab001" else ""
+        return if (flow == "add") jdbcTemplate.query(
+            """SELECT t.aac002, t.aac003, t.aac005 AS mz, t.aac009 AS hjxz, t.aac012 AS aac012,
+               t.atc905 AS salary, t.atc90c AS cstart, t.aae005 AS phone, t.atc902 AS addr,
+               t.aac183 AS zip, t.aaa100 AS locs, t.aaa110 AS locm, t.aaa601 AS medym,
+               t.aab001, t.aab004
+               FROM tc90 t
+               WHERE t.atb90r='3' AND to_char(t.atc90c,'YYYYMM')='$ym'$unitFilter
+               ORDER BY t.atc900""") { rs, _ ->
+            BaopanExporter.Row(
+                aac002 = rs.getString("aac002") ?: "", aac003 = rs.getString("aac003") ?: "",
+                mz = rs.getString("mz"), hjxz = rs.getString("hjxz"), rySf = rs.getString("aac012"),
+                salary = rs.getBigDecimal("salary"),
+                start = rs.getDate("cstart")?.toLocalDate(),
+                phone = rs.getString("phone"), addr = rs.getString("addr"), zip = rs.getString("zip"),
+                locSocial = rs.getString("locs"), locMedical = rs.getString("locm"),
+                medYm = rs.getObject("medym")?.let { (it as Number).toLong() },
+                aab001 = rs.getObject("aab001")?.let { (it as Number).toLong() },
+                aab004 = rs.getString("aab004"))
+        } else jdbcTemplate.query(
+            """SELECT t.aac002, t.aac003, t.atc90k AS reason, t.atc90i AS cend,
+               t.aaa110 AS locm, t.aab001, t.aab004
+               FROM tc90 t
+               WHERE t.atc90i IS NOT NULL AND to_char(t.atc90i,'YYYYMM')='$ym'$unitFilter
+               ORDER BY t.atc900""") { rs, _ ->
+            BaopanExporter.Row(
+                aac002 = rs.getString("aac002") ?: "", aac003 = rs.getString("aac003") ?: "",
+                end = rs.getDate("cend")?.toLocalDate(), reason = rs.getString("reason"),
+                locMedical = rs.getString("locm"),
+                aab001 = rs.getObject("aab001")?.let { (it as Number).toLong() },
+                aab004 = rs.getString("aab004"))
+        }
+    }
+
+    /** 名册报盘导出: 以 resources/baopan 局方模板为底稿 POI 生成。
+     *  社保增/减 = 单文件 .xlsx(企业职工批量参保登记 / 单位职工停保模板);
+     *  医保增/减 = 按医保参保属地(aaa110)拆 省(2299)/市 两文件打包 .zip。 */
     @GetMapping("/roster-export")
     fun rosterExport(@RequestParam kind: String, @RequestParam flow: String,
                      @RequestParam ym: String, @RequestParam(required = false) aab001: Long?,
                      response: jakarta.servlet.http.HttpServletResponse) {
-        val (cols, rows) = rosterData(kind, flow, ym, aab001)
-        fun esc(v: Any?) = v.toString().replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-        val sb = StringBuilder()
-        sb.append("<html xmlns:x=\"urn:schemas-microsoft-com:office:excel\"><head>")
-        sb.append("<meta charset=\"UTF-8\"></head><body><table border=\"1\">")
-        sb.append("<tr>")
-        for ((_, label) in cols) sb.append("<th>").append(esc(label)).append("</th>")
-        sb.append("</tr>")
-        for (r in rows) {
-            sb.append("<tr>")
-            for ((k, _) in cols) sb.append("<td>").append(esc(r[k] ?: "")).append("</td>")
-            sb.append("</tr>")
+        val rows = baopanRows(flow, ym, aab001)
+        val xlsx = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        when {
+            kind == "social" && flow == "add" -> sendFile(response, "社保增员_$ym.xlsx", xlsx,
+                baopan.socialAdd(rows, aab001?.toString(), rows.firstOrNull()?.aab004))
+            kind == "social" -> sendFile(response, "社保减员_$ym.xlsx", xlsx,
+                baopan.socialCut(rows))
+            flow == "add" -> sendFile(response, "医保增员_$ym.zip", "application/zip",
+                BaopanExporter.zipFiles(baopan.medicalAdd(rows, ym)))
+            else -> sendFile(response, "医保减员_$ym.zip", "application/zip",
+                BaopanExporter.zipFiles(baopan.medicalCut(rows, ym)))
         }
-        sb.append("</table></body></html>")
-        val kindName = if (kind == "social") "社保" else "医保"
-        val flowName = if (flow == "add") "报增名册" else "报减名册"
-        response.contentType = "application/vnd.ms-excel"
-        response.characterEncoding = "UTF-8"
+    }
+
+    private fun sendFile(response: jakarta.servlet.http.HttpServletResponse,
+                         filename: String, contentType: String, bytes: ByteArray) {
+        response.contentType = contentType
         response.setHeader("Content-Disposition",
-            "attachment; filename*=UTF-8''" +
-                java.net.URLEncoder.encode("${kindName}${flowName}_$ym.xls", "UTF-8"))
-        response.writer.write(sb.toString())
+            "attachment; filename*=UTF-8''" + java.net.URLEncoder.encode(filename, "UTF-8"))
+        response.outputStream.use { it.write(bytes) }
     }
 }
