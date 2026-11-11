@@ -268,4 +268,122 @@ class WorkbenchController(private val jdbcTemplate: JdbcTemplate) {
             r.atc90av, r.aac002, r.aac003)
         return mapOf("ace100" to ace)
     }
+
+    // ---------- 五险一金报盘名册 ----------
+    // 列规范 = 东软名册网格(社保 tc9wStore_grid / 医保 tc9w1Store_grid, td/h/y 与 td/c/ay);
+    // 旧 TC9W/TC9W1 工作表新库为空(报增导入包生产即 INVALID 未移植), 名册从合同+人口属性推导。
+
+    private val rosterKinds = setOf("social", "medical")
+    private val rosterFlows = setOf("add", "cut")
+
+    /** 名册数据: 返回 (列[键,标签], 行)。异动类型/证件类型等常量列在 Kotlin 侧补。 */
+    private fun rosterData(kind: String, flow: String, ym: String,
+                           aab001: Long?): Pair<List<Pair<String, String>>, List<Map<String, Any?>>> {
+        if (kind !in rosterKinds || flow !in rosterFlows || !Regex("^\\d{6}$").matches(ym)) {
+            return listOf<Pair<String, String>>() to emptyList()
+        }
+        val unitFilter = if (aab001 != null) " AND t.aab001=$aab001" else ""
+        val colsAndSql: Pair<List<Pair<String, String>>, String> = when (kind to flow) {
+            "social" to "add" -> listOf(
+                "ydlx" to "异动类型", "aac002" to "身份证号码", "aac003" to "姓名",
+                "xb" to "性别", "mz" to "民族", "hjxz" to "户籍性质", "ygxs" to "用工形式",
+                "sbgz" to "申报缴费工资(月)", "bcqdrq" to "本次劳动合同起始时间", "cbsj" to "参保时间",
+                "gw" to "岗位", "lxdh" to "联系电话", "cscd" to "社保参保属地", "aab004" to "单位名称",
+            ) to ("""SELECT t.aac002, t.aac003, a.aac004 AS xb,
+                COALESCE(NULLIF(t.aac005,''), a.aac005) AS mz, t.aac009 AS hjxz,
+                t.aae00p AS ygxs, t.atc905 AS sbgz, t.atc90c AS bcqdrq, t.atc90c AS cbsj,
+                t.atc908 AS gw, t.aae005 AS lxdh, t.aaa100 AS cscd, t.aab004
+                FROM tc90 t LEFT JOIN ac01 a ON a.aac002 = t.aac002
+                WHERE t.atb90r='3' AND to_char(t.atc90c,'YYYYMM')='$ym'$unitFilter
+                ORDER BY t.atc900""")
+            "social" to "cut" -> listOf(
+                "ydlx" to "异动类型", "aac002" to "身份证号码", "aac003" to "姓名",
+                "jzyy" to "减少原因", "jssj" to "减少时间", "jfjzny" to "缴费截止年月",
+                "aab004" to "单位名称",
+            ) to ("""SELECT t.aac002, t.aac003, t.atc90k AS jzyy, t.atc90i AS jssj,
+                t.atc90av AS jfjzny, t.aab004
+                FROM tc90 t
+                WHERE t.atc90i IS NOT NULL AND to_char(t.atc90i,'YYYYMM')='$ym'$unitFilter
+                ORDER BY t.atc900""")
+            "medical" to "add" -> listOf(
+                "ybny" to "医保年月", "ydlx" to "异动类型", "sfzlx" to "身份证件类型",
+                "aac002" to "身份证号码", "aac003" to "姓名", "csrq" to "出生日期", "xb" to "性别",
+                "mz" to "民族", "cjgzrq" to "参加工作日期", "hjxz" to "户口性质",
+                "lxdh" to "联系电话", "zjyxq" to "证件有效期", "gz" to "工资",
+                "sbjs" to "申报缴费基数", "cscd" to "参保属地", "aab004" to "单位名称",
+            ) to ("""SELECT t.aac002, t.aac003, a.aac006 AS csrq, a.aac004 AS xb,
+                COALESCE(NULLIF(t.aac005,''), a.aac005) AS mz, t.atc90c AS cjgzrq,
+                t.aac009 AS hjxz, t.aae005 AS lxdh, t.atc90ax AS zjyxq, t.atc905 AS gz,
+                t.aaa302 AS sbjs, t.aaa100 AS cscd, t.aab004
+                FROM tc90 t LEFT JOIN ac01 a ON a.aac002 = t.aac002
+                WHERE t.atb90r='3' AND to_char(t.atc90c,'YYYYMM')='$ym'$unitFilter
+                ORDER BY t.atc900""")
+            else -> listOf(
+                "ybny" to "医保年月", "ydlx" to "异动类型", "aac002" to "身份证号码",
+                "aac003" to "姓名", "bgyy" to "变更原因", "bgsj" to "变更时间",
+                "jfjzny" to "缴费截止年月", "aab004" to "单位名称",
+            ) to ("""SELECT t.aac002, t.aac003, t.atc90k AS bgyy, t.atc90i AS bgsj,
+                t.atc90av AS jfjzny, t.aab004
+                FROM tc90 t
+                WHERE t.atc90i IS NOT NULL AND to_char(t.atc90i,'YYYYMM')='$ym'$unitFilter
+                ORDER BY t.atc900""")
+        }
+        val (cols, sql) = colsAndSql
+        val raw = jdbcTemplate.queryForList(sql)
+        val constCol: Map<String, String> = when (kind to flow) {
+            "social" to "add" -> mapOf("ydlx" to "新参保")
+            "social" to "cut" -> mapOf("ydlx" to "减少")
+            "medical" to "add" -> mapOf("ydlx" to "新参保", "sfzlx" to "居民身份证")
+            else -> mapOf("ydlx" to "停保")
+        }
+        val rows = raw.mapIndexed { i, r ->
+            val out = LinkedHashMap<String, Any?>()
+            out["xh"] = i + 1
+            for ((k, _) in cols) {
+                out[k] = if (constCol.containsKey(k)) constCol[k] else r[k]
+            }
+            out
+        }
+        val fullCols = listOf("xh" to "序号") + cols
+        return fullCols to rows
+    }
+
+    /** 名册查询(JSON): 供页面表格 */
+    @GetMapping("/roster")
+    fun roster(@RequestParam kind: String, @RequestParam flow: String, @RequestParam ym: String,
+               @RequestParam(required = false) aab001: Long?): Map<String, Any?> {
+        val (cols, rows) = rosterData(kind, flow, ym, aab001)
+        return mapOf(
+            "columns" to cols.map { mapOf("key" to it.first, "label" to it.second) },
+            "rows" to rows, "count" to rows.size)
+    }
+
+    /** 名册导出(.xls, Excel 可直接打开; 对局网站模板贴数) */
+    @GetMapping("/roster-export")
+    fun rosterExport(@RequestParam kind: String, @RequestParam flow: String,
+                     @RequestParam ym: String, @RequestParam(required = false) aab001: Long?,
+                     response: jakarta.servlet.http.HttpServletResponse) {
+        val (cols, rows) = rosterData(kind, flow, ym, aab001)
+        fun esc(v: Any?) = v.toString().replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+        val sb = StringBuilder()
+        sb.append("<html xmlns:x=\"urn:schemas-microsoft-com:office:excel\"><head>")
+        sb.append("<meta charset=\"UTF-8\"></head><body><table border=\"1\">")
+        sb.append("<tr>")
+        for ((_, label) in cols) sb.append("<th>").append(esc(label)).append("</th>")
+        sb.append("</tr>")
+        for (r in rows) {
+            sb.append("<tr>")
+            for ((k, _) in cols) sb.append("<td>").append(esc(r[k] ?: "")).append("</td>")
+            sb.append("</tr>")
+        }
+        sb.append("</table></body></html>")
+        val kindName = if (kind == "social") "社保" else "医保"
+        val flowName = if (flow == "add") "报增名册" else "报减名册"
+        response.contentType = "application/vnd.ms-excel"
+        response.characterEncoding = "UTF-8"
+        response.setHeader("Content-Disposition",
+            "attachment; filename*=UTF-8''" +
+                java.net.URLEncoder.encode("${kindName}${flowName}_$ym.xls", "UTF-8"))
+        response.writer.write(sb.toString())
+    }
 }
