@@ -14,7 +14,16 @@
     log: "", busy: false,
   });
   const units = ref([]); const agreements = ref([]); const settleUnits = ref([]);
-  const batchRows = ref([]); const batchTable = ref("");
+  const baseErr = ref(""); const batchRows = ref([]); const batchTable = ref("");
+
+  async function loadBase() {
+    baseErr.value = "";
+    try {
+      units.value = (await api.wb("/units")) || [];
+      settleUnits.value = (await api.wb("/settle-units")) || [];
+      if (!units.value.length) baseErr.value = "单位清单为空(接口通但无数据)";
+    } catch (e) { baseErr.value = "基础数据加载失败: " + e.message; }
+  }
 
   const settleOptions = computed(() => {
     const hit = settleUnits.value.filter(s => s.aab001 === hire.aab001);
@@ -29,10 +38,8 @@
   });
 
   onMounted(async () => {
-    try {
-      units.value = (await api.wb("/units")) || [];
-      settleUnits.value = (await api.wb("/settle-units")) || [];
-    } catch (e) { ElementPlus.ElMessage.error("基础数据加载失败: " + e.message); }
+    await loadBase();
+    if (baseErr.value) setTimeout(() => { if (baseErr.value || !units.value.length) loadBase(); }, 2000);
   });
 
   async function run() {
@@ -80,6 +87,8 @@
     template: `
     <div class="page">
       <h4>① 单位 / 协议 / 结算单元</h4>
+      <div v-if="baseErr" class="bad">{{ baseErr }}
+        <el-button size="small" type="warning" plain @click="loadBase">重试</el-button></div>
       <el-form inline label-width="120px">
         <el-form-item label="单位">
           <el-select v-model="hire.aab001" filterable placeholder="选单位" style="width:300px">
@@ -143,7 +152,8 @@
       </template>
     </div>`,
     setup() {
-      return { hire, units, agreements, settleOptions, batchRows, batchTable, run, api };
+      return { hire, units, agreements, settleOptions, baseErr, loadBase,
+        batchRows, batchTable, run, api };
     },
   };
 })();

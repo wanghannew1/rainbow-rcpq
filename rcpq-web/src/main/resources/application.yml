@@ -8,5 +8,10 @@ spring:
     hibernate:
       ddl-auto: none   # DDL 由 db/V1-V3 迁移脚本管理, 禁止 Hibernate 自动建表
     open-in-view: false
+  web:
+    resources:
+      cache:
+        cachecontrol:
+          no-cache: true   # 静态资源协商缓存(304), 防 jar 更新后浏览器吃旧 JS
 server:
   port: 8080
