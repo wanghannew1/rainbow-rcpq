@@ -11,6 +11,7 @@
     log: "", busy: false });
   const rows = ref([]); const heads = ref([]); const units = ref([]);
   const bpRows = ref([]); const bpLog = ref("");
+  const bjRows = ref([]); const bjLog = ref("");
   const dlg = reactive({ show: false, atc9w0: null, name: "", abp001: "", aaa001: "" });
 
   onMounted(async () => {
@@ -111,6 +112,18 @@
 
   const stTag = (s) => ({ "1": "待校验", "4": "已校验" }[s] || (s || "-"));
 
+  /* 补缴明细(M3): 调已移植过程重建 TC9W_BP05 再查询 — 参保成功且缴费截止年月<当月
+     且工资截止年月=当月 的合同, 按年分组算单位/个人应补(险金引擎) */
+  async function loadBj() {
+    if (!rp.aaa030 || !rp.aaa020) { ElementPlus.ElMessage.warning("先选户头与参保属地"); return; }
+    try {
+      const r = await api.proc("PKG_保险人员增减.PRC_社保补缴明细",
+        { aae002: rp.ym, aaa030: rp.aaa030, aaa020: rp.aaa020 });
+      bjRows.value = (await api.wb(`/hz/bj?ym=${rp.ym}&aaa030=${rp.aaa030}&aaa020=${encodeURIComponent(rp.aaa020)}`)) || [];
+      bjLog.value = `补缴明细重建: 合同 ${r.contracts ?? "-"} 个, 明细 ${r.rows ?? bjRows.value.length} 行`;
+    } catch (e) { bjLog.value = "补缴明细失败: " + e.message; }
+  }
+
   WB.pages.hz = {
     template: `
     <div class="page">
@@ -201,6 +214,26 @@
         报增查询 → 成果确认(报增成功=登记实际参保时间+局端个人编号; 报增失败=登记异议) →
         成功校验 → 回盘提交(按 TC9W_BP 更新 TC90: 成功置 aaa203/atc90p='0', 异议转参保异议, 停保置 atc90p='1')。</div>
 
+      <h4>补缴明细(TC9W_BP05) — 参保成功且 缴费截止年月&lt;当月≤工资截止年月 的合同按年算补</h4>
+      <div style="margin-bottom:6px">
+        <el-button size="small" type="primary" @click="loadBj">重建并查询补缴明细</el-button>
+        <span class="kv">对应东软 tdck 补缴明细(PRC_社保补缴明细, 险金引擎逐年分组计算)。</span>
+      </div>
+      <div v-if="bjLog" class="kv">{{ bjLog }}</div>
+      <el-table v-if="bjRows.length" :data="bjRows" size="small" border max-height="260">
+        <el-table-column prop="aac003" label="姓名" width="90"/>
+        <el-table-column prop="aac002" label="身份证号码" width="170"/>
+        <el-table-column prop="abp001" label="户口" width="70"/>
+        <el-table-column prop="abp001_1" label="起止年月" width="110"/>
+        <el-table-column prop="abp003" label="月数" width="60"/>
+        <el-table-column prop="abp004" label="缴费基数" width="90"/>
+        <el-table-column prop="abp005" label="单位应补(养老)" width="110"/>
+        <el-table-column prop="abp006" label="单位应补(失业)" width="110"/>
+        <el-table-column prop="abp007" label="个人应补(养老)" width="110"/>
+        <el-table-column prop="abp008" label="个人应补(失业)" width="110"/>
+        <el-table-column prop="abp00d" label="合计应补" width="100"/>
+      </el-table>
+
       <el-dialog v-model="dlg.show" title="报增成功(成果确认)" width="380px">
         <el-form label-width="110px">
           <el-form-item label="姓名"><span>{{ dlg.name }}</span></el-form-item>
@@ -218,8 +251,9 @@
       </el-dialog>
     </div>`,
     setup() {
-      return { rp, rows, heads, units, bpRows, bpLog, dlg, selRows, push, loadHeads,
-        loadRoster, openOk, saveOk, confirmNo, nextMonth, pass, loadBp, check, commit, stTag };
+      return { rp, rows, heads, units, bpRows, bpLog, dlg, selRows, bjRows, bjLog, push,
+        loadHeads, loadRoster, openOk, saveOk, confirmNo, nextMonth, pass, loadBp, check,
+        commit, loadBj, stTag };
     },
   };
 })();

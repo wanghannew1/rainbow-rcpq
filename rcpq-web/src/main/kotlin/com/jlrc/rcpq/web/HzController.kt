@@ -169,4 +169,16 @@ class HzController(private val jdbc: JdbcTemplate, private val tdck: TdckCases) 
                FROM tc9w_bp WHERE aae002=? AND aaa030=? AND aaa020=? ORDER BY id""",
             ym.toLong(), aaa030, aaa020)
     }
+
+    /** 补缴明细查询: TC9W_BP05(先调 /proc/PKG_保险人员增减.PRC_社保补缴明细 重建) */
+    @GetMapping("/bj")
+    fun bujiao(@RequestParam ym: String, @RequestParam aaa030: Long,
+               @RequestParam aaa020: String): List<Map<String, Any?>> {
+        if (!Regex("^\\d{6}$").matches(ym)) return emptyList()
+        return jdbc.queryForList(
+            """SELECT atc900, aaa001, aac002, aac003, abp001, abp001_1, abp003, abp004,
+               abp005, abp006, abp007, abp008, abp009, abp00a, abp00d
+               FROM tc9w_bp05 WHERE aae002=? AND aaa030=? AND aaa020=? ORDER BY atc900""",
+            ym.toLong(), aaa030, aaa020)
+    }
 }
