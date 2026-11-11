@@ -16,7 +16,7 @@ class WorkbenchController(private val jdbcTemplate: JdbcTemplate) {
     @PostMapping("/next-batch")
     fun nextBatch(): Map<String, Any?> = mapOf("ace100" to nextval("seq_ce10_ace100"))
 
-    /** 新签导入批次行(tc90_bp), 字段白名单逐一绑定 */
+    /** 新签导入批次行(tc90_bp), 字段白名单逐一绑定(含校验必填: 身份证有效期/联系电话/协议首签日期/服务费标准) */
     data class HireRow(
         val aac002: String, val aac003: String, val aae00p: String,
         val atb930: Long, val atb900: Long, val aab001: Long,
@@ -24,6 +24,8 @@ class WorkbenchController(private val jdbcTemplate: JdbcTemplate) {
         val atc905: String, val aae002: String, val aaa401: String?,
         val aaa100: String?, val aaa203: String?, val aaa301: String?,
         val aab004: String?,
+        val aae005: String, val atc90ax: String, val atc90b: String,
+        val atb90a: String, val atb90b: String?,
     )
 
     @PostMapping("/hire-batch")
@@ -31,11 +33,13 @@ class WorkbenchController(private val jdbcTemplate: JdbcTemplate) {
         val ace = nextval("seq_ce10_ace100")
         jdbcTemplate.update(
             """INSERT INTO tc90_bp (id, ace100, aac002, aac003, aac005, aac012, aae00p, aac009, atc90a,
-               atc90c, atc90d, atc905, aae002, aaa401, aaa100, aaa203, aaa301, atb930, atb900, aab001, aab004)
+               atc90c, atc90d, atc905, aae002, aaa401, aaa100, aaa203, aaa301,
+               aae005, atc90ax, atc90b, atb90a, atb90b, atb930, atb900, aab001, aab004)
                VALUES (nextval('seq_tc90_id'), ?, ?, ?, '01-汉族', '91-其他人员', ?, '10-城镇失业',
-               ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+               ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?::numeric, ?::numeric, ?, ?, ?, ?)""",
             ace, r.aac002, r.aac003, r.aae00p, r.atc90a, r.atc90c, r.atc90d, r.atc905, r.aae002,
-            r.aaa401, r.aaa100, r.aaa203, r.aaa301, r.atb930, r.atb900, r.aab001, r.aab004 ?: "单位名")
+            r.aaa401, r.aaa100, r.aaa203, r.aaa301, r.aae005, r.atc90ax, r.atc90b,
+            r.atb90a, r.atb90b ?: "0", r.atb930, r.atb900, r.aab001, r.aab004 ?: "单位名")
         return mapOf("ace100" to ace)
     }
 
@@ -67,7 +71,7 @@ class WorkbenchController(private val jdbcTemplate: JdbcTemplate) {
                    atc93p, aae011)
                    SELECT ?, nextval('seq_tc93_atc930'), nextval('seq_sys_baz001'), nextval('seq_sys_baz002'),
                    t.atb900, t.aab001, t.aab004, t.atb930, t.atc90x, t.aac001, t.aac002, t.aac003,
-                   ?, ?, '1', ?, ?, ?, '1', 'jiaq' FROM tc90 t WHERE t.atc900=?""",
+                   ?, ?, '1', ?, ?::numeric, ?::numeric, '1', 'jiaq' FROM tc90 t WHERE t.atc900=?""",
                 r.atc900, r.ym, r.ym, r.ym, r.atc93aa, r.atc93aa, r.atc900)
         }
         val atc930 = jdbcTemplate.queryForObject(
@@ -82,7 +86,7 @@ class WorkbenchController(private val jdbcTemplate: JdbcTemplate) {
         jdbcTemplate.update(
             """INSERT INTO tc93_bp1 (id, ace100, aac002, aac003, atc93aa, atc93k, atc93m)
                VALUES (?, ?, ?, ?, ?, '0', '0')""",
-            bid, ace, aac002, aac003, java.math.BigDecimal(r.atc93aa))
+            bid, ace, aac002, aac003, r.atc93aa)
         return mapOf("ace100" to ace, "atc930" to atc930)
     }
 
@@ -128,6 +132,90 @@ class WorkbenchController(private val jdbcTemplate: JdbcTemplate) {
             ace, r.aac002, r.aac003, r.atc90c, r.atc90d, r.aac002, r.aac003)
         return mapOf("ace100" to ace)
     }
+
+    // ---------- 查询面(只读, 白名单列, LIMIT 封顶) ----------
+
+    /** 待审队列: 新签审核流水 TB91(类型 20/标志 2 待审) + 合同要素 */
+    @GetMapping("/audit-queue")
+    fun auditQueue(): List<Map<String, Any?>> = jdbcTemplate.queryForList(
+        """SELECT b.atb910, b.atb91z AS atc900, b.aae036,
+           t.aac002, t.aac003, t.atc90a, t.atc90c, t.atc90d, t.atc905, t.aab004, t.atb90r
+           FROM tb91 b JOIN tc90 t ON t.atc900 = b.atb91z
+           WHERE b.atb911='20' AND b.atb912='2'
+           ORDER BY b.atb910 DESC LIMIT 200""")
+
+    /** 批次查询: 按白名单表序探测 ace100 所属批次表, 返回逐行 ace10a(3过/2拒/1完成)+ace10b(原因) */
+    @GetMapping("/batch/{ace100}")
+    fun batch(@PathVariable ace100: Long): Map<String, Any?> {
+        val specs = listOf(
+            "tc90_bp" to listOf("aac002", "aac003", "atc90a", "atc90c", "atc90d", "atc905", "ace10a", "ace10b"),
+            "tc90_bp1" to listOf("aac002", "aac003", "atc90i", "aae003", "atc90k", "ace10a", "ace10b"),
+            "tc90_bp3" to listOf("aac002", "aac003", "atc90a", "atc90c", "atc90d", "ace10a", "ace10b"),
+            "tc93_bp1" to listOf("aac002", "aac003", "atc93aa", "ace10a", "ace10b"),
+            "tb97_bp" to listOf("abp001", "abp002", "abp005", "ace10a", "ace10b"),
+            "tb99_bp" to listOf("abp001", "abp002", "abp004", "ace10a", "ace10b"),
+        )
+        for ((table, cols) in specs) {
+            val rows = jdbcTemplate.queryForList(
+                "SELECT id, ${cols.joinToString(", ")} FROM $table WHERE ace100=? ORDER BY id", ace100)
+            if (rows.isNotEmpty()) {
+                val header = runCatching {
+                    jdbcTemplate.queryForMap(
+                        "SELECT aae019, aae036 FROM ce10 WHERE ace100=?", ace100)
+                }.getOrNull()
+                return mapOf("table" to table, "header" to header, "rows" to rows)
+            }
+        }
+        return mapOf("table" to null, "header" to null, "rows" to emptyList<Map<String, Any?>>())
+    }
+
+    /** 合同搜索: 身份证/姓名模糊或合同号精确, 供各表单选择器 */
+    @GetMapping("/contract-search")
+    fun contractSearch(@RequestParam q: String): List<Map<String, Any?>> {
+        val like = "%$q%"
+        return jdbcTemplate.queryForList(
+            """SELECT atc900, aac002, aac003, atb90r, atc90a, atc90c, atc90d, atc905,
+               aab001, aab004, atb930, atb900 FROM tc90
+               WHERE aac002 LIKE ? OR aac003 LIKE ? OR atc900::text = ?
+               ORDER BY atc900 DESC LIMIT 50""", like, like, q)
+    }
+
+    /** 单位清单( distinct 单位编号+名称, 附协议数) */
+    @GetMapping("/units")
+    fun units(): List<Map<String, Any?>> = jdbcTemplate.queryForList(
+        """SELECT aab001, aab004, count(*) AS agreements FROM tb90
+           GROUP BY aab001, aab004 ORDER BY aab001 LIMIT 2000""")
+
+    /** 单位下的派遣协议(TB90, 协议号倒序) */
+    @GetMapping("/agreements")
+    fun agreements(@RequestParam aab001: Long): List<Map<String, Any?>> = jdbcTemplate.queryForList(
+        "SELECT atb900, aab004 FROM tb90 WHERE aab001=? ORDER BY atb900 DESC", aab001)
+
+    /** 结算单元(TB93), 可按单位过滤 */
+    @GetMapping("/settle-units")
+    fun settleUnits(@RequestParam(required = false) aab001: Long?): List<Map<String, Any?>> =
+        if (aab001 == null) jdbcTemplate.queryForList(
+            "SELECT atb930, atb931, aab001 FROM tb93 ORDER BY atb930 LIMIT 2000")
+        else jdbcTemplate.queryForList(
+            "SELECT atb930, atb931, aab001 FROM tb93 WHERE aab001=? ORDER BY atb930", aab001)
+
+    /** 经办人(SYS_ORG_USER_UNIT) */
+    @GetMapping("/opers")
+    fun opers(): List<Map<String, Any?>> = jdbcTemplate.queryForList(
+        """SELECT account, aae011, aae019, aae017, aae020, aae022
+           FROM sys_org_user_unit ORDER BY aae011""")
+
+    /** 最近到账(TB97) */
+    @GetMapping("/arrivals")
+    fun arrivals(): List<Map<String, Any?>> = jdbcTemplate.queryForList(
+        """SELECT atb970, atb974, aab004, atb931, atb971, atb972, atb973 FROM tb97
+           ORDER BY atb970 DESC LIMIT 50""")
+
+    /** 最近发票(TB99) */
+    @GetMapping("/invoices")
+    fun invoices(): List<Map<String, Any?>> = jdbcTemplate.queryForList(
+        """SELECT atb990, atb99y, atb994, aab004, atb993 FROM tb99
+           ORDER BY atb990 DESC LIMIT 50""")
 
     /** 终止批次行(tc90_bp1), 单位要素从合同带出 */
     data class TerminateRow(
