@@ -89,11 +89,42 @@ curl -X POST localhost:8080/interaction/REQ-tdbf__dialog_xinqcl-commit \
 退回用 `REQ-tdbf__dialog_xinqcl-cancle`（删 TC90+TB91，单位重报）。撤销/终止类还有
 `terminateCancel / reCommit / doRenewCancle / doJsdyCancle`（同样整行模型，详见 /interaction/registry）。
 
-## 3. 五险一金报增（名册→导入→回盘→确认）
+## 3. 五险一金报增（名册→报盘→回盘→确认）——工作台"社保 / 医保报盘"+"社保报增回盘"页
 
-> 现状说明：名册与回盘核对过程（PKG_IMP 的 TC9W 对）在生产库已编译失效（见坏功能第八例），
-> 新系统未移植死码。当前可做：名册查询/统计（交互网关泛查询）、月确认冻结校验
-> （特殊情况导入会检查 atc9w8='3'）。Excel 名册通道待名册生成功能补齐后接 /import/sys。
+> 2026-11-11 起 M1/M2/M3 已建: 名册由合同推导（替代生产即 INVALID 的报增名册导入），
+> 回盘校验/提交复用已移植过程。操作留痕（wb_audit_log）/逻辑删除全站生效。
+> 工作台每个按键悬停可看东软对应位置（td/h/y 名册、td/c/k 回盘）。
+
+### 3.1 报盘查询与导出（页面"社保 / 医保报盘"，东软 tdhy 名册）
+
+```bash
+# 报盘查询(增=当月合同开始且生效 atb90r='3'; 减=当月合同终止)
+curl 'localhost:8080/wb/roster?kind=social&flow=add&ym=202611[&aab001=单位]'   # social|medical × add|cut
+# 报盘导出: 社保→参保登记/停保 .xlsx; 医保→按医保参保属地(aaa110)拆省(2299)/市打包 .zip
+curl -o 社保增员_202611.xlsx 'localhost:8080/wb/roster-export?kind=social&flow=add&ym=202611&aae011=经办'
+```
+
+### 3.2 社保报增回盘（页面"社保报增回盘"，东软 tdck 成果确认/回盘）
+
+```bash
+# 1) 生成名册并推送 TC9W(户头从 ab01 按单位取; 重推旧行置 atc9w8='9' 作废, 可追溯)
+curl -X POST localhost:8080/wb/hz/push -H 'Content-Type: application/json' \
+  -d '{"ym":"202611","aae011":"jiaq"}'
+# 2) 报增查询(工作表) / 户头下拉
+curl 'localhost:8080/wb/hz/roster?ym=202611[&aaa030=户头][&aaa020=区划]'; curl 'localhost:8080/wb/hz/heads?ym=202611'
+# 3) 成果确认: 报增成功(实际参保时间+局端个人编号→TC9W_BP aaa90w='1') / 报增失败(异议='2'+原因)
+curl -X POST localhost:8080/wb/hz/confirm -H 'Content-Type: application/json' \
+  -d '{"atc9w0":行号,"ok":true,"abp001":"2026-11-03","aaa001":"局端编号"}'
+# 4) 成功校验 → 回盘提交(按 TC9W_BP 三路更新 TC90: 成功置 aaa203/atc90p='0', 异议转参保异议, 停保置 atc90p='1')
+curl -X POST localhost:8080/proc/PKG_保险人员增减.PRC_社保异动回盘校验 \
+  -H 'Content-Type: application/json' -d '{"aae002":"202611","aaa030":"1","aaa020":"220100000000"}'
+curl -X POST localhost:8080/proc/PKG_保险人员增减.PRC_社保异动回盘提交 \
+  -H 'Content-Type: application/json' -d '{"aae002":"202611","aaa030":"1","aaa020":"220100000000","aae011":"jiaq"}'
+# 5) 延续至下月(勾选行; tc90.aaa201+1月, TC9W 更新沿用旧系统报错行为) / 审核通过(atc90p='0')
+curl -X POST localhost:8080/wb/hz/next -H 'Content-Type: application/json' -d '{"atc900":[合同号]}'
+# 6) 补缴明细: PRC_社保补缴明细 重建 TC9W_BP05 → GET /wb/hz/bj 查询
+# 页面另有: /wb/hz/bp 回盘批次查询; 局方回盘文件导入待 M5(见 five-insurance-migration.md)
+```
 
 月确认状态检查（办特殊登记/异动前）：
 

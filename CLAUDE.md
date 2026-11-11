@@ -23,7 +23,11 @@ fuser -k 8080/tcp; nohup /usr/lib/jvm/java-21-openjdk-amd64/bin/java \
 
 ## 铁律（前辈踩过的坑，违反=浪费窗口）
 1. 翻译 PL/SQL 前必读 user_source 真实源码 **且查 user_objects.status**——INVALID 包体
-   (PKG_IMP/PKG_IMP_FZ/PKG_派遣批量导入 三包生产即 INVALID)的源码是从未编译通过的残骸
+   (PKG_IMP/PKG_IMP_FZ/PKG_派遣批量导入 三包生产即 INVALID)的源码是从未编译通过的残骸。
+   **2026-11-11 备份库实测补充: INVALID 包体远不止三包**(PKG_保险人员增减/PKG_RCPQ 系列/
+   PKG_工资发放/PKG_财务/PKG_保险补退 等全在册, scripts/db/DbStatus.java 可查全清单)——
+   从 INVALID 包移植的过程, 移植前先找该行为的运行时证据(现网实测/黄金对照), 缺证据的按
+   "忠实报错 + 可用重建"双轨处理(社保回盘两过程即此模式)
 2. 差集必须 `sort -n`（字典序污染 comm 曾把 AC10 差 3 误读，实漏 21261）
 3. BigDecimal 比较一律 compareTo（equals 含 scale，5000≠5000.00）
 4. PG 事务任一语句失败即毒化——不能照搬 Oracle"先试错再建"模式，先探测(to_regclass)
