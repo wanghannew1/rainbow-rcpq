@@ -37,10 +37,10 @@
     if (agreements.value.length === 1) hire.atb900 = agreements.value[0].atb900;
   });
 
-  onMounted(async () => {
+  async function hireOnMount() {
     await loadBase();
     if (baseErr.value) setTimeout(() => { if (baseErr.value || !units.value.length) loadBase(); }, 2000);
-  });
+  }
 
   async function run() {
     if (!hire.aac002 || !hire.aac003) { ElementPlus.ElMessage.warning("身份证/姓名必填"); return; }
@@ -152,6 +152,7 @@
       </template>
     </div>`,
     setup() {
+      onMounted(hireOnMount);
       return { hire, units, agreements, settleOptions, baseErr, loadBase,
         batchRows, batchTable, run, api };
     },

@@ -15,7 +15,6 @@
     catch (e) { ElMessage.error(e.message); }
     loading.value = false;
   }
-  onMounted(loadQueue);
 
   function openRow(row) { detail.row = row; }
 
@@ -90,6 +89,9 @@
       <div class="kv">通过 = doXinqCommit(整行 atb90r='3'/atb912='3' 提交, 审核人=当前经办人);
         驳回 = doXinqCancle(删 TC90+TB91)</div>
     </div>`,
-    setup() { return { queue, loading, detail, loadQueue, openRow, commit, cancle }; },
+    setup() {
+      onMounted(loadQueue);
+      return { queue, loading, detail, loadQueue, openRow, commit, cancle };
+    },
   };
 })();

@@ -15,7 +15,6 @@
       invoices.value = (await api.wb("/invoices")) || [];
     } catch (e) { /* 列表失败不阻断导入 */ }
   }
-  onMounted(loadLists);
 
   async function arriveRun() {
     arr.busy = true; arr.log = ""; arrRows.value = [];
@@ -118,6 +117,7 @@
       </el-table>
     </div>`,
     setup() {
+      onMounted(loadLists);
       return { arr, inv, arrRows, invRows, arrivals, invoices, arriveRun, invoiceRun, api };
     },
   };
