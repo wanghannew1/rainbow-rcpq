@@ -9,12 +9,16 @@
     aac002: "", aac003: "", aae00p: "1-派遣",
     aab001: null, atb900: null, atb930: null,
     atc90a: "1-固定期限", atc90c: api.YMD, atc90d: "", atc905: 6800,
-    aae002: "202611", aaa301: null, aaa100: "220100000000-吉林省长春市", aaa203: "202611",
+    aae002: "202611", aaa301: null, aaa100: "", aaa203: "202611",
     aae005: "", atc90ax: "", atc90b: "", atb90a: null, atb90b: 0,
     log: "", busy: false,
   });
   const ygCodes = ref([]); const htCodes = ref([]);
-  const units = ref([]); const agreements = ref([]); const settleUnits = ref([]);
+  const units = ref([]); const agreementsAll = ref([]); const settleUnits = ref([]);
+  const regions = ref([]);
+  const agreements = computed(() => hire.aab001
+    ? agreementsAll.value.filter(a => a.aab001 === hire.aab001)
+    : agreementsAll.value);
   const baseErr = ref(""); const batchRows = ref([]); const batchTable = ref("");
 
   async function loadBase() {
@@ -31,17 +35,20 @@
     return hit.length ? hit : settleUnits.value;
   });
 
-  watch(() => hire.aab001, async v => {
+  watch(() => hire.aab001, v => {
     hire.atb900 = null;
     hire.atb930 = null;
-    agreements.value = v ? await api.wb("/agreements?aab001=" + v).catch(() => []) : [];
-    if (agreements.value.length === 1) hire.atb900 = agreements.value[0].atb900;
+    const hit = agreements.value;
+    if (hit.length === 1) hire.atb900 = hit[0].atb900;
   });
 
   async function hireOnMount() {
     await loadBase();
     ygCodes.value = await api.codes("AAE00P");
     htCodes.value = await api.codes("ATC90A");
+    agreementsAll.value = (await api.wb("/agreements").catch(() => [])) || [];
+    regions.value = (await api.wb("/regions").catch(() => [])) || [];
+    if (regions.value.length && !hire.aaa100) hire.aaa100 = regions.value[0].code;
     if (baseErr.value) setTimeout(() => { if (baseErr.value || !units.value.length) loadBase(); }, 2000);
   }
 
@@ -102,9 +109,9 @@
           </el-select>
         </el-form-item>
         <el-form-item label="派遣协议 ATB900">
-          <el-select v-model="hire.atb900" filterable placeholder="选协议" style="width:150px">
+          <el-select v-model="hire.atb900" filterable placeholder="选协议" style="width:320px">
             <el-option v-for="a in agreements" :key="a.atb900" :value="a.atb900"
-                       :label="String(a.atb900)"/>
+                       :label="a.atb900 + ' · ' + (a.aab004 || '')"/>
           </el-select>
         </el-form-item>
         <el-form-item label="结算单元 ATB930">
@@ -155,7 +162,11 @@
           <el-col :span="8"><el-form-item label="养老基数">
             <el-input-number v-model="hire.aaa301" :min="0" :precision="2" :controls="false"
                              placeholder="6800" style="width:100%"/></el-form-item></el-col>
-          <el-col :span="8"><el-form-item label="参保属地"><el-input v-model="hire.aaa100" placeholder="220100000000-吉林省长春市"/></el-form-item></el-col>
+          <el-col :span="8"><el-form-item label="参保属地">
+            <el-select v-model="hire.aaa100" filterable style="width:100%">
+              <el-option v-for="r in regions" :key="r.code" :value="r.code"
+                         :label="r.code + '-' + r.name"/>
+            </el-select></el-form-item></el-col>
           <el-col :span="8"><el-form-item label="参保年月">
             <el-date-picker v-model="hire.aaa203" type="month" value-format="YYYYMM"
                             placeholder="202611" style="width:100%"/></el-form-item></el-col>
@@ -185,7 +196,7 @@
     setup() {
       onMounted(hireOnMount);
       return { hire, units, agreements, settleOptions, baseErr, loadBase,
-        ygCodes, htCodes, batchRows, batchTable, run, api };
+        ygCodes, htCodes, regions, batchRows, batchTable, run, api };
     },
   };
 })();

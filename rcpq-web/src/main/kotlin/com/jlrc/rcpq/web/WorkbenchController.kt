@@ -186,10 +186,31 @@ class WorkbenchController(private val jdbcTemplate: JdbcTemplate) {
         """SELECT aab001, aab004, count(*) AS agreements FROM tb90
            GROUP BY aab001, aab004 ORDER BY aab001 LIMIT 2000""")
 
-    /** 单位下的派遣协议(TB90, 协议号倒序) */
+    /** 派遣协议(TB90, 协议号倒序); 可按单位过滤, 不带参返回全部(带单位名做标签) */
     @GetMapping("/agreements")
-    fun agreements(@RequestParam aab001: Long): List<Map<String, Any?>> = jdbcTemplate.queryForList(
-        "SELECT atb900, aab004 FROM tb90 WHERE aab001=? ORDER BY atb900 DESC", aab001)
+    fun agreements(@RequestParam(required = false) aab001: Long?): List<Map<String, Any?>> =
+        if (aab001 == null) jdbcTemplate.queryForList(
+            "SELECT atb900, aab001, aab004 FROM tb90 ORDER BY atb900 DESC LIMIT 2000")
+        else jdbcTemplate.queryForList(
+            "SELECT atb900, aab001, aab004 FROM tb90 WHERE aab001=? ORDER BY atb900 DESC", aab001)
+
+    /** 参保属地(区划): 从存量数据反向提取 12 位代码→名称映射(库内无区划字典表, 旧系统为手敲文本) */
+    @GetMapping("/regions")
+    fun regions(): List<Map<String, Any?>> {
+        val raw = jdbcTemplate.queryForList(
+            """SELECT DISTINCT aaa100 FROM tc90_bp WHERE aaa100 ~ '^[0-9]{12}' LIMIT 200""") +
+            jdbcTemplate.queryForList(
+                """SELECT DISTINCT aab301::text AS aaa100 FROM tb90
+                   WHERE aab301 IS NOT NULL AND aab301 ~ '^[0-9]{12}' LIMIT 200""")
+        val map = LinkedHashMap<String, String?>()
+        for (row in raw) {
+            val v = row["aaa100"]?.toString() ?: continue
+            val code = v.substring(0, 12)
+            val name = v.removePrefix(code).trimStart('-', '/', '　').ifEmpty { null }
+            map.putIfAbsent(code, name)
+        }
+        return map.map { (code, name) -> mapOf("code" to code, "name" to (name ?: code)) }
+    }
 
     /** 结算单元(TB93), 可按单位过滤 */
     @GetMapping("/settle-units")
