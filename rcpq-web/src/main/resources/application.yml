@@ -8,6 +8,8 @@ spring:
     hibernate:
       ddl-auto: none   # DDL 由 db/V1-V3 迁移脚本管理, 禁止 Hibernate 自动建表
     open-in-view: false
+  jackson:
+    time-zone: Asia/Shanghai   # 时间序列化按东八区(库里存北京墙钟, 默认 UTC 会错标成 +00:00)
   web:
     resources:
       cache:

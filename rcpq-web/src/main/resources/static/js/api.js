@@ -77,8 +77,12 @@ WB.ui = WB.ui || {};
   function nowLocal() {
     return new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 19);
   }
+  /** ISO 串 → "yyyy-MM-dd HH:mm:ss" 显示(依赖后端 jackson 东八区序列化) */
+  function fmtDT(s) { return s ? String(s).slice(0, 19).replace("T", " ") : ""; }
+  /** ISO 串 → 日期部分 */
+  function fmtD(s) { return s ? String(s).slice(0, 10) : ""; }
 
   WB.api = { store, post, get, proc, wb, interaction, codes, loadOpers, operBae, operAae,
-    batchLabel, batchType, contractState, contractStateType, nowLocal,
+    batchLabel, batchType, contractState, contractStateType, nowLocal, fmtDT, fmtD,
     YMD: new Date().toISOString().slice(0, 10) };
 })();

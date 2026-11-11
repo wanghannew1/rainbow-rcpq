@@ -8,6 +8,9 @@
 
   const queue = ref([]); const loading = ref(false);
   const detail = reactive({ row: null });
+  const htCodes = ref([]);
+  const htMap = Vue.computed(() =>
+    Object.fromEntries(htCodes.value.map(c => [c.split("-")[0], c])));
 
   async function loadQueue() {
     loading.value = true;
@@ -60,12 +63,16 @@
         <el-table-column prop="atc900" label="合同号" width="90"/>
         <el-table-column prop="aac003" label="姓名" width="90"/>
         <el-table-column prop="aac002" label="身份证" width="170"/>
-        <el-table-column prop="atc90a" label="合同类别" width="110"/>
+        <el-table-column label="合同类别" width="120">
+          <template #default="{ row }">{{ htMap[row.atc90a] || row.atc90a }}</template>
+        </el-table-column>
         <el-table-column prop="atc90c" label="开始" width="100"/>
         <el-table-column prop="atc90d" label="终止" width="100"/>
         <el-table-column prop="atc905" label="合同工资" width="90"/>
         <el-table-column prop="aab004" label="单位" min-width="150" show-overflow-tooltip/>
-        <el-table-column prop="aae036" label="导入时间" width="160"/>
+        <el-table-column label="导入时间" width="150">
+          <template #default="{ row }">{{ api.fmtDT(row.aae036) }}</template>
+        </el-table-column>
         <el-table-column label="操作" width="130">
           <template #default="{ row }">
             <el-button size="small" type="success" @click.stop="commit(row)">通过</el-button>
@@ -90,8 +97,11 @@
         驳回 = doXinqCancle(删 TC90+TB91)</div>
     </div>`,
     setup() {
-      onMounted(loadQueue);
-      return { queue, loading, detail, loadQueue, openRow, commit, cancle };
+      onMounted(async () => {
+        loadQueue();
+        htCodes.value = await api.codes("ATC90A");
+      });
+      return { queue, loading, detail, htMap, loadQueue, openRow, commit, cancle, api };
     },
   };
 })();

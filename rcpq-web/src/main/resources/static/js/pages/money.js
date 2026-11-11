@@ -106,7 +106,9 @@
       <h4>最近到账 (TB97 前 50)</h4>
       <el-table :data="arrivals" size="small" border max-height="260">
         <el-table-column prop="atb970" label="到账号" width="90"/>
-        <el-table-column prop="atb974" label="日期" width="100"/>
+        <el-table-column label="日期" width="100">
+          <template #default="{ row }">{{ api.fmtD(row.atb974) }}</template>
+        </el-table-column>
         <el-table-column prop="aab004" label="单位" min-width="180" show-overflow-tooltip/>
         <el-table-column prop="atb931" label="结算单元" min-width="160" show-overflow-tooltip/>
         <el-table-column prop="atb971" label="单位缴" width="90"/>
