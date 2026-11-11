@@ -33,7 +33,7 @@
   }
 
   function exportXls() {
-    if (!rows.value.length) { ElementPlus.ElMessage.warning("先查询出名册再导出"); return; }
+    if (!rows.value.length) { ElementPlus.ElMessage.warning("先报盘查询，再报盘导出"); return; }
     const q = `kind=${rp.kind}&flow=${rp.flow}&ym=${rp.ym}` +
       (rp.aab001 ? `&aab001=${rp.aab001}` : "");
     window.open("/wb/roster-export?" + q);
@@ -67,8 +67,8 @@
           </el-select>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" :loading="rp.busy" @click="load">生成名册</el-button>
-          <el-button type="success" @click="exportXls">导出报盘文件</el-button>
+          <el-button type="primary" :loading="rp.busy" @click="load">报盘查询</el-button>
+          <el-button type="success" @click="exportXls">报盘导出</el-button>
         </el-form-item>
       </el-form>
       <div v-if="rp.log" class="kv">{{ rp.log }}</div>
