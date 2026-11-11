@@ -20,15 +20,18 @@ import org.springframework.web.bind.annotation.RestController
  */
 @RestController
 @RequestMapping("/wb/hz")
-class HzController(private val jdbc: JdbcTemplate, private val tdck: TdckCases) {
+class HzController(private val jdbc: JdbcTemplate, private val tdck: TdckCases,
+                   private val audit: AuditLog) {
 
     /** 名册推送请求: 年月 + 可选单位过滤 + 经办人 */
     data class PushReq(val ym: String, val aab001: Long? = null, val aae011: String = "")
 
     /** 名册推送: 当月合同开始且生效(atb90r='3') → TC9W 工作表。
-     *  同合同同月旧行先删(重推覆盖); atc9w1='1' 报增, atc9w8='1' 待校验。 */
+     *  同合同同月旧行置 atc9w8='9' 作废(逻辑删除, 不物理删; 重推可追溯),
+     *  查询面一律排除 '9'; atc9w1='1' 报增, 新行 atc9w8='1' 待校验。 */
     @PostMapping("/push")
     fun push(@RequestBody r: PushReq): Map<String, Any?> {
+        audit.log(r.aae011, "wb:hz/push", "ym=${r.ym}", r)
         if (!Regex("^\\d{6}$").matches(r.ym)) return mapOf("appCode" to -1, "errMsg" to "年月格式不正确")
         val unitFilter = if (r.aab001 != null) " AND t.aab001=${r.aab001}" else ""
         // 险金户头(aaa030/aaa031)在 ab01, 按单位取(与 PRC_参保异议赋值 同源)
@@ -44,7 +47,8 @@ class HzController(private val jdbc: JdbcTemplate, private val tdck: TdckCases) 
         for (row in rows) {
             val aaa030 = (row["aaa030"] as Number?)?.toLong()
             if (aaa030 == null) { skipped.add("${row["aac003"]}(无险金户头)"); continue }
-            jdbc.update("DELETE FROM tc9w WHERE aae002=? AND atc900=? AND atc9w1='1'",
+            jdbc.update(
+                "UPDATE tc9w SET atc9w8='9' WHERE aae002=? AND atc900=? AND atc9w1='1' AND atc9w8<>'9'",
                 ymN, (row["atc900"] as Number).toLong())
             jdbc.update(
                 """INSERT INTO tc9w (atc9w0, aae002, atc900, aab001, aab004, atc9w1,
@@ -74,7 +78,7 @@ class HzController(private val jdbc: JdbcTemplate, private val tdck: TdckCases) 
                    AND b.aaa90w='1') AS confirmed_ok,
             EXISTS(SELECT 1 FROM tc9w_bp b WHERE b.aae002=w.aae002 AND b.atc900=w.atc900
                    AND b.aaa90w='2') AS confirmed_no
-            FROM tc9w w WHERE w.aae002=${ym.toLong()} AND w.atc9w1='1'"""
+            FROM tc9w w WHERE w.aae002=${ym.toLong()} AND w.atc9w1='1' AND w.atc9w8<>'9'"""
         if (aaa030 != null) sql += " AND w.aaa030=$aaa030"
         if (!aaa020.isNullOrBlank()) sql += " AND w.aaa100='${aaa020.replace("'", "''")}'"
         return jdbc.queryForList("$sql ORDER BY w.atc9w0")
@@ -86,7 +90,7 @@ class HzController(private val jdbc: JdbcTemplate, private val tdck: TdckCases) 
         if (!Regex("^\\d{6}$").matches(ym)) return emptyList()
         return jdbc.queryForList(
             """SELECT DISTINCT aaa030, aaa031, aaa100, aaa101 FROM tc9w
-               WHERE aae002=? AND atc9w1='1' AND aaa100 IS NOT NULL ORDER BY aaa030""", ym.toLong())
+               WHERE aae002=? AND atc9w1='1' AND atc9w8<>'9' AND aaa100 IS NOT NULL ORDER BY aaa030""", ym.toLong())
     }
 
     /** 成果确认请求: atc9w0 + 成功(参保日期 abp001 + 个人编号 aaa001) 或 异议(原因 aae013) */
@@ -94,10 +98,12 @@ class HzController(private val jdbc: JdbcTemplate, private val tdck: TdckCases) 
                           val aaa001: String? = null, val aae013: String? = null,
                           val aae011: String = "")
 
-    /** 成果确认: 写 TC9W_BP(ace10a='3', aaa90w 1=成功/2=异议; 重确认覆盖同键旧行)。
+    /** 成果确认: 写 TC9W_BP(ace10a='3', aaa90w 1=成功/2=异议)。
+     *  同键(aae002+atc900+aaa90w)已有行则原地 UPDATE 覆盖(逻辑更新, 不物理删, 重确认可追溯);
      *  abp001 存 'yyyy-MM-dd' — 回盘提交 PRC 按前 10 位 ISO 解析。 */
     @PostMapping("/confirm")
     fun confirm(@RequestBody r: ConfirmReq): Map<String, Any?> {
+        audit.log(r.aae011, "wb:hz/confirm", "atc9w0=${r.atc9w0}", r)
         val w = runCatching {
             jdbc.queryForMap(
                 """SELECT aae002, aaa030, aaa031, aaa100, aaa101, atc900, aac002, aac003,
@@ -108,11 +114,15 @@ class HzController(private val jdbc: JdbcTemplate, private val tdck: TdckCases) 
         if (!r.ok && r.aae013.isNullOrBlank())
             return mapOf("appCode" to -1, "errMsg" to "报增失败须填原因")
         val ymN = (w["aae002"] as Number).toLong()
+        val atc900N = (w["atc900"] as Number).toLong()
         val aaa90w = if (r.ok) "1" else "2"
-        jdbc.update(
-            "DELETE FROM tc9w_bp WHERE aae002=? AND atc900=? AND aaa90w=?",
-            ymN, (w["atc900"] as Number).toLong(), aaa90w)
-        jdbc.update(
+        // 逻辑更新: 同键旧行原地覆盖(不物理删), 操作留痕见 wb_audit_log
+        val updated = jdbc.update(
+            """UPDATE tc9w_bp SET aaa001=?, abp001=?, aae013=?, aae011=?, aae036=now()
+               WHERE aae002=? AND atc900=? AND aaa90w=?""",
+            if (r.ok) r.aaa001 else null, if (r.ok) r.abp001 else null, r.aae013,
+            r.aae011, ymN, atc900N, aaa90w)
+        if (updated == 0) jdbc.update(
             """INSERT INTO tc9w_bp (id, aae002, aaa030, aaa031, aaa020, aaa021, aaa001,
                aac002, aac003, abp001, ace10a, aaa90w, atc900, aab001, aab004, aae011,
                aae036, aae013)
@@ -121,7 +131,7 @@ class HzController(private val jdbc: JdbcTemplate, private val tdck: TdckCases) 
             ymN, (w["aaa030"] as Number?)?.toLong(), w["aaa031"],
             w["aaa100"], w["aaa101"], if (r.ok) r.aaa001 else null,
             w["aac002"], w["aac003"], if (r.ok) r.abp001 else null, aaa90w,
-            (w["atc900"] as Number).toLong(), (w["aab001"] as Number?)?.toLong(), w["aab004"],
+            atc900N, (w["aab001"] as Number?)?.toLong(), w["aab004"],
             r.aae011, r.aae013)
         if (r.ok) jdbc.update("UPDATE tc9w SET aaa001=? WHERE atc9w0=?", r.aaa001, r.atc9w0)
         return mapOf("appCode" to 1,
@@ -135,6 +145,7 @@ class HzController(private val jdbc: JdbcTemplate, private val tdck: TdckCases) 
      *  旧系统行为: TC90 延续生效后 TC9W 更新必然报错(忠实保留) — 以 msg 透出。 */
     @PostMapping("/next")
     fun next(@RequestBody r: BatchReq): Map<String, Any?> {
+        audit.log(null, "wb:hz/next", "atc900=${r.atc900}", r)
         if (r.atc900.isEmpty()) return mapOf("appCode" to -1, "errMsg" to "请选择名册行")
         return try {
             tdck.doAjax("", r.atc900.joinToString(","), "bz")
@@ -148,6 +159,7 @@ class HzController(private val jdbc: JdbcTemplate, private val tdck: TdckCases) 
      *  同上: TC90 标记生效后按旧系统报错 — msg 透出。 */
     @PostMapping("/pass")
     fun pass(@RequestBody r: BatchReq): Map<String, Any?> {
+        audit.log(null, "wb:hz/pass", "atc900=${r.atc900}", r)
         if (r.atc900.isEmpty()) return mapOf("appCode" to -1, "errMsg" to "请选择名册行")
         val atc9w0 = r.atc9w0.joinToString(",")
         val atc900 = r.atc900.joinToString(",")

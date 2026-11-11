@@ -189,7 +189,10 @@
             <el-date-picker v-model="hire.aaa203" type="month" value-format="YYYYMM"
                             placeholder="202611" style="width:100%"/></el-form-item></el-col>
         </el-row>
-        <el-button type="primary" :loading="hire.busy" @click="run">③ 生成批次 → 校验 → 提交</el-button>
+        <wb-dsf-tip menu="员工合同(新员工签约)" page="tdb/p 合同新增导入(批量)/tdb/a 派遣员工登记(单人)"
+          area="导入弹窗" btn="校验/提交" note="PRC_员工导入校验/PRC_员工导入提交; 新系统合并为一键(新签批次 TC90_BP→TB91 待审)">
+          <el-button type="primary" :loading="hire.busy" @click="run">③ 生成批次 → 校验 → 提交</el-button>
+        </wb-dsf-tip>
         <span class="kv">  等价旧系统: tdbp 新签弹窗的校验/提交按钮</span>
       </el-form>
       <pre class="log" v-if="hire.log">{{ hire.log }}</pre>

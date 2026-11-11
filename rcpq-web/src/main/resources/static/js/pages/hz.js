@@ -139,9 +139,17 @@
           </el-select>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" :loading="rp.busy" @click="push">生成名册并推送</el-button>
-          <el-button @click="loadHeads">刷新户头</el-button>
-          <el-button @click="loadRoster">报增查询</el-button>
+          <wb-dsf-tip menu="员工异动/补退费管理(社保)" page="报增名册导入(CHECK_TC9W_IMP)/tdb/p 合同新增导入"
+            area="名册导入" btn="导入" note="旧报增名册导入为生产即 INVALID 死包未移植; 新系统由合同推导推送 TC9W(等效替代)">
+            <el-button type="primary" :loading="rp.busy" @click="push">生成名册并推送</el-button>
+          </wb-dsf-tip>
+          <wb-dsf-tip menu="—" page="—" area="—" btn="—" note="新系统辅助按键, 东软无对应">
+            <el-button @click="loadHeads">刷新户头</el-button>
+          </wb-dsf-tip>
+          <wb-dsf-tip menu="员工异动/补退费管理(社保)" page="td/c/k 社保异动回盘/补退费(社保异动结果)"
+            area="报增查询条件" btn="查询(doQueryBz)">
+            <el-button @click="loadRoster">报增查询</el-button>
+          </wb-dsf-tip>
         </el-form-item>
         <el-form-item label="户头">
           <el-select v-model="rp.aaa030" clearable placeholder="户头" style="width:200px" @change="bpRows = []">
@@ -160,8 +168,14 @@
 
       <h4>名册工作表(TC9W, 报增)</h4>
       <div style="margin-bottom:6px">
-        <el-button size="small" type="success" @click="pass">审核通过(勾选)</el-button>
-        <el-button size="small" type="warning" @click="nextMonth">延续至下月(勾选)</el-button>
+        <wb-dsf-tip menu="员工异动/补退费管理(社保)" page="td/c/k 社保异动回盘/补退费"
+          area="报增结果列表" btn="审核(doPass)" note="tc90.atc90p='0'; TC9W 更新沿用旧系统报错行为">
+          <el-button size="small" type="success" @click="pass">审核通过(勾选)</el-button>
+        </wb-dsf-tip>
+        <wb-dsf-tip menu="员工异动/补退费管理(社保)" page="td/c/k 社保异动回盘/补退费"
+          area="报增结果列表" btn="延续至下月(doNextBz)" note="tc90.aaa201 社保参保年月+1; TC9W 更新沿用旧系统报错行为">
+          <el-button size="small" type="warning" @click="nextMonth">延续至下月(勾选)</el-button>
+        </wb-dsf-tip>
         <span class="kv">报增失败=局方反馈未通过, 登记异议后随回盘提交; 延续至下月=社保参保年月+1(与旧系统同: TC90 延续生效, TC9W 更新按旧报错)。</span>
       </div>
       <el-table :data="rows" size="small" border max-height="380"
@@ -184,17 +198,32 @@
         </el-table-column>
         <el-table-column label="成果确认" width="150">
           <template #default="{row}">
-            <el-button size="small" type="success" link @click="openOk(row)">报增成功</el-button>
-            <el-button size="small" type="danger" link @click="confirmNo(row)">报增失败</el-button>
+            <wb-dsf-tip menu="员工异动/补退费管理(社保)" page="td/c/k 社保异动回盘/补退费"
+              area="成果确认" btn="报增成功(申报结果导入的单行等价)" note="写 TC9W_BP 参保成功(实际参保时间+个人编号), 回盘提交后更新合同">
+              <el-button size="small" type="success" link @click="openOk(row)">报增成功</el-button>
+            </wb-dsf-tip>
+            <wb-dsf-tip menu="员工异动/补退费管理(社保)" page="td/c/k 社保异动回盘/补退费"
+              area="成果确认" btn="报增失败导入" note="登记异议(aaa90w='2'+原因), 回盘提交后转参保异议">
+              <el-button size="small" type="danger" link @click="confirmNo(row)">报增失败</el-button>
+            </wb-dsf-tip>
           </template>
         </el-table-column>
       </el-table>
 
       <h4>回盘批次(TC9W_BP) — 成功校验 → 回盘提交</h4>
       <div style="margin-bottom:6px">
-        <el-button size="small" @click="loadBp">查询批次</el-button>
-        <el-button size="small" type="primary" @click="check">成功校验</el-button>
-        <el-button size="small" type="danger" @click="commit">回盘提交</el-button>
+        <wb-dsf-tip menu="员工异动/补退费管理(社保)" page="td/c/k 社保异动回盘/补退费"
+          area="成果确认(回盘批次 tc9w_bpStore)" btn="批次查询" note="新系统按年月/户头/属地查 TC9W_BP">
+          <el-button size="small" @click="loadBp">查询批次</el-button>
+        </wb-dsf-tip>
+        <wb-dsf-tip menu="员工异动/补退费管理(社保)" page="td/c/k 社保异动回盘/补退费"
+          area="成果确认" btn="报增成功校验" note="已移植过程 PRC_社保异动回盘校验(清洗+逐行校验, 待审置已校验)">
+          <el-button size="small" type="primary" @click="check">成功校验</el-button>
+        </wb-dsf-tip>
+        <wb-dsf-tip menu="员工异动/补退费管理(社保)" page="td/c/k 社保异动回盘/补退费"
+          area="回盘" btn="回盘提交" note="已移植过程 PRC_社保异动回盘提交(停保/参保成功/异议三路更新 TC90+盖章)">
+          <el-button size="small" type="danger" @click="commit">回盘提交</el-button>
+        </wb-dsf-tip>
         <span class="kv">对应东软 tdck 成果确认: 校验/提交为已移植过程 PRC_社保异动回盘校验/提交。</span>
       </div>
       <div v-if="bpLog" class="kv">{{ bpLog }}</div>
@@ -216,7 +245,10 @@
 
       <h4>补缴明细(TC9W_BP05) — 参保成功且 缴费截止年月&lt;当月≤工资截止年月 的合同按年算补</h4>
       <div style="margin-bottom:6px">
-        <el-button size="small" type="primary" @click="loadBj">重建并查询补缴明细</el-button>
+        <wb-dsf-tip menu="员工异动/补退费管理(社保)" page="td/c/k 社保异动回盘/补退费"
+          area="补缴明细" btn="补缴明细查询" note="已移植过程 PRC_社保补缴明细(重建 TC9W_BP05, 险金引擎逐年分组计算)">
+          <el-button size="small" type="primary" @click="loadBj">重建并查询补缴明细</el-button>
+        </wb-dsf-tip>
         <span class="kv">对应东软 tdck 补缴明细(PRC_社保补缴明细, 险金引擎逐年分组计算)。</span>
       </div>
       <div v-if="bjLog" class="kv">{{ bjLog }}</div>

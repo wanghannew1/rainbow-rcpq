@@ -73,7 +73,9 @@
         <el-form-item label="新终止">
           <el-date-picker v-model="renew.atc90d" type="date" value-format="YYYY-MM-DD"
                           placeholder="2030-12-01" style="width:140px"/></el-form-item>
-        <el-form-item><el-button type="primary" :loading="renew.busy" @click="renewRun">校验+提交</el-button></el-form-item>
+        <el-form-item><wb-dsf-tip menu="员工合同(变更/续签)" page="tdb/p 合同新增导入·续签弹窗" area="续签批次 TC90_BP3" btn="校验/提交" note="匹配生效合同→写签订历史 TC90_QDLS+atc90f='2'">
+          <el-button type="primary" :loading="renew.busy" @click="renewRun">校验+提交</el-button>
+        </wb-dsf-tip></el-form-item>
       </el-form>
       <pre class="log" v-if="renew.log">{{ renew.log }}</pre>
       <el-table v-if="renewRows.length" :data="renewRows" size="small" border style="margin-bottom:8px">
@@ -100,7 +102,9 @@
         <el-form-item label="工资结束年月">
           <el-date-picker v-model="term.atc90av" type="month" value-format="YYYYMM"
                           placeholder="202812" style="width:120px"/></el-form-item>
-        <el-form-item><el-button type="danger" :loading="term.busy" @click="termRun">校验+提交</el-button></el-form-item>
+        <el-form-item><wb-dsf-tip menu="员工合同(变更/终止)" page="tdb/b 合同解除(终止弹窗)" area="终止批次 TC90_BP1" btn="校验/提交" note="PRC_员工终止导入提交: 报减名册/工资结束年月 atc90av/费用结束年月 aae003; 有效合同走审核 TB911=23">
+          <el-button type="danger" :loading="term.busy" @click="termRun">校验+提交</el-button>
+        </wb-dsf-tip></el-form-item>
       </el-form>
       <pre class="log" v-if="term.log">{{ term.log }}</pre>
       <el-table v-if="termRows.length" :data="termRows" size="small" border>

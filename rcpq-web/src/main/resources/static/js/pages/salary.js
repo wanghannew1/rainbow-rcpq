@@ -65,7 +65,11 @@
           <el-descriptions-item label="结算单元">{{ salary.contract.atb930 }}</el-descriptions-item>
           <el-descriptions-item label="单位">{{ salary.contract.aab004 }}</el-descriptions-item>
         </el-descriptions>
-        <el-button type="primary" :loading="salary.busy" @click="run">一键: 编制 → 核对 → 提交</el-button>
+        <wb-dsf-tip menu="工资(薪酬)" page="td/d/g 工资核对(工资次第信息)"
+          area="导入核对批次 TC93_BP1" btn="核对/提交(PKG_IMP.CHECK_TC93)"
+          note="新系统一键编制 TC93 当月行→核对→提交; 核对含三金额比对/最低工资 80% 门槛">
+          <el-button type="primary" :loading="salary.busy" @click="run">一键: 编制 → 核对 → 提交</el-button>
+        </wb-dsf-tip>
       </template>
       <pre class="log" v-if="salary.log">{{ salary.log }}</pre>
       <template v-if="batchRows.length">

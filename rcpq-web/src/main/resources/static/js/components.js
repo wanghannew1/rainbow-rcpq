@@ -49,4 +49,27 @@
       return { q, rows, busy, searched, search, api };
     },
   };
+
+  /** 东软对应位置漂浮提示(全站标准, 2026-11-11 定调): 每个操作按键声明旧系统
+     菜单/模块、页面(码+名称)、板块、按键名, 悬停才显示, 不占界面。
+     用法: <wb-dsf-tip menu=".." page=".." area=".." btn=".." note=".."><el-button../></wb-dsf-tip>
+     note 写新旧差异(如"新系统新增能力"/"沿用旧系统报错行为"), 东软无对应的写明。 */
+  WB.ui.dsfTip = {
+    name: "WbDsfTip",
+    props: { menu: String, page: String, area: String, btn: String, note: String },
+    template: `
+    <el-tooltip placement="bottom-start" effect="light" :hide-after="0">
+      <template #content>
+        <div style="max-width:380px;font-size:12px;line-height:1.8">
+          <div style="font-weight:600">东软系统对应位置</div>
+          <div v-if="menu">菜单/模块：{{ menu }}</div>
+          <div v-if="page">页面：{{ page }}</div>
+          <div v-if="area">板块：{{ area }}</div>
+          <div v-if="btn">按键：{{ btn }}</div>
+          <div v-if="note" style="color:#909399;margin-top:2px">{{ note }}</div>
+        </div>
+      </template>
+      <span style="display:inline-block"><slot/></span>
+    </el-tooltip>`,
+  };
 })();

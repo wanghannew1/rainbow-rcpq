@@ -11,7 +11,8 @@ import org.springframework.web.bind.annotation.*
  */
 @RestController
 @RequestMapping("/proc")
-class ProcGatewayController(private val handlers: List<ProcHandler>) {
+class ProcGatewayController(private val handlers: List<ProcHandler>,
+                            private val audit: AuditLog) {
 
     private val byName: Map<String, ProcHandler> by lazy {
         handlers.associateBy { it.procName() }
@@ -19,6 +20,8 @@ class ProcGatewayController(private val handlers: List<ProcHandler>) {
 
     @PostMapping("/{name:.+}")
     fun call(@PathVariable name: String, @RequestBody params: Map<String, Any?>): Map<String, Any?> {
+        audit.log(params["aae011"]?.toString(), "proc:$name",
+            params["aae002"]?.toString() ?: params["atc900"]?.toString(), params)
         val h = byName[name]
             ?: return mapOf("appCode" to -1, "errMsg" to "过程未实现或未注册: $name")
         return h.handle(params)

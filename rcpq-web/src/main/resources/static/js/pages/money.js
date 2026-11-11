@@ -68,7 +68,9 @@
         <el-form-item label="金额">
           <el-input-number v-model="arr.abp005" :min="0" :precision="2" :controls="false"
                            style="width:130px"/></el-form-item>
-        <el-form-item><el-button type="primary" :loading="arr.busy" @click="arriveRun">导入 TB97</el-button></el-form-item>
+        <el-form-item><wb-dsf-tip menu="收款(到账核销)" page="td/l/y 银行到账导入(工行/建行/吉林银行)" area="到账批次 TB97_BP" btn="导入" note="银行回单 Excel→TB97_BP→TB97, 新系统工作台化">
+          <el-button type="primary" :loading="arr.busy" @click="arriveRun">导入 TB97</el-button>
+        </wb-dsf-tip></el-form-item>
       </el-form>
       <pre class="log" v-if="arr.log">{{ arr.log }}</pre>
       <el-table v-if="arrRows.length" :data="arrRows" size="small" border style="margin-bottom:8px">
@@ -89,7 +91,9 @@
         <el-form-item label="服务费金额">
           <el-input-number v-model="inv.abp004" :min="0" :precision="2" :controls="false"
                            style="width:130px"/></el-form-item>
-        <el-form-item><el-button type="primary" :loading="inv.busy" @click="invoiceRun">导入 TB99</el-button></el-form-item>
+        <el-form-item><wb-dsf-tip menu="收款(开票)" page="td/l/b 发票导入" area="发票批次 TB99_BP" btn="导入" note="发票 Excel→TB99_BP→TB99, 8 类费项目金额合计生成 atb993 项目编码串">
+          <el-button type="primary" :loading="inv.busy" @click="invoiceRun">导入 TB99</el-button>
+        </wb-dsf-tip></el-form-item>
       </el-form>
       <pre class="log" v-if="inv.log">{{ inv.log }}</pre>
       <el-table v-if="invRows.length" :data="invRows" size="small" border style="margin-bottom:8px">

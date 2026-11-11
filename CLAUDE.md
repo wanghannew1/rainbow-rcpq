@@ -31,6 +31,10 @@ fuser -k 8080/tcp; nohup /usr/lib/jvm/java-21-openjdk-amd64/bin/java \
    numeric 目标列显式 ::numeric/num()
 6. 备份库 Oracle 172.16.0.60:1521/orcl ccrcpq/ccrc（JDK8+ojdbc14，脚本在 scripts/db/）
 7. 大文件/脚本放 work/(gitignore)或 scripts/，禁 /tmp
+8. **删除一律逻辑删除**（作废标记，禁物理 DELETE）；**用户操作一律写 wb_audit_log 留痕**
+   （AuditLog bean：/proc、/interaction、/wb 写操作、报盘导出已覆盖）；**新操作按键必须用
+   wb-dsf-tip 漂浮标注东软对应位置**（菜单/页面码+名称/板块/按键名，悬停显示）。
+   已移植忠实过程中的物理删（如 doXinqCancle）列改造清单逐步替换，不顺手改
 
 ## 三类 API 入口（前端对接面）
 - POST /proc/{包名.过程名} — 48 个业务过程（校验/提交/计算，appCode=1 成功）

@@ -54,7 +54,9 @@
     <div class="page">
       <el-form inline>
         <el-form-item>
-          <el-button :loading="loading" @click="loadQueue">刷新队列</el-button>
+          <wb-dsf-tip menu="员工合同(审核岗, 双人复核)" page="tdb/f 审核信息查询" area="待审列表" btn="—" note="新系统辅助按键(队列刷新), 东软无单独对应">
+            <el-button :loading="loading" @click="loadQueue">刷新队列</el-button>
+          </wb-dsf-tip>
           <span class="kv">  待审 {{ queue.length }} 条(封顶 200)</span>
         </el-form-item>
       </el-form>
@@ -75,8 +77,14 @@
         </el-table-column>
         <el-table-column label="操作" width="130">
           <template #default="{ row }">
+            <wb-dsf-tip menu="员工合同(审核岗, 双人复核)" page="tdb/f 审核信息查询" area="待审列表"
+              btn="通过(doXinqCommit)" note="atb90r='3'/TB912='3' 提交(行编辑保存模型)">
             <el-button size="small" type="success" @click.stop="commit(row)">通过</el-button>
+            </wb-dsf-tip>
+            <wb-dsf-tip menu="员工合同(审核岗, 双人复核)" page="tdb/f 审核信息查询" area="待审列表"
+              btn="不通过(doXinqCancle)" note="旧系统物理删 TC90+TB91; 按新标准待改造为逻辑删除(改造清单在案)">
             <el-button size="small" type="danger" plain @click.stop="cancle(row)">驳回</el-button>
+            </wb-dsf-tip>
           </template>
         </el-table-column>
       </el-table>

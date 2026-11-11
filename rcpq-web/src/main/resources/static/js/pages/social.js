@@ -35,7 +35,7 @@
   function exportXls() {
     if (!rows.value.length) { ElementPlus.ElMessage.warning("先报盘查询，再报盘导出"); return; }
     const q = `kind=${rp.kind}&flow=${rp.flow}&ym=${rp.ym}` +
-      (rp.aab001 ? `&aab001=${rp.aab001}` : "");
+      (rp.aab001 ? `&aab001=${rp.aab001}` : "") + `&aae011=${api.store.oper.aae011}`;
     window.open("/wb/roster-export?" + q);
   }
 
@@ -67,8 +67,14 @@
           </el-select>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" :loading="rp.busy" @click="load">报盘查询</el-button>
-          <el-button type="success" @click="exportXls">报盘导出</el-button>
+          <wb-dsf-tip menu="员工异动/补退费管理(社保)" page="td/h/y 新增员工查询(tdhy)"
+            area="查询条件" btn="查询" note="名册网格=tc9wStore_grid; 医保对应 td/c/ay 市医保(tdcay) tc9w1Store_grid">
+            <el-button type="primary" :loading="rp.busy" @click="load">报盘查询</el-button>
+          </wb-dsf-tip>
+          <wb-dsf-tip menu="员工异动/补退费管理(社保)" page="td/h/y 新增员工查询(tdhy)"
+            area="名册网格" btn="导出" note="东软导出名册后人工对局方模板贴数; 新系统直接生成局方可报盘文件(参保登记/停保 .xlsx, 医保拆省/市 zip), 属增强">
+            <el-button type="success" @click="exportXls">报盘导出</el-button>
+          </wb-dsf-tip>
         </el-form-item>
       </el-form>
       <div v-if="rp.log" class="kv">{{ rp.log }}</div>

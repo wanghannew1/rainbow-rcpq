@@ -10,7 +10,8 @@ import org.springframework.web.bind.annotation.*
 @RestController
 @RequestMapping("/wb")
 class WorkbenchController(private val jdbcTemplate: JdbcTemplate,
-                          private val baopan: BaopanExporter) {
+                          private val baopan: BaopanExporter,
+                          private val audit: AuditLog) {
 
     private fun nextval(seq: String) = jdbcTemplate.queryForObject("SELECT nextval('$seq')", Long::class.java)!!
 
@@ -31,6 +32,7 @@ class WorkbenchController(private val jdbcTemplate: JdbcTemplate,
 
     @PostMapping("/hire-batch")
     fun hireBatch(@RequestBody r: HireRow): Map<String, Any?> {
+        audit.log(null, "wb:hire-batch", null, r)
         val ace = nextval("seq_ce10_ace100")
         jdbcTemplate.update(
             """INSERT INTO tc90_bp (id, ace100, aac002, aac003, aac005, aac012, aae00p, aac009, atc90a,
@@ -62,6 +64,7 @@ class WorkbenchController(private val jdbcTemplate: JdbcTemplate,
 
     @PostMapping("/salary-setup")
     fun salarySetup(@RequestBody r: SalarySetup): Map<String, Any?> {
+        audit.log(null, "wb:salary-setup", null, r)
         val exists = jdbcTemplate.queryForObject(
             "SELECT COUNT(*) FROM tc93 WHERE atc900=? AND atc931=?",
             Int::class.java, r.atc900, r.ym) ?: 0
@@ -96,6 +99,7 @@ class WorkbenchController(private val jdbcTemplate: JdbcTemplate,
 
     @PostMapping("/arrival-batch")
     fun arrivalBatch(@RequestBody r: ArrivalRow): Map<String, Any?> {
+        audit.log(null, "wb:arrival-batch", null, r)
         val ace = nextval("seq_ce10_ace100")
         jdbcTemplate.update(
             "INSERT INTO tb97_bp (id, ace100, abp001, abp002, abp005) VALUES (nextval('seq_tb97_bp_id'), ?, ?, ?, ?)",
@@ -108,6 +112,7 @@ class WorkbenchController(private val jdbcTemplate: JdbcTemplate,
 
     @PostMapping("/invoice-batch")
     fun invoiceBatch(@RequestBody r: InvoiceRow): Map<String, Any?> {
+        audit.log(null, "wb:invoice-batch", null, r)
         val ace = nextval("seq_ce10_ace100")
         jdbcTemplate.update(
             """INSERT INTO tb99_bp (id, ace100, aaa030, aaa031, abp001, abp002, abp003, abp004)
@@ -123,6 +128,7 @@ class WorkbenchController(private val jdbcTemplate: JdbcTemplate,
 
     @PostMapping("/renew-batch")
     fun renewBatch(@RequestBody r: RenewRow): Map<String, Any?> {
+        audit.log(null, "wb:renew-batch", null, r)
         val ace = nextval("seq_ce10_ace100")
         jdbcTemplate.update(
             """INSERT INTO tc90_bp3 (id, ace100, aac002, aac003, atb930, aab001, aab004, aab004_1,
@@ -257,6 +263,7 @@ class WorkbenchController(private val jdbcTemplate: JdbcTemplate,
 
     @PostMapping("/terminate-batch")
     fun terminateBatch(@RequestBody r: TerminateRow): Map<String, Any?> {
+        audit.log(null, "wb:terminate-batch", null, r)
         val ace = nextval("seq_ce10_ace100")
         val bid = jdbcTemplate.queryForObject("SELECT COALESCE(MAX(id)+1,1) FROM tc90_bp1", Long::class.java)
         jdbcTemplate.update(
@@ -402,8 +409,11 @@ class WorkbenchController(private val jdbcTemplate: JdbcTemplate,
     @GetMapping("/roster-export")
     fun rosterExport(@RequestParam kind: String, @RequestParam flow: String,
                      @RequestParam ym: String, @RequestParam(required = false) aab001: Long?,
+                     @RequestParam(required = false) aae011: String?,
                      response: jakarta.servlet.http.HttpServletResponse) {
         val rows = baopanRows(flow, ym, aab001)
+        audit.log(aae011, "export:roster", "kind=$kind flow=$flow ym=$ym aab001=$aab001",
+            mapOf("kind" to kind, "flow" to flow, "ym" to ym, "aab001" to aab001, "count" to rows.size))
         val xlsx = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         when {
             kind == "social" && flow == "add" -> sendFile(response, "社保增员_$ym.xlsx", xlsx,

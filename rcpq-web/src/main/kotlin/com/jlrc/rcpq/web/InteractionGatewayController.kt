@@ -37,6 +37,7 @@ class InteractionGatewayController(
     private val metadataRegistry: MetadataRegistry,
     private val queryExecutor: QueryExecutor,
     private val updateExecutor: UpdateExecutor,
+    private val audit: AuditLog,
     private val xabUnitCases: XabUnitCases,
     private val azCases: AzCases,
     private val tdaCases: TdaProtocolCases,
@@ -129,6 +130,9 @@ class InteractionGatewayController(
      */
     @PostMapping("/{code}")
     fun update(@PathVariable code: String, @RequestBody body: Map<String, Any?>): Map<String, Any?> {
+        audit.log(body["bae011"]?.toString() ?: body["aae011"]?.toString(),
+            "interaction:$code",
+            body["atc900"]?.toString() ?: body["aae002"]?.toString(), body)
         val spec = registry.resolve(code)
             ?: return mapOf("error" to "未知交互码: $code", "code" to -30010)
         val storeCandidates = storeCandidates(code, spec, body["store"]?.toString())
