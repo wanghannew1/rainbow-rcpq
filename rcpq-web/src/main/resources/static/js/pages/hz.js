@@ -7,12 +7,17 @@
   const { api } = WB;
   const { ElMessageBox } = ElementPlus;
 
-  const rp = reactive({ ym: "202611", aab001: null, aaa030: null, aaa020: "",
-    log: "", busy: false });
+  const rp = reactive({ ym: "202611", kind: "social", aab001: null, aaa030: null,
+    aaa020: "", log: "", busy: false });
+  const isMed = () => rp.kind === "medical";
+  const procName = (base) => isMed()
+    ? "PKG_保险人员增减.PRC_市医保" + base
+    : "PKG_保险人员增减.PRC_社保异动回盘" + base;
+  const kindQS = () => "&kind=" + rp.kind;
   const rows = ref([]); const heads = ref([]); const units = ref([]);
   const bpRows = ref([]); const bpLog = ref("");
   const bjRows = ref([]); const bjLog = ref("");
-  const dlg = reactive({ show: false, atc9w0: null, name: "", abp001: "", aaa001: "" });
+  const dlg = reactive({ show: false, atc9w0: null, name: "", abp001: "", abp004: "", aaa001: "" });
 
   onMounted(async () => {
     try { units.value = (await api.wb("/units")) || []; } catch (e) { /* 保底 */ }
@@ -21,8 +26,8 @@
   async function push() {
     rp.busy = true; rp.log = "";
     try {
-      const r = await api.wb("/hz/push", { ym: rp.ym, aab001: rp.aab001 || null,
-        aae011: api.store.oper.aae011 });
+      const r = await api.wb("/hz/push", { ym: rp.ym, kind: rp.kind,
+        aab001: rp.aab001 || null, aae011: api.store.oper.aae011 });
       rp.log = r.msg || `已推送 ${r.pushed} 人`;
       if (r.skipped && r.skipped.length) rp.log += " 跳过: " + r.skipped.slice(0, 5).join(", ");
       await loadHeads();
@@ -31,7 +36,7 @@
   }
 
   async function loadHeads() {
-    try { heads.value = (await api.wb("/hz/heads?ym=" + rp.ym)) || []; }
+    try { heads.value = (await api.wb("/hz/heads?ym=" + rp.ym + kindQS())) || []; }
     catch (e) { heads.value = []; }
   }
 
@@ -39,7 +44,7 @@
     if (!rp.ym) { ElementPlus.ElMessage.warning("选年月"); return; }
     rp.busy = true; rp.log = "";
     try {
-      const q = `ym=${rp.ym}` + (rp.aaa030 ? `&aaa030=${rp.aaa030}` : "") +
+      const q = `ym=${rp.ym}${kindQS()}` + (rp.aaa030 ? `&aaa030=${rp.aaa030}` : "") +
         (rp.aaa020 ? `&aaa020=${encodeURIComponent(rp.aaa020)}` : "");
       rows.value = (await api.wb("/hz/roster?" + q)) || [];
       rp.log = `报增名册 ${rp.ym}: 共 ${rows.value.length} 人`;
@@ -48,13 +53,13 @@
   }
 
   function openOk(row) {
-    dlg.atc9w0 = row.atc9w0; dlg.name = row.aac003; dlg.abp001 = api.YMD; dlg.aaa001 = "";
+    dlg.atc9w0 = row.atc9w0; dlg.name = row.aac003; dlg.abp001 = api.YMD; dlg.aaa001 = ""; dlg.abp004 = "";
     dlg.show = true;
   }
   async function saveOk() {
     try {
-      const r = await api.wb("/hz/confirm", { atc9w0: dlg.atc9w0, ok: true,
-        abp001: dlg.abp001, aaa001: dlg.aaa001, aae011: api.store.oper.aae011 });
+      const r = await api.wb("/hz/confirm", { atc9w0: dlg.atc9w0, ok: true, kind: rp.kind,
+        abp001: dlg.abp001, abp004: dlg.abp004, aaa001: dlg.aaa001, aae011: api.store.oper.aae011 });
       dlg.show = false; rp.log = r.msg; loadRoster();
     } catch (e) { ElementPlus.ElMessage.error(e.message); }
   }
@@ -62,7 +67,7 @@
     try {
       const v = await ElMessageBox.prompt(`报增失败原因(【${row.aac003}】)`, "报增失败(异议)",
         { inputValue: "报增失败" });
-      const r = await api.wb("/hz/confirm", { atc9w0: row.atc9w0, ok: false,
+      const r = await api.wb("/hz/confirm", { atc9w0: row.atc9w0, ok: false, kind: rp.kind,
         aae013: v.value, aae011: api.store.oper.aae011 });
       rp.log = r.msg; loadRoster();
     } catch (e) { if (e !== "cancel" && e?.message) ElementPlus.ElMessage.error(e.message); }
@@ -89,13 +94,13 @@
   async function loadBp() {
     if (!rp.aaa030 || !rp.aaa020) { ElementPlus.ElMessage.warning("先选户头与参保属地"); return; }
     try {
-      bpRows.value = (await api.wb(`/hz/bp?ym=${rp.ym}&aaa030=${rp.aaa030}&aaa020=${encodeURIComponent(rp.aaa020)}`)) || [];
+      bpRows.value = (await api.wb(`/hz/bp?ym=${rp.ym}${kindQS()}&aaa030=${rp.aaa030}&aaa020=${encodeURIComponent(rp.aaa020)}`)) || [];
       bpLog.value = `回盘批次(${rp.ym} 户头${rp.aaa030}): 共 ${bpRows.value.length} 行(成功 ${bpRows.value.filter(r => r.aaa90w === "1").length}/异议 ${bpRows.value.filter(r => r.aaa90w === "2").length})`;
     } catch (e) { ElementPlus.ElMessage.error(e.message); }
   }
   async function check() {
     try {
-      const r = await api.proc("PKG_保险人员增减.PRC_社保异动回盘校验",
+      const r = await api.proc(procName("校验"),
         { aae002: rp.ym, aaa030: rp.aaa030, aaa020: rp.aaa020 });
       bpLog.value = `成功校验: 通过 ${r.pass ?? "-"} / 拒绝 ${r.reject ?? "-"}`;
     } catch (e) { bpLog.value = "校验失败: " + e.message; }
@@ -103,7 +108,7 @@
   async function commit() {
     try {
       await ElMessageBox.confirm("回盘提交将按 TC9W_BP 成果更新合同社保状态(参保成功/异议/停保), 确认?", "回盘提交");
-      const r = await api.proc("PKG_保险人员增减.PRC_社保异动回盘提交",
+      const r = await api.proc(procName("提交"),
         { aae002: rp.ym, aaa030: rp.aaa030, aaa020: rp.aaa020, aae011: api.store.oper.aae011 });
       bpLog.value = `回盘提交完成: 停保 ${r.stopApplied ?? 0} / 参保成功 ${r.successApplied ?? 0} / 异议 ${r.objectionApplied ?? 0}`;
       loadRoster();
@@ -128,7 +133,13 @@
     template: `
     <div class="page">
       <el-form inline>
-        <el-form-item label="社保年月">
+        <el-form-item label="险种">
+          <el-select v-model="rp.kind" style="width:110px" @change="rows = []; heads = []; bpRows = []">
+            <el-option value="social" label="社保"/>
+            <el-option value="medical" label="市医保"/>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="年月">
           <el-date-picker v-model="rp.ym" type="month" value-format="YYYYMM"
                           placeholder="202611" style="width:120px"/>
         </el-form-item>
@@ -233,8 +244,8 @@
         </template></el-table-column>
         <el-table-column prop="aac003" label="姓名" width="90"/>
         <el-table-column prop="aac002" label="身份证号码" width="170"/>
-        <el-table-column prop="aaa001" label="个人编号" width="100"/>
-        <el-table-column prop="abp001" label="实际参保时间" width="110"/>
+        <el-table-column prop="aaa001" :label="rp.kind === 'medical' ? '申报基数' : '个人编号'" width="100"/>
+        <el-table-column prop="abp001" :label="rp.kind === 'medical' ? '校验码串' : '实际参保时间'" width="110"/>
         <el-table-column prop="aae013" label="原因" min-width="140" show-overflow-tooltip/>
         <el-table-column prop="aab004" label="单位" min-width="150" show-overflow-tooltip/>
       </el-table>
@@ -275,6 +286,9 @@
           <el-form-item label="个人编号">
             <el-input v-model="dlg.aaa001" placeholder="局端分配的个人编号" style="width:180px"/>
           </el-form-item>
+          <el-form-item v-if="rp.kind === 'medical'" label="申报基数">
+            <el-input v-model="dlg.abp004" placeholder="空=合同基数" style="width:180px"/>
+          </el-form-item>
         </el-form>
         <template #footer>
           <el-button @click="dlg.show = false">取消</el-button>
@@ -283,7 +297,8 @@
       </el-dialog>
     </div>`,
     setup() {
-      return { rp, rows, heads, units, bpRows, bpLog, dlg, selRows, bjRows, bjLog, push,
+      return { rp, rows, heads, units, bpRows, bpLog, dlg, selRows, bjRows, bjLog,
+        isMed, push,
         loadHeads, loadRoster, openOk, saveOk, confirmNo, nextMonth, pass, loadBp, check,
         commit, loadBj, stTag };
     },
