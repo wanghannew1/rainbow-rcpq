@@ -212,13 +212,13 @@ class WorkbenchController(private val jdbcTemplate: JdbcTemplate) {
         return map.map { (code, name) -> mapOf("code" to code, "name" to (name ?: code)) }
     }
 
-    /** 结算单元(TB93), 可按单位过滤 */
+    /** 结算单元(TB93), 可按单位过滤; atb900=绑定的派遣协议(全量填充, 联动反填用) */
     @GetMapping("/settle-units")
     fun settleUnits(@RequestParam(required = false) aab001: Long?): List<Map<String, Any?>> =
         if (aab001 == null) jdbcTemplate.queryForList(
-            "SELECT atb930, atb931, aab001 FROM tb93 ORDER BY atb930 LIMIT 2000")
+            "SELECT atb930, atb931, aab001, atb900 FROM tb93 ORDER BY atb930 LIMIT 2000")
         else jdbcTemplate.queryForList(
-            "SELECT atb930, atb931, aab001 FROM tb93 WHERE aab001=? ORDER BY atb930", aab001)
+            "SELECT atb930, atb931, aab001, atb900 FROM tb93 WHERE aab001=? ORDER BY atb930", aab001)
 
     /** 经办人(SYS_ORG_USER_UNIT) */
     @GetMapping("/opers")

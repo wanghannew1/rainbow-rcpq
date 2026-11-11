@@ -19,6 +19,34 @@
   const agreements = computed(() => hire.aab001
     ? agreementsAll.value.filter(a => a.aab001 === hire.aab001)
     : agreementsAll.value);
+  const settleOptions = computed(() => hire.aab001
+    ? settleUnits.value.filter(s => s.aab001 === hire.aab001)
+    : settleUnits.value);
+
+  // 三向联动: 单位变化 → 两下拉过滤+失配清空+唯一自动选中
+  watch(() => hire.aab001, () => {
+    const ss = settleOptions.value;
+    if (!hire.atb930 || !ss.some(s => s.atb930 === hire.atb930)) {
+      hire.atb930 = ss.length === 1 ? ss[0].atb930 : null;
+    }
+    const ags = agreements.value;
+    if (!hire.atb900 || !ags.some(a => a.atb900 === hire.atb900)) {
+      hire.atb900 = ags.length === 1 ? ags[0].atb900 : null;
+    }
+  });
+  // 选协议 → 单位反填(watch 保留合法协议, 过滤结算单元)
+  function onAgreementChange(v) {
+    const a = agreementsAll.value.find(x => x.atb900 === v);
+    if (a && hire.aab001 !== a.aab001) hire.aab001 = a.aab001;
+  }
+  // 选结算单元 → 协议+单位反填(tb93 两字段全量填充)
+  function onSettleChange(v) {
+    const s = settleUnits.value.find(x => x.atb930 === v);
+    if (s) {
+      if (s.atb900 && hire.atb900 !== s.atb900) hire.atb900 = s.atb900;
+      if (hire.aab001 !== s.aab001) hire.aab001 = s.aab001;
+    }
+  }
   const baseErr = ref(""); const batchRows = ref([]); const batchTable = ref("");
 
   async function loadBase() {
@@ -29,18 +57,6 @@
       if (!units.value.length) baseErr.value = "单位清单为空(接口通但无数据)";
     } catch (e) { baseErr.value = "基础数据加载失败: " + e.message; }
   }
-
-  const settleOptions = computed(() => {
-    const hit = settleUnits.value.filter(s => s.aab001 === hire.aab001);
-    return hit.length ? hit : settleUnits.value;
-  });
-
-  watch(() => hire.aab001, v => {
-    hire.atb900 = null;
-    hire.atb930 = null;
-    const hit = agreements.value;
-    if (hit.length === 1) hire.atb900 = hit[0].atb900;
-  });
 
   async function hireOnMount() {
     await loadBase();
@@ -109,13 +125,15 @@
           </el-select>
         </el-form-item>
         <el-form-item label="派遣协议 ATB900">
-          <el-select v-model="hire.atb900" filterable placeholder="选协议" style="width:320px">
+          <el-select v-model="hire.atb900" filterable placeholder="选协议" style="width:320px"
+                     @change="onAgreementChange">
             <el-option v-for="a in agreements" :key="a.atb900" :value="a.atb900"
                        :label="a.atb900 + ' · ' + (a.aab004 || '')"/>
           </el-select>
         </el-form-item>
         <el-form-item label="结算单元 ATB930">
-          <el-select v-model="hire.atb930" filterable placeholder="选结算单元" style="width:300px">
+          <el-select v-model="hire.atb930" filterable placeholder="选结算单元" style="width:300px"
+                     @change="onSettleChange">
             <el-option v-for="s in settleOptions" :key="s.atb930" :value="s.atb930"
                        :label="s.atb930 + ' ' + s.atb931"/>
           </el-select>
@@ -196,7 +214,8 @@
     setup() {
       onMounted(hireOnMount);
       return { hire, units, agreements, settleOptions, baseErr, loadBase,
-        ygCodes, htCodes, regions, batchRows, batchTable, run, api };
+        ygCodes, htCodes, regions, onAgreementChange, onSettleChange,
+        batchRows, batchTable, run, api };
     },
   };
 })();
