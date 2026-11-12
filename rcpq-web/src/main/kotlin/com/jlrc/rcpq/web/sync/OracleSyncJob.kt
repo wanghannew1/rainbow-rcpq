@@ -83,8 +83,7 @@ class OracleSyncJob(private val pg: JdbcTemplate) {
                 val results = chosen.map { spec ->
                     val t0 = System.currentTimeMillis()
                     try {
-                        // INCR 暂不支持 latestBy 去重表(TC90_LIST 回查 SQL 修正待续), 回退全量——正确性优先
-                        val r = if (mode.equals("INCR", true) && spec.latestBy == null) incrOne(ora, spec) else syncOne(ora, spec)
+                        val r = if (mode.equals("INCR", true)) incrOne(ora, spec) else syncOne(ora, spec)
                         logRun(spec.table, mode, r.read, r.upsert, r.skipped, System.currentTimeMillis() - t0, "OK", null)
                         mapOf("table" to spec.table, "status" to "OK", "mode" to mode, "read" to r.read,
                             "upsert" to r.upsert, "skipped" to r.skipped,
@@ -137,7 +136,7 @@ class OracleSyncJob(private val pg: JdbcTemplate) {
         var written = 0L
         val selectSql = if (spec.latestBy == null) "SELECT $colList FROM ${spec.table}"
         else "SELECT $colList FROM (SELECT t.*, ROW_NUMBER() OVER (PARTITION BY $pkList " +
-            "ORDER BY ${spec.latestBy} DESC NULLS LAST) rn FROM ${spec.table} t) WHERE rn = 1"
+            "ORDER BY ${spec.latestBy} DESC NULLS LAST, ROWID) rn FROM ${spec.table} t) WHERE rn = 1"
         ora.prepareStatement(selectSql).use { ps ->
             ps.fetchSize = 2000
             val rs = ps.executeQuery()
@@ -172,6 +171,7 @@ class OracleSyncJob(private val pg: JdbcTemplate) {
     /** INCR 模式: 两库同列按 PK 排序流式归并, 规范化指纹比对——
      *  未变行跳过, 新增/修改键回查 Oracle 批量 UPSERT; PG 独有键跳过(自建行保留)。 */
     private fun incrOne(ora: Connection, spec: Spec): Result {
+        if (DEBUG) System.err.println("DBG incrOne 进入 " + spec.table)
         val oraCols = mutableListOf<String>()
         ora.prepareStatement(
             "SELECT column_name FROM user_tab_columns WHERE table_name=? ORDER BY column_id").use { ps ->
@@ -189,7 +189,7 @@ class OracleSyncJob(private val pg: JdbcTemplate) {
         val colList = cols.joinToString(",")
         val selectSql = if (spec.latestBy == null) "SELECT $colList FROM ${spec.table} ORDER BY $pkList"
         else "SELECT $colList FROM (SELECT t.*, ROW_NUMBER() OVER (PARTITION BY $pkList " +
-            "ORDER BY ${spec.latestBy} DESC NULLS LAST) rn FROM ${spec.table} t) WHERE rn = 1 ORDER BY $pkList"
+            "ORDER BY ${spec.latestBy} DESC NULLS LAST, ROWID) rn FROM ${spec.table} t) WHERE rn = 1 ORDER BY $pkList"
 
         var read = 0L
         var skipped = 0L
@@ -242,6 +242,7 @@ class OracleSyncJob(private val pg: JdbcTemplate) {
                     }
                     fun cmp(rowA: Array<Any?>, rowB: Array<Any?>): Int =
                         keyOf(rowA).compareTo(keyOf(rowB))
+                    val dbg = DEBUG
                     var o = hasOra; var g = hasPg
                     if (o) pullOra()
                     if (g) pullPg()
@@ -249,12 +250,24 @@ class OracleSyncJob(private val pg: JdbcTemplate) {
                     while (o || g) {
                         when {
                             o && (!g || cmp(rowOra, rowPg) < 0) -> {  // Oracle 新增
+                                if (DEBUG && changedKeys.size < 3)
+                                    System.err.println("DBG 新增分支 keyOra=" + keyOf(rowOra) +
+                                        (if (g) " keyPg=" + keyOf(rowPg) else " (PG流已尽)"))
                                 changedKeys.add(rowOra.clone()); read++
                                 o = rsOra.next(); if (o) pullOra()
                             }
                             o && g && cmp(rowOra, rowPg) == 0 -> {
                                 read++
-                                if (cols.indices.any { !eqCol(it) }) changedKeys.add(rowOra.clone()) else skipped++
+                                if (cols.indices.any { !eqCol(it) }) {
+                                    if (DEBUG && changedKeys.isEmpty()) {
+                                        System.err.println("DBG key=" + keyOf(rowOra))
+                                        for (i in cols.indices) if (!eqCol(i))
+                                            System.err.println("  DBG col=" + cols[i] + " oraClass=" +
+                                                (rowOra[i]?.javaClass?.simpleName ?: "null") + " ora=" + rowOra[i] +
+                                                " pgClass=" + (rowPg[i]?.javaClass?.simpleName ?: "null") + " pg=" + rowPg[i])
+                                    }
+                                    changedKeys.add(rowOra.clone())
+                                } else skipped++
                                 o = rsOra.next(); if (o) pullOra()
                                 g = rsPg.next(); if (g) pullPg()
                             }
@@ -273,10 +286,11 @@ class OracleSyncJob(private val pg: JdbcTemplate) {
             conn.autoCommit = false
             try {
                 conn.prepareStatement(upsertSql).use { batch ->
-                    // 回查同样套 latestBy 去重(源表 PK 失效有重复, 如 TC90_LIST.IKEY)
+                    // 回查同样套 latestBy 去重(源表 PK 失效有重复, 如 TC90_LIST.IKEY);
+                    // 内层只生成子查询(WHERE rn=1 由统一外层带过滤拼入, 避免双 WHERE)
                     val innerDedupe = if (spec.latestBy == null) "SELECT $colList FROM ${spec.table}"
                     else "SELECT t.* FROM (SELECT t.*, ROW_NUMBER() OVER (PARTITION BY $pkList " +
-                        "ORDER BY ${spec.latestBy} DESC NULLS LAST) rn FROM ${spec.table} t) WHERE rn = 1"
+                        "ORDER BY ${spec.latestBy} DESC NULLS LAST, ROWID) rn FROM ${spec.table} t)"
                     for (keys in changedKeys.chunked(300)) {
                         val ors = (0 until keys.size).joinToString(" OR ") {
                             "(" + spec.pk.mapIndexed { j, p -> "$p = ?" }.joinToString(" AND ") + ")"
@@ -306,6 +320,8 @@ class OracleSyncJob(private val pg: JdbcTemplate) {
     }
 
     companion object {
+        /** 调试开关: SyncMain --debug 置 true, 打印首个差异行明细 */
+        var DEBUG = false
         private const val Statement_SUCCESS_NO_INFO = -2 // java.sql.Statement.SUCCESS_NO_INFO
     }
 

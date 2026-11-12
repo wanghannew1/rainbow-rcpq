@@ -28,6 +28,7 @@ fun main(args: Array<String>) {
     job.oraUser = System.getenv("SYNC_ORA_USER") ?: "ccrcpq"
     job.oraPass = System.getenv("SYNC_ORA_PASS") ?: "ccrc"
 
+    OracleSyncJob.DEBUG = "--debug" in args
     val incr = args.any { it.equals("--incr", true) || it.equals("-i", true) }
     val tables = args.filterNot { it.startsWith("-") }.takeIf { it.isNotEmpty() }
     val r = job.syncTables(tables, if (incr) "INCR" else "FULL")
