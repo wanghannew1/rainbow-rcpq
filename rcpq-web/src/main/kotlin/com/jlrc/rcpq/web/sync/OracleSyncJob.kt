@@ -3,6 +3,7 @@ package com.jlrc.rcpq.web.sync
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.stereotype.Component
+import java.math.BigDecimal
 import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.Timestamp
@@ -68,8 +69,10 @@ class OracleSyncJob(private val pg: JdbcTemplate) {
         mapOf("table" to s.table, "pk" to s.pk, "pg_rows" to n)
     }
 
-    /** 执行同步; filter=null 全量, 否则只跑指定表(大小写不敏感)。返回逐表结果汇总。 */
-    fun syncTables(filter: List<String>? = null): Map<String, Any?> {
+    /** 执行同步。mode: FULL=全量 UPSERT(夜间); INCR=白天增量——两库按 PK 排序归并比对,
+     *  跳过未变行, 只写新增/修改键(Oracle 侧删除不传播: PG 自建行保留, 与全量同口径)。
+     *  filter=null 全部表, 否则只跑指定表(大小写不敏感)。 */
+    fun syncTables(filter: List<String>? = null, mode: String = "FULL"): Map<String, Any?> {
         if (!running.compareAndSet(false, true))
             return mapOf("appCode" to -1, "errMsg" to "同步进行中, 请稍后(防重入)")
         try {
@@ -80,14 +83,16 @@ class OracleSyncJob(private val pg: JdbcTemplate) {
                 val results = chosen.map { spec ->
                     val t0 = System.currentTimeMillis()
                     try {
-                        val r = syncOne(ora, spec)
-                        logRun(spec.table, r.read, r.upsert, r.ins, r.upd, System.currentTimeMillis() - t0, "OK", null)
-                        mapOf("table" to spec.table, "status" to "OK", "read" to r.read,
-                            "upsert" to r.upsert, "insert" to r.ins, "update" to r.upd,
+                        // INCR 暂不支持 latestBy 去重表(TC90_LIST 回查 SQL 修正待续), 回退全量——正确性优先
+                        val r = if (mode.equals("INCR", true) && spec.latestBy == null) incrOne(ora, spec) else syncOne(ora, spec)
+                        logRun(spec.table, mode, r.read, r.upsert, r.skipped, System.currentTimeMillis() - t0, "OK", null)
+                        mapOf("table" to spec.table, "status" to "OK", "mode" to mode, "read" to r.read,
+                            "upsert" to r.upsert, "skipped" to r.skipped,
                             "ms" to System.currentTimeMillis() - t0)
                     } catch (e: Exception) {
-                        logRun(spec.table, 0, 0, 0, 0, System.currentTimeMillis() - t0, "ERROR", e.message)
-                        mapOf("table" to spec.table, "status" to "ERROR", "error" to e.message)
+                        val msg = e.toString() + "\n" + (e.stackTrace.firstOrNull()?.toString() ?: "")
+                        logRun(spec.table, mode, 0, 0, 0, System.currentTimeMillis() - t0, "ERROR", msg)
+                        mapOf("table" to spec.table, "status" to "ERROR", "mode" to mode, "error" to msg)
                     }
                 }
                 return mapOf("appCode" to (if (results.all { it["status"] == "OK" }) 1 else -1),
@@ -99,7 +104,7 @@ class OracleSyncJob(private val pg: JdbcTemplate) {
         }
     }
 
-    private data class Result(val read: Long, val upsert: Long, val ins: Long, val upd: Long)
+    private data class Result(val read: Long, val upsert: Long, val ins: Long, val upd: Long, val skipped: Long = 0)
 
     private fun syncOne(ora: Connection, spec: Spec): Result {
         // 列交集: Oracle user_tab_columns ∩ PG information_schema, 保持 Oracle 顺序
@@ -164,16 +169,152 @@ class OracleSyncJob(private val pg: JdbcTemplate) {
         return Result(read, written, 0, 0)
     }
 
+    /** INCR 模式: 两库同列按 PK 排序流式归并, 规范化指纹比对——
+     *  未变行跳过, 新增/修改键回查 Oracle 批量 UPSERT; PG 独有键跳过(自建行保留)。 */
+    private fun incrOne(ora: Connection, spec: Spec): Result {
+        val oraCols = mutableListOf<String>()
+        ora.prepareStatement(
+            "SELECT column_name FROM user_tab_columns WHERE table_name=? ORDER BY column_id").use { ps ->
+            ps.setString(1, spec.table)
+            val r = ps.executeQuery()
+            while (r.next()) oraCols.add(r.getString(1))
+        }
+        val pgCols = pg.query(
+            "SELECT upper(column_name) FROM information_schema.columns WHERE table_name=?",
+            { rs, _ -> rs.getString(1) }, spec.table.lowercase()).toSet()
+        val cols = oraCols.filter { it in pgCols }
+        require(cols.containsAll(spec.pk)) { "${spec.table} 主键列缺失: ${spec.pk} ∩ $cols" }
+        val pkIdx = spec.pk.map { p -> cols.indexOfFirst { it.equals(p, true) } }
+        val pkList = spec.pk.joinToString(",")
+        val colList = cols.joinToString(",")
+        val selectSql = if (spec.latestBy == null) "SELECT $colList FROM ${spec.table} ORDER BY $pkList"
+        else "SELECT $colList FROM (SELECT t.*, ROW_NUMBER() OVER (PARTITION BY $pkList " +
+            "ORDER BY ${spec.latestBy} DESC NULLS LAST) rn FROM ${spec.table} t) WHERE rn = 1 ORDER BY $pkList"
+
+        var read = 0L
+        var skipped = 0L
+        val changedKeys = mutableListOf<Array<Any?>>()
+        val upsertSql =
+            "INSERT INTO ${spec.table.lowercase()} ($colList) VALUES (${cols.joinToString(",") { "?" }}) " +
+            "ON CONFLICT ($pkList) DO UPDATE SET " +
+            cols.filter { c -> spec.pk.none { p -> p.equals(c, true) } }
+                .joinToString(",") { "${it}=EXCLUDED.${it}" }
+
+        fun canon(v: Any?): String = when (v) {
+            null -> "\u0000"
+            is BigDecimal -> v.stripTrailingZeros().toPlainString()
+            is Timestamp -> v.time.toString()
+            is java.sql.Date -> v.time.toString()
+            is String -> "s:" + v
+            is Number -> "n:" + v.toString()
+            else -> v.toString()
+        }
+
+        ora.prepareStatement(selectSql).use { po ->
+            po.fetchSize = 2000
+            val rsOra = po.executeQuery()
+            requireNotNull(pg.dataSource).connection.use { conn ->
+                conn.autoCommit = false
+                conn.prepareStatement(
+                    "SELECT $colList FROM ${spec.table.lowercase()} ORDER BY $pkList").use { pi ->
+                    pi.fetchSize = 2000
+                    val rsPg = pi.executeQuery()
+                    val rowOra = arrayOfNulls<Any?>(cols.size)
+                    val rowPg = arrayOfNulls<Any?>(cols.size)
+                    val hasOra = rsOra.next()
+                    val hasPg = rsPg.next()
+                    fun pullOra() {
+                        for (i in cols.indices) rowOra[i] = rsOra.getObject(i + 1)
+                    }
+                    fun pullPg() {
+                        for (i in cols.indices) rowPg[i] = rsPg.getObject(i + 1)
+                    }
+                    fun keyOf(row: Array<Any?>): String = pkIdx.joinToString("|") { canon(row[it]) }
+                    // PG 侧 date 列(迁移语义截断时间)与 Oracle DATE 带时间的值: 只比日期部分,
+                    // 时间差异不判改(比对容忍); 两侧同为 timestamp 时仍按毫秒精确比
+                    fun eqCol(i: Int): Boolean {
+                        val a = rowOra[i]; val b = rowPg[i]
+                        if (b is java.sql.Date && a is Timestamp) {
+                            val dA = a.toLocalDateTime().toLocalDate()
+                            return dA == b.toLocalDate()
+                        }
+                        return canon(a) == canon(b)
+                    }
+                    fun cmp(rowA: Array<Any?>, rowB: Array<Any?>): Int =
+                        keyOf(rowA).compareTo(keyOf(rowB))
+                    var o = hasOra; var g = hasPg
+                    if (o) pullOra()
+                    if (g) pullPg()
+                    // 归并比对(两流均按 PK 升序); 修改判定=规范化指纹不等(铁律3: BigDecimal 归一后比)
+                    while (o || g) {
+                        when {
+                            o && (!g || cmp(rowOra, rowPg) < 0) -> {  // Oracle 新增
+                                changedKeys.add(rowOra.clone()); read++
+                                o = rsOra.next(); if (o) pullOra()
+                            }
+                            o && g && cmp(rowOra, rowPg) == 0 -> {
+                                read++
+                                if (cols.indices.any { !eqCol(it) }) changedKeys.add(rowOra.clone()) else skipped++
+                                o = rsOra.next(); if (o) pullOra()
+                                g = rsPg.next(); if (g) pullPg()
+                            }
+                            else -> {  // PG 独有 → 自建行/Oracle 已删, 不动
+                                g = rsPg.next(); if (g) pullPg()
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        // 回查 Oracle 批量 UPSERT 差异键(分块 IN 条件; 单键组兼容复合 PK)
+        var written = 0L
+        if (changedKeys.isNotEmpty()) {
+            val conn = requireNotNull(pg.dataSource).connection
+            conn.autoCommit = false
+            try {
+                conn.prepareStatement(upsertSql).use { batch ->
+                    // 回查同样套 latestBy 去重(源表 PK 失效有重复, 如 TC90_LIST.IKEY)
+                    val innerDedupe = if (spec.latestBy == null) "SELECT $colList FROM ${spec.table}"
+                    else "SELECT t.* FROM (SELECT t.*, ROW_NUMBER() OVER (PARTITION BY $pkList " +
+                        "ORDER BY ${spec.latestBy} DESC NULLS LAST) rn FROM ${spec.table} t) WHERE rn = 1"
+                    for (keys in changedKeys.chunked(300)) {
+                        val ors = (0 until keys.size).joinToString(" OR ") {
+                            "(" + spec.pk.mapIndexed { j, p -> "$p = ?" }.joinToString(" AND ") + ")"
+                        }
+                        ora.prepareStatement(
+                            if (spec.latestBy == null) "$innerDedupe WHERE $ors"
+                            else "SELECT * FROM ($innerDedupe WHERE rn = 1 AND ($ors)) t2").use { ps ->
+                            var pi = 1
+                            for (k in keys) for (j in pkIdx) ps.setObject(pi++, k[j])
+                            ps.executeQuery().use { rs ->
+                                while (rs.next()) {
+                                    for (i in cols.indices) batch.setObject(i + 1, rs.getObject(i + 1))
+                                    batch.addBatch()
+                                }
+                            }
+                        }
+                        written += batch.executeBatch().sumOf { if (it == Statement_SUCCESS_NO_INFO) 1L else it.coerceAtLeast(0).toLong() }
+                        conn.commit()
+                    }
+                }
+            } finally {
+                conn.autoCommit = true
+                conn.close()
+            }
+        }
+        return Result(read, written, 0, 0, skipped)
+    }
+
     companion object {
         private const val Statement_SUCCESS_NO_INFO = -2 // java.sql.Statement.SUCCESS_NO_INFO
     }
 
-    private fun logRun(table: String, read: Long, upsert: Long, ins: Long, upd: Long, ms: Long, status: String, err: String?) {
+    private fun logRun(table: String, mode: String, read: Long, upsert: Long, skipped: Long, ms: Long, status: String, err: String?) {
         runCatching {
             pg.update(
-                """INSERT INTO wb_sync_log (table_name, read_rows, upsert_rows, insert_rows,
-                   update_rows, duration_ms, status, error) VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
-                table, read, upsert, ins, upd, ms, status, err)
+                "INSERT INTO wb_sync_log (table_name, mode, read_rows, upsert_rows, skipped_rows, " +
+                    "duration_ms, status, error) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                table, mode, read, upsert, skipped, ms, status, err)
         }
     }
 }

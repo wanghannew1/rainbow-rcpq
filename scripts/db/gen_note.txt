@@ -1,0 +1,18 @@
+-- V15__ora_sync_date_ts.sql — 同步表 date 列对齐 Oracle DATE 语义(2026-11-12)
+-- 生成器: scripts/db/DbDateCols.java; 原因: PG date 截断时间致增量比对大面积误判
+-- 且存量 Oracle DATE 本就含时间部分(如 tc90.atc90e); date→timestamp 无损扩展
+-- tc90
+-- tc90_list
+-- tc90_yy
+-- ac01
+-- tb90
+-- tb91
+-- tb93
+-- tc93
+-- tb97
+-- tb99
+-- ab01
+-- aa10
+-- tc06
+-- tc92
+-- ce10

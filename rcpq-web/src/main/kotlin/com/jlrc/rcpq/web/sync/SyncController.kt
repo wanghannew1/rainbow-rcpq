@@ -24,12 +24,13 @@ class SyncController(
     @Value("\${sync.enabled:false}") private val enabled: Boolean,
 ) {
 
-    data class RunReq(val tables: List<String>? = null, val aae011: String? = null)
+    data class RunReq(val tables: List<String>? = null, val mode: String = "FULL",
+                      val aae011: String? = null)
 
     @PostMapping("/run")
     fun run(@RequestBody(required = false) r: RunReq?): Map<String, Any?> {
         audit.log(r?.aae011, "sync:run", (r?.tables ?: emptyList()).joinToString(","), r)
-        return job.syncTables(r?.tables)
+        return job.syncTables(r?.tables, r?.mode ?: "FULL")
     }
 
     @GetMapping("/status")

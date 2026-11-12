@@ -10,7 +10,8 @@ import kotlin.system.exitProcess
  * 与进程内 /sync/run 复用同一 OracleSyncJob 引擎(单一实现, 不漂移)。
  *
  * 用法: java -Dloader.main=com.jlrc.rcpq.web.sync.SyncMain -jar rcpq-web.jar 表名...
- *   (无参=全量 15 表; PG/Oracle 连接取环境变量, 见 sync_daily.sh)
+ *   (无参=全量 15 表 FULL; --incr=增量比对, 白天业务期按需, 只写差异行;
+ *    PG/Oracle 连接取环境变量, 见 sync_daily.sh)
  * 退出码: 0=全 OK, 1=有表失败/被防重入拒绝 — crontab 可据此告警。
  */
 fun main(args: Array<String>) {
@@ -27,7 +28,9 @@ fun main(args: Array<String>) {
     job.oraUser = System.getenv("SYNC_ORA_USER") ?: "ccrcpq"
     job.oraPass = System.getenv("SYNC_ORA_PASS") ?: "ccrc"
 
-    val r = job.syncTables(args.takeIf { it.isNotEmpty() }?.toList())
+    val incr = args.any { it.equals("--incr", true) || it.equals("-i", true) }
+    val tables = args.filterNot { it.startsWith("-") }.takeIf { it.isNotEmpty() }
+    val r = job.syncTables(tables, if (incr) "INCR" else "FULL")
     println(r["msg"])
     (r["tables"] as? List<*>)?.forEach { t ->
         val m = t as Map<*, *>
