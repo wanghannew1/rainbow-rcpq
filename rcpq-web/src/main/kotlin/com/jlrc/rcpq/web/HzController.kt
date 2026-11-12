@@ -284,4 +284,188 @@ class HzController(private val jdbc: JdbcTemplate, private val tdck: TdckCases,
                FROM tc9w_bp05 WHERE aae002=? AND aaa030=? AND aaa020=? ORDER BY atc900""",
             ym.toLong(), aaa030, aaa020)
     }
+
+    // ---------- M5: 局方申报结果(回盘)文件导入 ----------
+    // 真实文件样本在 resources/baopan/huipan/:
+    //  社保异动导入模板.xls  sheet '社保异动回盘' 9 列: 申报结果(1=成功/2=异议)/保险个人编号/
+    //    公民身份证号码/姓名/户口性质/业务年月/备注/养老滞纳金/失业滞纳金 —— 实测局方返回文件
+    //    编号/证件列常为空, 按报盘行序对齐工作表(可调口径; 有证件时按证件匹配优先)
+    //  市医保回盘2026.04.xls sheet '个人缴费信息' 17 列: 单位编号/费款所属期/个人编号/身份证
+    //    号码/姓名/人员类别(在职)/缴费标志/到账日期/缴费基数/缴费金额/基本医疗/个人缴纳大额/
+    //    个人缴纳医疗/单位缴纳医疗/划个人帐户/单位缴纳工伤/单位缴纳生育
+    //    —— 列→abp 映射与校验规则自洽: 缴费基数→abp004(基数不符 11), 个人缴纳大额→abp007
+    //    (大额 14 vs AA94), 个人缴纳医疗→abp008(灵活就业 12), 划个人帐户→abp00b(失业代缴 17)
+    // 省医保回盘文件格式已存档但暂不导入(省医保链路未建, 见 five-insurance-migration.md)
+
+    /** 回盘文件导入请求路径参数: 表单字段 ym/kind/aae011 + file */
+    private fun hdr(sheet: org.apache.poi.ss.usermodel.Sheet, names: List<String>): Map<String, Int> {
+        val row = sheet.getRow(0) ?: return emptyMap()
+        val out = mutableMapOf<String, Int>()
+        for (c in 0 until row.lastCellNum.toInt()) {
+            val t = row.getCell(c)?.toString()?.trim() ?: continue
+            if (t in names && !out.containsKey(t)) out[t] = c
+        }
+        return out
+    }
+
+    private fun cellStr(row: org.apache.poi.ss.usermodel.Row?, col: Int?): String? {
+        if (row == null || col == null) return null
+        val c = row.getCell(col) ?: return null
+        return when (c.cellType) {
+            org.apache.poi.ss.usermodel.CellType.NUMERIC ->
+                if (org.apache.poi.ss.usermodel.DateUtil.isCellDateFormatted(c))
+                    c.getDateCellValue().toInstant()
+                        .atZone(java.time.ZoneId.systemDefault()).toLocalDate().toString()
+                else c.numericCellValue.toBigDecimal().stripTrailingZeros().toPlainString()
+            else -> c.toString()?.trim()?.takeIf { it.isNotEmpty() }
+        }
+    }
+
+    /** 15 位身份证 → 18 位(19 世纪补位+校验位), 非 15 位原样 — FUNC_AAC00215_18 等价 */
+    private fun id15to18(v: String?): String? {
+        val t = v?.trim() ?: return null
+        if (t.length != 15 || !t.all { it.isDigit() }) return t
+        val s17 = t.substring(0, 6) + "19" + t.substring(6)
+        val w = intArrayOf(7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2)
+        val sum = s17.mapIndexed { i, ch -> (ch - '0') * w[i] }.sum()
+        val code = (12 - sum % 11) % 11
+        return s17 + (if (code == 10) "X" else code.toString())
+    }
+
+    /** 业务年月列 → 'yyyy-MM-dd'(提交 PRC 按前 10 位 ISO 解析): 8 位 yyyymmdd/日期串均归一 */
+    private fun toIsoDate(v: String?): String? {
+        val t = v?.trim() ?: return null
+        return when {
+            Regex("^\\d{8}$").matches(t) -> t.substring(0, 4) + "-" + t.substring(4, 6) + "-" + t.substring(6)
+            Regex("^\\d{4}-\\d{2}-\\d{2}").matches(t) -> t.substring(0, 10)
+            Regex("^\\d{6}$").matches(t) -> t.substring(0, 4) + "-" + t.substring(4, 6) + "-01"
+            else -> null
+        }
+    }
+
+    /** 局方申报结果(回盘)文件导入: 解析 .xls → 按 证件/行序 对齐名册工作表 → 写
+     *  TC9W_BP(社保)/TC9W_BP04(市医保) 待校验行 → 复用 /proc 校验/提交。
+     *  东软对应: tdck 申报结果导入弹窗/tdcay 导入弹窗(通用导入通道写批次表)。 */
+    @PostMapping("/import-bp")
+    fun importBp(@RequestParam ym: String, @RequestParam kind: String,
+                 @RequestParam aae011: String,
+                 @RequestParam("file") file: org.springframework.web.multipart.MultipartFile): Map<String, Any?> {
+        audit.log(aae011, "wb:hz/import-bp", "ym=$ym kind=$kind",
+            mapOf("ym" to ym, "kind" to kind, "file" to file.originalFilename, "size" to file.size))
+        if (!Regex("^\\d{6}$").matches(ym)) return mapOf("appCode" to -1, "errMsg" to "年月格式不正确")
+        val wb = try {
+            org.apache.poi.ss.usermodel.WorkbookFactory.create(file.inputStream)
+        } catch (e: Exception) {
+            return mapOf("appCode" to -1, "errMsg" to "文件解析失败: ${e.message}")
+        }
+        wb.use { book ->
+            val sheet = book.getSheetAt(0)
+            val ids = jdbc.query(
+                """SELECT atc9w0, atc900, aaa030, aaa031, aaa100, aaa101, aac002, aac003,
+                   aab001, aab004 FROM ${if (kind == "medical") "tc9w1" else "tc9w"}
+                   WHERE aae002=? AND atc9w1='1' AND atc9w8<>'9' ORDER BY atc9w0""",
+                { rs, _ -> mapOf(
+                    "atc9w0" to (rs.getObject("atc9w0") as Number).toLong(),
+                    "atc900" to (rs.getObject("atc900") as Number?)?.toLong(),
+                    "aaa030" to (rs.getObject("aaa030") as Number?)?.toLong(),
+                    "aaa031" to rs.getString("aaa031"), "aaa100" to rs.getString("aaa100"),
+                    "aaa101" to rs.getString("aaa101"), "aac002" to rs.getString("aac002"),
+                    "aac003" to rs.getString("aac003"), "aab001" to (rs.getObject("aab001") as Number?)?.toLong(),
+                    "aab004" to rs.getString("aab004")) },
+                ym.toLong())
+            val byId = ids.associateBy { it["aac002"] }
+            var imported = 0
+            var unmatched = 0
+            val rejects = mutableListOf<String>()
+            var seq = 0 // 行序对齐游标(文件数据行 ↔ 工作表推送序)
+            for (r in 1..sheet.lastRowNum) {
+                val row = sheet.getRow(r) ?: continue
+                if (kind == "medical") {
+                    val h = hdr(sheet, listOf("身份证号码", "姓名", "人员类别", "缴费标志", "到账日期",
+                        "缴费基数", "缴费金额", "基本医疗", "个人缴纳大额", "个人缴纳医疗",
+                        "单位缴纳医疗", "划个人帐户", "单位缴纳工伤", "单位缴纳生育",
+                        "费款所属期", "个人编号"))
+                    val idCard = cellStr(row, h["身份证号码"])?.let { id15to18(it) }
+                    val w = (idCard?.let { byId[it] }) ?: ids.getOrNull(seq)
+                    if (w == null) {
+                        unmatched++; rejects.add("R${r + 1}: 无对应名册行"); seq++; continue
+                    }
+                    seq++
+                    // 逻辑更新: 已有反馈行原地覆盖(不物理删), ace10a 留空待校验
+                    val updMed = jdbc.update(
+                        """UPDATE tc9w_bp04 SET aac000=?, aac002=?, aac003=?, abp001=?, abp002=?,
+                           abp003=?, abp004=?, abp005=?, abp006=?, abp007=?, abp008=?, abp009=?,
+                           abp00a=?, abp00b=?, abp00c=?, aab001=?, aab004=?, aae011=?, aae036=now()
+                           WHERE aae002=? AND atc900=?""",
+                        cellStr(row, h["个人编号"]), w["aac002"], w["aac003"] ?: cellStr(row, h["姓名"]),
+                        cellStr(row, h["人员类别"]) ?: "在职", cellStr(row, h["缴费标志"]),
+                        cellStr(row, h["到账日期"]), cellStr(row, h["缴费基数"]),
+                        cellStr(row, h["缴费金额"]), cellStr(row, h["基本医疗"]),
+                        cellStr(row, h["个人缴纳大额"]), cellStr(row, h["个人缴纳医疗"]),
+                        cellStr(row, h["单位缴纳医疗"]), cellStr(row, h["单位缴纳工伤"]),
+                        cellStr(row, h["划个人帐户"]), cellStr(row, h["单位缴纳生育"]),
+                        w["aab001"], w["aab004"], aae011, ym.toLong(), w["atc900"])
+                    if (updMed == 0) jdbc.update(
+                        """INSERT INTO tc9w_bp04 (id, aae002, aaa030, aaa031, aaa020, aaa021, aac000,
+                        aac002, aac003, abp001, abp002, abp003, abp004, abp005, abp006, abp007,
+                        abp008, abp009, abp00a, abp00b, abp00c, atc900, aab001, aab004, aae011, aae036)
+                        VALUES (nextval('seq_tc9w_bp04_id'), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, now())""",
+                        ym.toLong(), w["aaa030"], w["aaa031"], w["aaa100"], w["aaa101"],
+                        cellStr(row, h["个人编号"]), w["aac002"], w["aac003"] ?: cellStr(row, h["姓名"]),
+                        cellStr(row, h["人员类别"]) ?: "在职", cellStr(row, h["缴费标志"]),
+                        cellStr(row, h["到账日期"]), cellStr(row, h["缴费基数"]),
+                        cellStr(row, h["缴费金额"]), cellStr(row, h["基本医疗"]),
+                        cellStr(row, h["个人缴纳大额"]), cellStr(row, h["个人缴纳医疗"]),
+                        cellStr(row, h["单位缴纳医疗"]), cellStr(row, h["单位缴纳工伤"]),
+                        cellStr(row, h["划个人帐户"]), cellStr(row, h["单位缴纳生育"]),
+                        w["atc900"], w["aab001"], w["aab004"], aae011)
+                    imported++
+                } else {
+                    val h = hdr(sheet, listOf("申报结果", "保险个人编号", "公民身份证号码", "姓名",
+                        "户口性质", "业务年月", "备注", "养老滞纳金", "失业滞纳金"))
+                    val result = cellStr(row, h["申报结果"])
+                    if (result.isNullOrBlank()) continue
+                    val idCard = cellStr(row, h["公民身份证号码"])?.let { id15to18(it) }
+                    val w = (idCard?.let { byId[it] }) ?: ids.getOrNull(seq)
+                    if (w == null) {
+                        unmatched++; rejects.add("R${r + 1}: 无对应名册行"); seq++; continue
+                    }
+                    seq++
+                    val aaa90w = when (result) {
+                        "1" -> "1"; "2" -> "2"; else -> null
+                    }
+                    if (aaa90w == null) {
+                        unmatched++; rejects.add("R${r + 1}: 申报结果 '$result' 非已知值"); continue
+                    }
+                    // 逻辑更新: 同键(aae002+atc900+aaa90w)已有行原地覆盖(不物理删)
+                    val updSoc = jdbc.update(
+                        """UPDATE tc9w_bp SET aaa001=?, aac002=?, aac003=?, aac009=?, abp001=?,
+                           abp002=?, abp003=?, aab001=?, aab004=?, aae011=?, aae036=now(), aae013=?
+                           WHERE aae002=? AND atc900=? AND aaa90w=?""",
+                        cellStr(row, h["保险个人编号"]),
+                        idCard ?: w["aac002"], w["aac003"] ?: cellStr(row, h["姓名"]),
+                        cellStr(row, h["户口性质"]), toIsoDate(cellStr(row, h["业务年月"])),
+                        cellStr(row, h["养老滞纳金"]), cellStr(row, h["失业滞纳金"]),
+                        w["aab001"], w["aab004"], aae011, cellStr(row, h["备注"]),
+                        ym.toLong(), w["atc900"], aaa90w)
+                    if (updSoc == 0) jdbc.update(
+                        """INSERT INTO tc9w_bp (id, aae002, aaa030, aaa031, aaa020, aaa021, aaa001,
+                        aac002, aac003, aac009, abp001, abp002, abp003, ace10a, aaa90w, atc900,
+                        aab001, aab004, aae011, aae036, aae013)
+                        VALUES (nextval('seq_tc9w_id'), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?, ?, ?, ?, now(), ?)""",
+                        ym.toLong(), w["aaa030"], w["aaa031"], w["aaa100"], w["aaa101"],
+                        cellStr(row, h["保险个人编号"]),
+                        idCard ?: w["aac002"], w["aac003"] ?: cellStr(row, h["姓名"]),
+                        cellStr(row, h["户口性质"]), toIsoDate(cellStr(row, h["业务年月"])),
+                        cellStr(row, h["养老滞纳金"]), cellStr(row, h["失业滞纳金"]),
+                        aaa90w, w["atc900"], w["aab001"], w["aab004"], aae011,
+                        cellStr(row, h["备注"]))
+                    imported++
+                }
+            }
+            return mapOf("appCode" to 1, "imported" to imported, "unmatched" to unmatched,
+                "rosterRows" to ids.size, "rejects" to rejects,
+                "msg" to "导入 $imported 行(待成功校验)" + if (unmatched > 0) "; 未匹配 $unmatched 行" else "")
+        }
+    }
 }

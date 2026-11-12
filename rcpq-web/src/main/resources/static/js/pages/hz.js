@@ -75,6 +75,26 @@
 
   const selRows = ref([]);
   function sel() { return selRows.value; }
+  const fileInput = ref(null);
+  function pickFile() { fileInput.value.click(); }
+  /* M5: 局方申报结果(回盘)文件导入 — 社保=社保异动回盘 9 列/市医保=个人缴费信息 17 列,
+     按证件或报盘行序对齐名册写 TC9W_BP/BP04 待校验, 之后走成功校验→回盘提交 */
+  async function uploadBp(ev) {
+    const f = ev.target.files[0]; if (!f) return;
+    try {
+      const fd = new FormData();
+      fd.append("file", f);
+      const r = await fetch(`/wb/hz/import-bp?ym=${rp.ym}&kind=${rp.kind}&aae011=${api.store.oper.aae011}`,
+        { method: "POST", body: fd });
+      const j = await r.json();
+      if (j.appCode !== 1) { ElementPlus.ElMessage.error(j.errMsg || "导入失败"); }
+      else {
+        rp.log = j.msg + (j.rejects && j.rejects.length ? " 例: " + j.rejects.slice(0, 3).join("; ") : "");
+        loadBp(); loadRoster();
+      }
+    } catch (e) { ElementPlus.ElMessage.error(e.message); }
+    ev.target.value = "";
+  }
   async function nextMonth() {
     const s = sel(); if (!s.length) { ElementPlus.ElMessage.warning("请勾选名册行"); return; }
     try {
@@ -173,6 +193,13 @@
             <el-option v-for="h in heads.filter(x => !rp.aaa030 || x.aaa030 === rp.aaa030)"
                        :key="h.aaa100" :value="h.aaa100" :label="(h.aaa101 || '') + ' ' + h.aaa100"/>
           </el-select>
+        </el-form-item>
+        <el-form-item>
+          <wb-dsf-tip menu="员工异动/补退费管理(社保)" page="td/c/k 社保异动回盘/补退费"
+            area="申报结果导入弹窗" btn="导入" note="局方回盘 .xls: 社保=社保异动回盘 9 列/市医保=个人缴费信息 17 列(样本见 baopan/huipan); 按证件或报盘行序对齐名册, 写 TC9W_BP/BP04 待校验">
+            <el-button size="small" type="warning" @click="pickFile">导入回盘文件</el-button>
+          </wb-dsf-tip>
+          <input ref="fileInput" type="file" accept=".xls,.xlsx" style="display:none" @change="uploadBp"/>
         </el-form-item>
       </el-form>
       <div v-if="rp.log" class="kv">{{ rp.log }}</div>
@@ -298,7 +325,7 @@
     </div>`,
     setup() {
       return { rp, rows, heads, units, bpRows, bpLog, dlg, selRows, bjRows, bjLog,
-        isMed, push,
+        isMed, fileInput, pickFile, uploadBp, push,
         loadHeads, loadRoster, openOk, saveOk, confirmNo, nextMonth, pass, loadBp, check,
         commit, loadBj, stTag };
     },
