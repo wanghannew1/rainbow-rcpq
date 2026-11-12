@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/rainbow_rcpq
+    url: jdbc:postgresql://localhost:5432/rainbow_rcpq?reWriteBatchedInserts=true   # 同步批量写入改多行
     username: rcpq
     password: rcpq_dev
     driver-class-name: org.postgresql.Driver
@@ -17,3 +17,12 @@ spring:
           no-cache: true   # 静态资源协商缓存(304), 防 jar 更新后浏览器吃旧 JS
 server:
   port: 8080
+
+# Oracle→PG 每日同步(并行运行期; 表集合=OracleSyncJob.specs, 规则见该类注释)
+ora:
+  url: jdbc:oracle:thin:@172.16.0.60:1521:orcl
+  user: ccrcpq
+  password: ccrc
+sync:
+  enabled: false      # 生产置 true 后按 sync.cron 每日定时; 开发用 POST /sync/run 手动
+  cron: "0 30 1 * * *"
