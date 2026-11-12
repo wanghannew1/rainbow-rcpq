@@ -47,6 +47,10 @@ fuser -k 8080/tcp; nohup /usr/lib/jvm/java-21-openjdk-amd64/bin/java \
 - POST /interaction/{REQ-编号} — 行编辑保存（**传改好状态的整行**，非增量指令）
 - POST /import/tddc、/import/sys/{importId} — Excel 导入
 - GET  /proc、/interaction/registry — 清单
+- POST /sync/run、GET /sync/status|tables — Oracle→PG 每日同步（并行运行期，2026-11-12）：
+  15 表集合见 OracleSyncJob.specs；**同步表=旧库原始表，PG 侧只读不改造**（写在两次同步
+  之间会被覆盖）；PG 序列已抬段 1e7 防两库撞号（scripts/db/seq_offset.sql，PG 新业务键
+  从 1e7 起）；定时 sync.enabled+sync.cron，手动 POST /sync/run
 
 ## 当前阶段：前端（业务员工作台）
 方案：静态页 + Vue3/ElementPlus(资源下载进 static/vendor, 内网无 CDN 依赖)，
