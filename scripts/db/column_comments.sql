@@ -39,3 +39,20 @@ COMMENT ON COLUMN tb99_bp.ace10a IS '批次行校验结果: 3=过 2=拒(原因 a
 
 -- ===== 工作台新增 =====
 COMMENT ON TABLE wb_audit_log IS '工作台操作留痕(2026-11-11 定调: 用户操作一律留痕; 覆盖/proc、/interaction、/wb 写操作、报盘导出; AuditLog bean 只插入不更新)';
+
+-- ===== W1 公积金链(2026-11-16, 出处=旧包源码+AA10 字典+备份库分布, 详见 docs/five-insurance-migration.md W0/W1) =====
+COMMENT ON COLUMN tc9u.atc9u8 IS '公积金名单审核状态(AA10 字典): 1=暂存 2=提交审核 3=生效 4=提交前台(终态)。旧系统置4语句被注释(保险人员增减 L6555-6560)全表停1; W0#1 裁决: 新系统异动回盘提交成功后整批置4(2026-11-16 实测生产回盘链活跃)。9=新系统作废标记(逻辑删除, 旧库无此义)';
+COMMENT ON COLUMN tc9u.atc9u1 IS '公积金业务类型: 1=报增(开户) 2=启封后转出标记(异议回盘提交置2, 旧源码 L6470-6472)';
+COMMENT ON COLUMN tc9u.atc9uy IS '公积金业务类型镜像位: 异议回盘提交启封分支与 atc9u1 同置 2(旧源码 L6471)';
+COMMENT ON COLUMN tc9u.atc9u2 IS '公积金业务状态(生成义): 1=当月新增(与 aa10 字典申报结果义分叉, 同 TC9W 家族 atc9w2)';
+COMMENT ON COLUMN tc9u.abp00a IS '单位缴存比例(整数百分数, 拆自 tc90.atb90s 冒号前段)';
+COMMENT ON COLUMN tc9u.abp00b IS '个人缴存比例(整数百分数, 拆自 tc90.atb90s 冒号后段)';
+COMMENT ON COLUMN tc9u_bp02.abp002 IS '公积金封存回盘状态: 封存=按封存行处理(提交回写 TC90.AAA004), 其他值跳过; 异议校验启封分支按本表 aaa001 反查封存信息';
+COMMENT ON COLUMN tc9u_bp02.ace10a IS '封存桶行状态: 1=新开户已落账(封存提交写入); 旧系统校验结果回写被注释, 清洗后为空';
+COMMENT ON COLUMN tc9u_bp03.abp002 IS '公积金异议回盘匹配键=身份证号(清洗 x→X/去空白)';
+COMMENT ON COLUMN tc9u_bp03.abp003 IS '公积金异议回盘内容: 含"100066835"且含"状态封存"→启封, 否则→异议(校验判定写 abp004)';
+COMMENT ON COLUMN tc9u_bp03.abp004 IS '公积金异议回盘判定: 启封/异议(异议回盘校验写入; 提交按此分流)';
+COMMENT ON COLUMN tc9u_bp03.ace10a IS '异议桶行校验结果: 3=过 2=拒(原因 ace10b), 提交只消费 3';
+COMMENT ON COLUMN tc9w_bp02.abp002 IS '公积金异动回盘缴存状态: 正常=校验/提交消费(匹配+编号+比例校验→TC90.ATC90W 置0), 其他值仅置 ace10a=3 不参与提交';
+COMMENT ON COLUMN tc9w_bp02.aaa90z IS '公积金异动回盘差异码: 10=申报基数与合同 aaa303 不符(差异值记 aaa303_1 旧/aaa303_2 新, 非失败)';
+COMMENT ON COLUMN tc9w_bp02.ace10a IS '公积金异动回盘桶行状态: 3=校验过(待提交) 2=校验拒(ace10b 原因) 1=提交完成';

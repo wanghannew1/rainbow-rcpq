@@ -8,9 +8,12 @@
   const { ElMessageBox } = ElementPlus;
 
   const rp = reactive({ ym: "202611", kind: "social", aab001: null, aaa030: null,
-    aaa020: "", log: "", busy: false });
+    aaa020: "", bucket: "hx", log: "", busy: false });
   const isMed = () => rp.kind === "medical";
-  const procName = (base) => isMed()
+  const isHf = () => rp.kind === "housingfund";
+  const procName = (base) => isHf()
+    ? "PKG_保险人员增减.PRC_公积金异动回盘" + base
+    : isMed()
     ? "PKG_保险人员增减.PRC_市医保" + base
     : "PKG_保险人员增减.PRC_社保异动回盘" + base;
   const kindQS = () => "&kind=" + rp.kind;
@@ -114,8 +117,12 @@
   async function loadBp() {
     if (!rp.aaa030 || !rp.aaa020) { ElementPlus.ElMessage.warning("先选户头与参保属地"); return; }
     try {
-      bpRows.value = (await api.wb(`/hz/bp?ym=${rp.ym}${kindQS()}&aaa030=${rp.aaa030}&aaa020=${encodeURIComponent(rp.aaa020)}`)) || [];
-      bpLog.value = `回盘批次(${rp.ym} 户头${rp.aaa030}): 共 ${bpRows.value.length} 行(成功 ${bpRows.value.filter(r => r.aaa90w === "1").length}/异议 ${bpRows.value.filter(r => r.aaa90w === "2").length})`;
+      const bq = isHf() ? `&bucket=${rp.bucket}` : "";
+      bpRows.value = (await api.wb(`/hz/bp?ym=${rp.ym}${kindQS()}${bq}&aaa030=${rp.aaa030}&aaa020=${encodeURIComponent(rp.aaa020)}`)) || [];
+      const s = bpRows.value.filter(r => r.aaa90w === "1").length;
+      const y = bpRows.value.filter(r => r.aaa90w === "2").length;
+      bpLog.value = `回盘批次(${rp.ym} 户头${rp.aaa030}${isHf() ? " 桶" + rp.bucket : ""}): 共 ${bpRows.value.length} 行` +
+        (isHf() ? "" : `(成功 ${s}/异议 ${y})`);
     } catch (e) { ElementPlus.ElMessage.error(e.message); }
   }
   async function check() {
@@ -127,13 +134,28 @@
   }
   async function commit() {
     try {
-      await ElMessageBox.confirm("回盘提交将按 TC9W_BP 成果更新合同社保状态(参保成功/异议/停保), 确认?", "回盘提交");
+      await ElMessageBox.confirm("回盘提交将按回盘桶成果更新合同状态(参保成功/异议/停保), 确认?", "回盘提交");
       const r = await api.proc(procName("提交"),
         { aae002: rp.ym, aaa030: rp.aaa030, aaa020: rp.aaa020, aae011: api.store.oper.aae011 });
-      bpLog.value = `回盘提交完成: 停保 ${r.stopApplied ?? 0} / 参保成功 ${r.successApplied ?? 0} / 异议 ${r.objectionApplied ?? 0}`;
+      bpLog.value = (isHf()
+        ? `公积金回盘提交完成: 参保成功 ${r.cbApplied ?? 0} / 停保 ${r.tzApplied ?? 0} / 名单终态置位 ${r.terminalApplied ?? 0}(W0#1)`
+        : `回盘提交完成: 停保 ${r.stopApplied ?? 0} / 参保成功 ${r.successApplied ?? 0} / 异议 ${r.objectionApplied ?? 0}`);
       loadRoster();
     } catch (e) { if (e !== "cancel") bpLog.value = "提交失败: " + e.message; }
   }
+  /* W1 公积金封存/异议回盘(TC9U_BP02/BP03): 校验/提交四键, 东软 tdcae 弹窗 */
+  async function procPair(label, name, body, fmt) {
+    try {
+      const r = await api.proc("PKG_保险人员增减.PRC_公积金" + name, body);
+      bpLog.value = label + ": " + fmt(r);
+    } catch (e) { bpLog.value = label + "失败: " + e.message; }
+  }
+  const gjBody = () => ({ aae002: rp.ym, aaa030: rp.aaa030, aaa020: rp.aaa020 });
+  const fcCheck = () => procPair("封存校验", "封存回盘校验", gjBody(), r => `清洗 ${r.cleaned ?? "-"} 行(忠实: 逐行校验结果回写旧系统已注释)`);
+  const fcCommit = () => procPair("封存提交", "封存回盘提交", gjBody(), r => `开户落账 ${r.applied ?? 0} / 跳过 ${r.skipped ?? 0}`);
+  const yyCheck = () => procPair("异议校验", "异议回盘校验", gjBody(), r => `通过 ${r.pass ?? "-"} / 拒绝 ${r.reject ?? "-"}`);
+  const yyCommit = () => procPair("异议提交", "异议回盘提交",
+    { ...gjBody(), aae011: api.store.oper.aae011 }, r => `启封 ${r.hfApplied ?? 0} / 异议 ${r.yyApplied ?? 0}`);
 
   const stTag = (s) => ({ "1": "待校验", "4": "已校验" }[s] || (s || "-"));
 
@@ -154,9 +176,10 @@
     <div class="page">
       <el-form inline>
         <el-form-item label="险种">
-          <el-select v-model="rp.kind" style="width:110px" @change="rows = []; heads = []; bpRows = []">
+          <el-select v-model="rp.kind" style="width:110px" @change="rows = []; heads = []; bpRows = []; rp.bucket = 'hx'">
             <el-option value="social" label="社保"/>
             <el-option value="medical" label="市医保"/>
+            <el-option value="housingfund" label="公积金"/>
           </el-select>
         </el-form-item>
         <el-form-item label="年月">
@@ -194,18 +217,25 @@
                        :key="h.aaa100" :value="h.aaa100" :label="(h.aaa101 || '') + ' ' + h.aaa100"/>
           </el-select>
         </el-form-item>
-        <el-form-item>
+        <el-form-item v-if="!isHf()">
           <wb-dsf-tip menu="员工异动/补退费管理(社保)" page="td/c/k 社保异动回盘/补退费"
             area="申报结果导入弹窗" btn="导入" note="局方回盘 .xls: 社保=社保异动回盘 9 列/市医保=个人缴费信息 17 列(样本见 baopan/huipan); 按证件或报盘行序对齐名册, 写 TC9W_BP/BP04 待校验">
             <el-button size="small" type="warning" @click="pickFile">导入回盘文件</el-button>
           </wb-dsf-tip>
           <input ref="fileInput" type="file" accept=".xls,.xlsx" style="display:none" @change="uploadBp"/>
         </el-form-item>
+        <el-form-item v-if="isHf()" label="回盘桶">
+          <el-select v-model="rp.bucket" style="width:130px" @change="bpRows = []">
+            <el-option value="hx" label="异动(TC9W_BP02)"/>
+            <el-option value="fc" label="封存(TC9U_BP02)"/>
+            <el-option value="yy" label="异议(TC9U_BP03)"/>
+          </el-select>
+        </el-form-item>
       </el-form>
       <div v-if="rp.log" class="kv">{{ rp.log }}</div>
 
-      <h4>名册工作表(TC9W, 报增)</h4>
-      <div style="margin-bottom:6px">
+      <h4>名册工作表({{ isHf() ? "TC9U 公积金" : "TC9W 社保/医保" }}, 报增)</h4>
+      <div style="margin-bottom:6px" v-if="!isHf()">
         <wb-dsf-tip menu="员工异动/补退费管理(社保)" page="td/c/k 社保异动回盘/补退费"
           area="报增结果列表" btn="审核(doPass)" note="tc90.atc90p='0'; TC9W 更新沿用旧系统报错行为">
           <el-button size="small" type="success" @click="pass">审核通过(勾选)</el-button>
@@ -236,11 +266,13 @@
         </el-table-column>
         <el-table-column label="成果确认" width="150">
           <template #default="{row}">
-            <wb-dsf-tip menu="员工异动/补退费管理(社保)" page="td/c/k 社保异动回盘/补退费"
-              area="成果确认" btn="报增成功(申报结果导入的单行等价)" note="写 TC9W_BP 参保成功(实际参保时间+个人编号), 回盘提交后更新合同">
-              <el-button size="small" type="success" link @click="openOk(row)">报增成功</el-button>
+            <wb-dsf-tip :menu="isHf() ? '员工异动/补退费管理(公积金)' : '员工异动/补退费管理(社保)'"
+              :page="isHf() ? 'td/c/ae 员工公积金报增申请(15)' : 'td/c/k 社保异动回盘/补退费'"
+              area="成果确认" :btn="isHf() ? '登记回盘结果(公积金回盘文件未到位 W0#4 前的手动通道)' : '报增成功(申报结果导入的单行等价)'"
+              :note="isHf() ? '写 TC9W_BP02 正常行(基数/比例缺省=名册值), 异动回盘校验→提交后更新 TC90.ATC90W/AAA004 + W0#1 终态置位; 公积金异议走异议回盘桶' : '写 TC9W_BP 参保成功(实际参保时间+个人编号), 回盘提交后更新合同'">
+              <el-button size="small" type="success" link @click="openOk(row)">{{ isHf() ? "登记回盘结果" : "报增成功" }}</el-button>
             </wb-dsf-tip>
-            <wb-dsf-tip menu="员工异动/补退费管理(社保)" page="td/c/k 社保异动回盘/补退费"
+            <wb-dsf-tip v-if="!isHf()" menu="员工异动/补退费管理(社保)" page="td/c/k 社保异动回盘/补退费"
               area="成果确认" btn="报增失败导入" note="登记异议(aaa90w='2'+原因), 回盘提交后转参保异议">
               <el-button size="small" type="danger" link @click="confirmNo(row)">报增失败</el-button>
             </wb-dsf-tip>
@@ -248,24 +280,56 @@
         </el-table-column>
       </el-table>
 
-      <h4>回盘批次(TC9W_BP) — 成功校验 → 回盘提交</h4>
+      <h4>回盘批次({{ isHf() ? "公积金三桶 TC9W_BP02/TC9U_BP02/TC9U_BP03" : "TC9W_BP" }}) — 校验 → 提交</h4>
       <div style="margin-bottom:6px">
-        <wb-dsf-tip menu="员工异动/补退费管理(社保)" page="td/c/k 社保异动回盘/补退费"
-          area="成果确认(回盘批次 tc9w_bpStore)" btn="批次查询" note="新系统按年月/户头/属地查 TC9W_BP">
+        <wb-dsf-tip :menu="isHf() ? '员工异动/补退费管理(公积金)' : '员工异动/补退费管理(社保)'"
+          :page="isHf() ? 'td/c/ae 员工公积金报增申请(15)' : 'td/c/k 社保异动回盘/补退费'"
+          area="成果确认(回盘批次)" btn="批次查询" note="新系统按年月/户头/属地(公积金封存桶按 aaa100)查回盘桶">
           <el-button size="small" @click="loadBp">查询批次</el-button>
         </wb-dsf-tip>
-        <wb-dsf-tip menu="员工异动/补退费管理(社保)" page="td/c/k 社保异动回盘/补退费"
-          area="成果确认" btn="报增成功校验" note="已移植过程 PRC_社保异动回盘校验(清洗+逐行校验, 待审置已校验)">
-          <el-button size="small" type="primary" @click="check">成功校验</el-button>
+        <wb-dsf-tip :menu="isHf() ? '员工异动/补退费管理(公积金)' : '员工异动/补退费管理(社保)'"
+          :page="isHf() ? 'td/c/ae 员工公积金报增申请(15)' : 'td/c/k 社保异动回盘/补退费'"
+          area="成果确认" :btn="isHf() ? '异动回盘校验' : '报增成功校验'"
+          :note="isHf() ? '已移植过程 PRC_公积金异动回盘校验(清洗+匹配+编号/比例校验; W0#1: 旧校验尾置终态被注释→移至提交后)' : '已移植过程 PRC_社保异动回盘校验(清洗+逐行校验, 待审置已校验)'">
+          <el-button size="small" type="primary" @click="check">{{ isHf() ? "异动校验" : "成功校验" }}</el-button>
         </wb-dsf-tip>
-        <wb-dsf-tip menu="员工异动/补退费管理(社保)" page="td/c/k 社保异动回盘/补退费"
-          area="回盘" btn="回盘提交" note="已移植过程 PRC_社保异动回盘提交(停保/参保成功/异议三路更新 TC90+盖章)">
+        <wb-dsf-tip :menu="isHf() ? '员工异动/补退费管理(公积金)' : '员工异动/补退费管理(社保)'"
+          :page="isHf() ? 'td/c/ae 员工公积金报增申请(15)' : 'td/c/k 社保异动回盘/补退费'"
+          area="回盘" :btn="isHf() ? '异动回盘提交' : '回盘提交'"
+          :note="isHf() ? '已移植过程 PRC_公积金异动回盘提交(参保成功回写 TC90.ATC90W/AAA004/比例/基数+停保+TC90_YY; W0#1 裁决: 恢复 TC9U.ATC9U8 整批置4)' : '已移植过程 PRC_社保异动回盘提交(停保/参保成功/异议三路更新 TC90+盖章)'">
           <el-button size="small" type="danger" @click="commit">回盘提交</el-button>
         </wb-dsf-tip>
-        <span class="kv">对应东软 tdck 成果确认: 校验/提交为已移植过程 PRC_社保异动回盘校验/提交。</span>
+        <template v-if="isHf()">
+          <wb-dsf-tip menu="员工异动/补退费管理(公积金)" page="td/c/ae 员工公积金报增申请(15)"
+            area="封存回盘弹窗(tdcae:243/268)" btn="封存回盘校验/提交"
+            note="封存校验净效果=文本清洗(旧系统逐行结果回写被注释, 忠实); 封存提交回写 TC90.AAA004(ATC90W='2'时同时清) + 桶行置'新开户'">
+            <el-button size="small" type="primary" plain @click="fcCheck">封存校验</el-button>
+            <el-button size="small" type="danger" plain @click="fcCommit">封存提交</el-button>
+          </wb-dsf-tip>
+          <wb-dsf-tip menu="员工异动/补退费管理(公积金)" page="td/c/ae 员工公积金报增申请(15)"
+            area="异议回盘弹窗(tdcae:322-391)" btn="异议回盘校验/提交"
+            note="异议校验: ABP003 含'100066835'+'状态封存'→启封, 否则异议; 提交: 启封置 TC9U.ATC9U1='2'/ATC9UY='2', 异议走参保异议赋值(SAFESIGN='4')+TC90.ATC90W='2'">
+            <el-button size="small" type="primary" plain @click="yyCheck">异议校验</el-button>
+            <el-button size="small" type="danger" plain @click="yyCommit">异议提交</el-button>
+          </wb-dsf-tip>
+        </template>
+        <span class="kv">{{ isHf()
+          ? "对应东软 tdcae 封存/异议回盘弹窗; 公积金回盘文件实样未到位(W0#4), 桶行由「登记回盘结果」手动写入。"
+          : "对应东软 tdck 成果确认: 校验/提交为已移植过程 PRC_社保异动回盘校验/提交。" }}</span>
       </div>
       <div v-if="bpLog" class="kv">{{ bpLog }}</div>
-      <el-table v-if="bpRows.length" :data="bpRows" size="small" border max-height="260">
+      <el-table v-if="bpRows.length && isHf()" :data="bpRows" size="small" border max-height="260">
+        <el-table-column prop="id" label="行ID" width="90"/>
+        <el-table-column prop="abp002" label="缴存状态/内容" width="120"/>
+        <el-table-column prop="aac003" label="姓名" width="90"/>
+        <el-table-column prop="aac002" label="证件/标识" width="170"/>
+        <el-table-column prop="aaa001" label="个人编号" width="100"/>
+        <el-table-column prop="abp003" label="基数/内容" width="110"/>
+        <el-table-column prop="abp004" label="启封判定" width="90"/>
+        <el-table-column prop="ace10a" label="校验/提交态" width="100"/>
+        <el-table-column prop="ace10b" label="说明" min-width="120"/>
+      </el-table>
+      <el-table v-if="bpRows.length && !isHf()" :data="bpRows" size="small" border max-height="260">
         <el-table-column label="结果" width="80"><template #default="{row}">
           <el-tag size="small" :type="row.aaa90w === '1' ? 'success' : 'danger'">{{ row.aaa90w === '1' ? '参保成功' : '异议' }}</el-tag>
         </template></el-table-column>
@@ -281,16 +345,16 @@
         报增查询 → 成果确认(报增成功=登记实际参保时间+局端个人编号; 报增失败=登记异议) →
         成功校验 → 回盘提交(按 TC9W_BP 更新 TC90: 成功置 aaa203/atc90p='0', 异议转参保异议, 停保置 atc90p='1')。</div>
 
-      <h4>补缴明细(TC9W_BP05) — 参保成功且 缴费截止年月&lt;当月≤工资截止年月 的合同按年算补</h4>
-      <div style="margin-bottom:6px">
+      <h4 v-if="!isHf()">补缴明细(TC9W_BP05) — 参保成功且 缴费截止年月&lt;当月≤工资截止年月 的合同按年算补</h4>
+      <div style="margin-bottom:6px" v-if="!isHf()">
         <wb-dsf-tip menu="员工异动/补退费管理(社保)" page="td/c/k 社保异动回盘/补退费"
           area="补缴明细" btn="补缴明细查询" note="已移植过程 PRC_社保补缴明细(重建 TC9W_BP05, 险金引擎逐年分组计算)">
           <el-button size="small" type="primary" @click="loadBj">重建并查询补缴明细</el-button>
         </wb-dsf-tip>
         <span class="kv">对应东软 tdck 补缴明细(PRC_社保补缴明细, 险金引擎逐年分组计算)。</span>
       </div>
-      <div v-if="bjLog" class="kv">{{ bjLog }}</div>
-      <el-table v-if="bjRows.length" :data="bjRows" size="small" border max-height="260">
+      <div v-if="bjLog && !isHf()" class="kv">{{ bjLog }}</div>
+      <el-table v-if="bjRows.length && !isHf()" :data="bjRows" size="small" border max-height="260">
         <el-table-column prop="aac003" label="姓名" width="90"/>
         <el-table-column prop="aac002" label="身份证号码" width="170"/>
         <el-table-column prop="abp001" label="户口" width="70"/>
@@ -307,7 +371,7 @@
       <el-dialog v-model="dlg.show" title="报增成功(成果确认)" width="380px">
         <el-form label-width="110px">
           <el-form-item label="姓名"><span>{{ dlg.name }}</span></el-form-item>
-          <el-form-item label="实际参保时间">
+          <el-form-item v-if="!isHf()" label="实际参保时间">
             <el-date-picker v-model="dlg.abp001" type="date" value-format="YYYY-MM-DD" style="width:180px"/>
           </el-form-item>
           <el-form-item label="个人编号">
@@ -315,6 +379,9 @@
           </el-form-item>
           <el-form-item v-if="rp.kind === 'medical'" label="申报基数">
             <el-input v-model="dlg.abp004" placeholder="空=合同基数" style="width:180px"/>
+          </el-form-item>
+          <el-form-item v-if="isHf()" label="公积金基数">
+            <el-input v-model="dlg.abp004" placeholder="空=名册基数" style="width:180px"/>
           </el-form-item>
         </el-form>
         <template #footer>
@@ -325,9 +392,9 @@
     </div>`,
     setup() {
       return { rp, rows, heads, units, bpRows, bpLog, dlg, selRows, bjRows, bjLog,
-        isMed, fileInput, pickFile, uploadBp, push,
+        isMed, isHf, fileInput, pickFile, uploadBp, push,
         loadHeads, loadRoster, openOk, saveOk, confirmNo, nextMonth, pass, loadBp, check,
-        commit, loadBj, stTag };
+        commit, loadBj, stTag, fcCheck, fcCommit, yyCheck, yyCommit };
     },
   };
 })();
