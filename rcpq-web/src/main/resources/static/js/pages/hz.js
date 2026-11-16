@@ -12,7 +12,10 @@
   const isMed = () => rp.kind === "medical";
   const isHf = () => rp.kind === "housingfund";
   const isSm = () => rp.kind === "smedical";
-  const procName = (base) => isSm()
+  const isGs = () => rp.kind === "sgongshang";
+  const procName = (base) => isGs()
+    ? "PKG_保险人员增减.PRC_省工伤异动回盘" + base
+    : isSm()
     ? "PKG_保险人员增减.PRC_省医保异动回盘" + base
     : isHf()
     ? "PKG_保险人员增减.PRC_公积金异动回盘" + base
@@ -176,6 +179,34 @@
       bpLog.value = `补差提交(批次 ${v.value}): 落账 ${r.applied ?? 0} 行`;
     } catch (e) { if (e !== "cancel") bpLog.value = "补差提交失败: " + e.message; }
   }
+  /* W3a 省工伤: 减免(TC09_BP→TC09) / 补差(TC9W_BP08→TJ0B3) */
+  const gsBatch = () => ElMessageBox.prompt("批次号(ace100)", "批次", { inputValue: "" });
+  const gsBody = (ace) => ({ ace100: ace, aae002: rp.ym, aaa030: rp.aaa030, aaa020: rp.aaa020, aae011: api.store.oper.aae011 });
+  async function gsJmCheck() {
+    try { const v = await gsBatch();
+      const r = await api.proc("PKG_保险人员增减.PRC_省工伤减免校验", { ace100: v.value });
+      bpLog.value = `减免校验(批次 ${v.value}): 通过 ${r.pass ?? "-"} / 拒绝 ${r.reject ?? "-"}`;
+    } catch (e) { if (e !== "cancel") bpLog.value = "减免校验失败: " + e.message; }
+  }
+  async function gsJmCommit() {
+    try { const v = await gsBatch();
+      await ElMessageBox.confirm("减免提交将重建 TC09 台账(先物理删旧账, 旧系统同款), 确认?", "减免提交");
+      const r = await api.proc("PKG_保险人员增减.PRC_省工伤减免提交", gsBody(v.value));
+      bpLog.value = `减免提交(批次 ${v.value}): 落账 ${r.applied ?? 0} 行`;
+    } catch (e) { if (e !== "cancel") bpLog.value = "减免提交失败: " + e.message; }
+  }
+  async function gsBcCheck() {
+    try { const v = await gsBatch();
+      const r = await api.proc("PKG_保险人员增减.PRC_省工伤基数补差回盘校验", { ace100: v.value });
+      bpLog.value = `补差校验(批次 ${v.value}): 通过 ${r.pass ?? "-"}(缺月仍置过=忠实)`;
+    } catch (e) { if (e !== "cancel") bpLog.value = "补差校验失败: " + e.message; }
+  }
+  async function gsBcCommit() {
+    try { const v = await gsBatch();
+      const r = await api.proc("PKG_保险人员增减.PRC_省工伤基数补差回盘提交", gsBody(v.value));
+      bpLog.value = `补差提交(批次 ${v.value}): 落账 ${r.applied ?? 0} 行(TJ0B3 逐月摊分)`;
+    } catch (e) { if (e !== "cancel") bpLog.value = "补差提交失败: " + e.message; }
+  }
   async function gzb() {
     if (!rp.aaa030 || !rp.aaa020) { ElementPlus.ElMessage.warning("先选户头与参保属地"); return; }
     try {
@@ -209,6 +240,7 @@
             <el-option value="social" label="社保"/>
             <el-option value="medical" label="市医保"/>
             <el-option value="smedical" label="省医保"/>
+            <el-option value="sgongshang" label="省工伤"/>
             <el-option value="housingfund" label="公积金"/>
           </el-select>
         </el-form-item>
@@ -259,6 +291,13 @@
             <el-option value="hx" label="异动(TC9W_BP02)"/>
             <el-option value="fc" label="封存(TC9U_BP02)"/>
             <el-option value="yy" label="异议(TC9U_BP03)"/>
+          </el-select>
+        </el-form-item>
+        <el-form-item v-if="isGs()" label="回盘桶">
+          <el-select v-model="rp.bucket" style="width:140px" @change="bpRows = []">
+            <el-option value="hx" label="异动(TC9W_BP09)"/>
+            <el-option value="bj" label="补差(TC9W_BP08)"/>
+            <el-option value="jm" label="减免(TC09_BP)"/>
           </el-select>
         </el-form-item>
         <el-form-item v-if="isSm()" label="回盘桶">
@@ -361,6 +400,20 @@
             area="省医保缴费工资表" btn="生成"
             note="已移植过程 PRC_省医保工资表(重建 TC9W_BP07, 险金引擎计算五险扣款; 当月已回盘则拒绝)">
             <el-button size="small" type="warning" plain @click="gzb">工资表生成</el-button>
+          </wb-dsf-tip>
+        </template>
+        <template v-if="isGs()">
+          <wb-dsf-tip menu="员工异动/补退费管理(省工伤)" page="td/c/bt 省工伤减免回盘(27)"
+            area="减免回盘弹窗" btn="校验/提交"
+            note="已移植过程 PRC_省工伤减免校验/提交(按 AAA009 编号匹配+TC09 重建; 额度/合计零值拒)">
+            <el-button size="small" type="primary" plain @click="gsJmCheck">减免校验</el-button>
+            <el-button size="small" type="danger" plain @click="gsJmCommit">减免提交</el-button>
+          </wb-dsf-tip>
+          <wb-dsf-tip menu="员工异动/补退费管理(省工伤)" page="td/c/bs 省工伤基数调整补差回盘(26)"
+            area="基数补差回盘弹窗" btn="校验/提交"
+            note="已移植过程 PRC_省工伤基数补差回盘校验/提交(跨年所属期逐月摊分 TJ0B3; 缺月校验仍置'3'忠实; 旧 DELETE TJ0B3 被注释=累积模式)">
+            <el-button size="small" type="primary" plain @click="gsBcCheck">补差校验</el-button>
+            <el-button size="small" type="danger" plain @click="gsBcCommit">补差提交</el-button>
           </wb-dsf-tip>
         </template>
         <span class="kv">{{ isHf()
@@ -470,7 +523,7 @@
       return { rp, rows, heads, units, bpRows, bpLog, dlg, selRows, bjRows, bjLog,
         isMed, isHf, fileInput, pickFile, uploadBp, push,
         loadHeads, loadRoster, openOk, saveOk, confirmNo, nextMonth, pass, loadBp, check,
-        commit, loadBj, stTag, fcCheck, fcCommit, yyCheck, yyCommit, bjCheck, bjCommit, gzb, isSm };
+        commit, loadBj, stTag, fcCheck, fcCommit, yyCheck, yyCommit, bjCheck, bjCommit, gzb, isSm, isGs, gsJmCheck, gsJmCommit, gsBcCheck, gsBcCommit };
     },
   };
 })();

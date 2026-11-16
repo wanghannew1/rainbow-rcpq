@@ -66,3 +66,15 @@ COMMENT ON COLUMN tc9w_bp01.ace10a IS '省医保回盘桶行状态: 3=校验过(
 COMMENT ON COLUMN tc9w_bp06.aaa005 IS '省医保基数补差桶匹配键=医保个人编号(tc90.aaa005, 非证件号, 校验/提交均按此匹配)';
 COMMENT ON COLUMN tc9w_bp06.ace10a IS '补差桶行状态: 3=校验过 2=拒(原因 ace10b) 1=已落 TJ0B2 台账; 批次号=ace100(CE10 导入批次)';
 COMMENT ON TABLE tc9w_bp07 IS '省医保缴费工资表(工资表过程重建: 物理删旧批+调险金引擎算五险扣款, 守卫=当月 TC9W2 已回盘则拒绝)';
+
+-- ===== W3a 省工伤链(2026-11-17, 出处=旧包源码 L3372-9161/L7470-8104+AA10 字典) =====
+COMMENT ON COLUMN tc9w3.atc9w8 IS '省工伤名单审核状态(AA10): 1=暂存 4=结果提交前台(终态)。省工伤异动回盘校验置4(旧源码 L7865 未注释=活, 范围=户头+属地+年月; 库内 3×4=11815/3×1=1970 实证)。9=新系统作废标记(重推逻辑删除, 旧库无此义)';
+COMMENT ON COLUMN tc9w3.atc9w2 IS '省工伤业务状态(生成义): 1=合同开始当月 2=非当月(与 AA10 申报结果义分叉, 同 tc9w2.atc9w2)';
+COMMENT ON COLUMN tc9w_bp09.ace10a IS '省工伤回盘桶行状态: 3=校验过 2=校验拒 1=提交完成(省工伤提交翻1, 与省医保不翻不同); 提交完成另见 aae236 盖章';
+COMMENT ON COLUMN tc9w_bp09.aaa90w IS '省工伤回盘申报结果: 1=参保成功 2=异议(AA10)';
+COMMENT ON COLUMN tc09_bp.ace10a IS '省工伤减免桶行状态: 3=校验过 2=拒(ace10b 原因) 1=已落 TC09; 匹配键=AAA005(经 tc90.aaa009 医保编号, 旧复制粘贴系忠实)';
+COMMENT ON COLUMN tc09_bp.bba004 IS '工伤减免额度(零值/非数值校验拒)';
+COMMENT ON COLUMN tc09_bp.atc9eh IS '缴费合计(零值/非数值校验拒)';
+COMMENT ON COLUMN tc9w_bp08.aae003 IS '费款所属期: yyyymm 或 yyyymm-yyyymm 区间; 校验单月=查前一月工资/提交单月=当月(旧系统自体差异忠实)';
+COMMENT ON COLUMN tc9w_bp08.ace10a IS '省工伤补差桶行状态: 3=校验过(缺月也置3, 信息入 ace10b, 忠实) 2=拒 1=已落 TJ0B3';
+COMMENT ON COLUMN tc09.atc091 IS '结算方式: 1=(减免提交固定值)';
