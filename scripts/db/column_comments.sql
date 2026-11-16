@@ -92,3 +92,11 @@ COMMENT ON COLUMN tj0a1.aae013 IS '月转款确认联动位: 确认时明细整�
 COMMENT ON COLUMN tj0a1.atj0aa IS '当月新增标识: 合同 aaa208(工资截止年月)=业务年月 → 1, 否则 0(转款情况写入)';
 COMMENT ON COLUMN tj0a.atj0a2 IS '缴费人数: 本单元 atj0a7>0 的员工计数(重建时累加)';
 COMMENT ON COLUMN tj0a1.atj0a5 IS '养老滞纳金合计(源 tc9w_bp.abp002 ::numeric, 回盘文件写入)';
+
+-- ===== W4c-1 医保双线月情况(2026-11-17, 出处=PKG_派遣保险月情况 L314-635/L1126-1551) =====
+COMMENT ON COLUMN tj0b.aae001 IS '省医保下期应缴年月(重建置=业务年月+1, ADD_MONTHS 语义; numeric)';
+COMMENT ON COLUMN tj0c.aae001 IS '市医保下期应缴年月(重建置=业务年月+1; numeric)';
+COMMENT ON COLUMN tj0b1.daa001 IS '省医保个人大病: 引擎 daa001+daa002; AAA608=业务年月时取 TC9W_BP01.ABO003(>0); AAA603<>业务年月归零(忠实)';
+COMMENT ON COLUMN tj0c1.daa001 IS '市医保个人大病: TC9W_BP04 sum(abp007)(户头+年月+姓名+证件, rownum=1); hack 220822199710080425+202509→100 忠实';
+COMMENT ON COLUMN tj0b1.atj0b3 IS '省医保单位缴费合计=BBA002(含公务员补助比例额)+ATB90T+BBA005';
+COMMENT ON COLUMN tj0c1.atj0c3 IS '市医保单位缴费合计=BBA002+BBA004+BBA005';
