@@ -23,9 +23,20 @@ import org.springframework.web.bind.annotation.RestController
 class HzController(private val jdbc: JdbcTemplate, private val tdck: TdckCases,
                    private val audit: AuditLog) {
 
-    /** 名册推送请求: 年月 + 险种(social=TC9W/medical=TC9W1/housingfund=TC9U) + 可选单位过滤 + 经办人 */
+    /** 名册推送请求: 年月 + 险种(social=TC9W/medical=TC9W1/housingfund=TC9U/smedical=TC9W2) + 可选单位过滤 + 经办人 */
     data class PushReq(val ym: String, val kind: String = "social",
                        val aab001: Long? = null, val aae011: String = "")
+
+    /** DATE 列经 PG JDBC 返回 java.sql.Date(Timestamp 不可强转) — 两型归一 LocalDate */
+    private fun toDate(v: Any?): java.time.LocalDate? = when (v) {
+        is java.sql.Timestamp -> v.toLocalDateTime().toLocalDate()
+        is java.sql.Date -> v.toLocalDate()
+        else -> null
+    }
+
+    /** LocalDate → yyyymmdd */
+    private fun ymd8(v: Any?): String? = toDate(v)
+        ?.format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd"))
 
     /** 名册推送: 当月合同开始且生效(atb90r='3') → TC9W 工作表。
      *  同合同同月旧行置 atc9w8='9' 作废(逻辑删除, 不物理删; 重推可追溯),
@@ -37,18 +48,21 @@ class HzController(private val jdbc: JdbcTemplate, private val tdck: TdckCases,
         val unitFilter = if (r.aab001 != null) " AND t.aab001=${r.aab001}" else ""
         val medFilter = if (r.kind == "medical") " AND t.aaa402='1' AND t.aaa110 IS NOT NULL" else ""
         val hfFilter = if (r.kind == "housingfund") " AND t.aaa407='1'" else ""
+        val smFilter = if (r.kind == "smedical") " AND t.aaa402='1' AND t.aaa110 IS NOT NULL AND t.atc90pa IS NULL" else ""
         // 险金户头(aaa030/aaa031)在 ab01, 按单位取(与 PRC_参保异议赋值 同源)
         val rows = jdbc.queryForList(
             """SELECT t.atc900, t.aac002, t.aac003, t.aab001, t.aab004,
                u.aaa030, u.aaa031, t.aaa100, t.aaa101, t.aaa110, t.aaa111,
                t.aac001, t.atb900, t.aaa004, t.atb90s, t.aaa303, t.aaa120, t.aaa121,
-               t.aae005, t.atc902, t.aac004, t.aac006, t.zynum, t.jynum
+               t.aae005, t.atc902, t.aac004, t.aac006, t.zynum, t.jynum,
+               t.aac005, t.aac009, t.aac012, t.aaa005, t.atc905, t.atc90ax, t.atc90b, t.atc90pa, t.atc90c
                FROM tc90 t LEFT JOIN ab01 u ON u.aab001 = t.aab001
-               WHERE t.atb90r='3' AND to_char(t.atc90c,'YYYYMM')='${r.ym}'$unitFilter$medFilter$hfFilter
+               WHERE t.atb90r='3' AND to_char(t.atc90c,'YYYYMM')='${r.ym}'$unitFilter$medFilter$hfFilter$smFilter
                ORDER BY t.atc900""")
         val ymN = r.ym.toLong()
         if (r.kind == "medical") return pushMedical(r, rows, ymN)
         if (r.kind == "housingfund") return pushHousingFund(r, rows, ymN)
+        if (r.kind == "smedical") return pushSMedical(r, rows, ymN)
         var pushed = 0
         val skipped = mutableListOf<String>()
         for (row in rows) {
@@ -129,8 +143,7 @@ class HzController(private val jdbc: JdbcTemplate, private val tdck: TdckCases,
                 val bs = a.toByteArray(Charsets.UTF_8)
                 if (bs.size <= 50) a else String(bs, 0, 50, Charsets.UTF_8) }
             // 出生 yyyymmdd(原 to_char(aac006,'yyyymmdd')); aac006 为 date/timestamp 列
-            val birth = (row["aac006"] as? java.sql.Timestamp)?.toLocalDateTime()?.toLocalDate()
-                ?.format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd"))
+            val birth = ymd8(row["aac006"])
             jdbc.update(
                 "UPDATE tc9u SET atc9u8='9' WHERE aae002=? AND atc900=? AND atc9u1='1' AND atc9u8<>'9'",
                 ymN, (row["atc900"] as Number).toLong())
@@ -161,6 +174,71 @@ class HzController(private val jdbc: JdbcTemplate, private val tdck: TdckCases,
             "msg" to "推送 $pushed 人" + (if (skipped.isEmpty()) "" else "; 跳过 ${skipped.size}(险金户头缺失)"))
     }
 
+    /** 省医保名册推送: 在保未参保合同(aaa402='1', aaa110 非空, atc90pa NULL) → TC9W2 报增(atc9w1='1')。
+     *  字段赋值对齐 PRC_省医保人员增减 报增分支(L2080-2184): 证件'1 居民身份证（户口簿）',
+     *  性别/民族/户口取 AA10 拼接(民族/户口有兜底, 性别无), baz001=max+1 计数器(忠实,
+     *  旧系统取号后被覆盖), atc9w2=1当月/2非当月(生成义, W0#2), aaa90y='90' 默认失败。 */
+    private fun pushSMedical(r: PushReq, rows: List<Map<String, Any?>>, ymN: Long): Map<String, Any?> {
+        val user = jdbc.query(
+            "SELECT aae011, aae017, aae019, aae020, aae022 FROM sys_org_user_unit WHERE aae011=?",
+            { rs, _ -> arrayOf(rs.getString("aae011"), rs.getString("aae017"), rs.getString("aae019"),
+                rs.getString("aae020"), rs.getString("aae022")) },
+            r.aae011).firstOrNull()
+        fun aa10Label(col: String, code: String?): String? =
+            code?.let { c -> jdbc.query(
+                "SELECT aaa102 || ' ' || aaa103 FROM aa10 WHERE aaa102=? AND aaa100=?",
+                { rs, _ -> rs.getString(1) }, c, col).firstOrNull() }
+        fun bytes50(v: String?): String? = v?.let { a ->
+            val bs = a.toByteArray(Charsets.UTF_8); if (bs.size <= 50) a else String(bs, 0, 50, Charsets.UTF_8) }
+        fun ymd(col: Any?): String? = ymd8(col)
+        val nowYm = java.time.YearMonth.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMM"))
+        var pushed = 0
+        val skipped = mutableListOf<String>()
+        for (row in rows) {
+            val aaa030 = (row["aaa030"] as Number?)?.toLong()
+            if (aaa030 == null) { skipped.add("${row["aac003"]}(无险金户头)"); continue }
+            var nXh = (jdbc.queryForObject(
+                "SELECT coalesce(max(baz001),0) FROM tc9w2 WHERE atc9w1='1' AND aaa030=? AND aae002=?",
+                Long::class.java, aaa030, ymN) ?: 0L) + 1
+            val start = toDate(row["atc90c"])
+            val isCurMonth = start != null &&
+                java.time.YearMonth.from(start).format(java.time.format.DateTimeFormatter.ofPattern("yyyyMM")) == nowYm
+            jdbc.update(
+                "UPDATE tc9w2 SET atc9w8='9' WHERE aae002=? AND atc900=? AND atc9w1='1' AND atc9w8<>'9'",
+                ymN, (row["atc900"] as Number).toLong())
+            jdbc.update(
+                """INSERT INTO tc9w2 (baz001, baz002, atc9w0, aae002, abpzzz, atc900, atb900, aab001,
+                   aab004, aaa100, aaa101, aac001, atc9w1, aaa030, aaa031, abp001, aac002, aac003,
+                   abp004, abp005, abp006, abp007, abp008, abp009, abp00a, abp00b, abp00c, abp00d,
+                   abp00e, abp00f, abp00g, abp00h, abp00i, abp00j, abp00k, atc9w8, atc9w2,
+                   aaa005, aaa302_1, aaa90y, zynum, jynum,
+                   aae011, aae017, aae019, aae020, aae022, aae036)
+                   VALUES (?, nextval('seq_sys_baz002'), nextval('seq_tc9w2_atc9w0'), ?, '0', ?, ?, ?,
+                   ?, ?, ?, ?, '1', ?, ?, '1 居民身份证（户口簿）', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+                   ?, '130000', ?, '4 其他', ?, ?, ?, '1', ?, ?, ?, '90', ?, ?,
+                   ?, ?, ?, ?, ?, now())""",
+                nXh, ymN, (row["atc900"] as Number).toLong(),
+                (row["atb900"] as Number?)?.toLong(), (row["aab001"] as Number?)?.toLong(), row["aab004"],
+                row["aaa110"], row["aaa111"], row["aac001"], aaa030, row["aaa031"],
+                row["aac002"], row["aac003"],
+                ymd(row["aac006"]), aa10Label("AAC004", row["aac004"]?.toString()),
+                aa10Label("AAC005", row["aac005"]?.toString()) ?: "01 汉族",
+                ymd(row["atc90c"]), "0 非公务员", "3 合同制",
+                if (row["aac012"]?.toString() == "91") "1 干部" else "0 非干部", "0 非在编",
+                aa10Label("AAC009", row["aac009"]?.toString()) ?: "11 本市城镇户口",
+                row["aae005"], bytes50(row["atc902"]?.toString()),
+                bytes50(row["atc902"]?.toString()),
+                ymd(row["atc90ax"]), ymd(row["atc90b"]), row["atc905"]?.toString(),
+                if (isCurMonth) "1" else "2",
+                row["aaa005"], row["atc905"] as Number?,
+                row["zynum"], row["jynum"],
+                user?.get(0), user?.get(1), user?.get(2), user?.get(3), user?.get(4))
+            pushed++
+        }
+        return mapOf("appCode" to 1, "pushed" to pushed, "skipped" to skipped,
+            "msg" to "推送 $pushed 人" + (if (skipped.isEmpty()) "" else "; 跳过 ${skipped.size}(险金户头缺失)"))
+    }
+
     /** 报增查询: TC9W/TC9W1 名册工作表(按年月/险金户头/参保属地过滤; kind=medical 读 TC9W1) */
     @GetMapping("/roster")
     fun roster(@RequestParam ym: String,
@@ -180,6 +258,19 @@ class HzController(private val jdbc: JdbcTemplate, private val tdck: TdckCases,
             if (aaa030 != null) hsql += " AND w.aaa030=$aaa030"
             if (!aaa020.isNullOrBlank()) hsql += " AND w.aaa100='${aaa020.replace("'", "''")}'"
             return jdbc.queryForList("$hsql ORDER BY w.atc9u0")
+        }
+        if (kind == "smedical") {
+            var ssql = """SELECT w.atc9w0, w.aae002, w.atc900, w.aac001, w.aab001, w.aab004,
+                w.atc9w1, w.aaa030, w.aaa031, w.aaa100, w.aaa101, w.aac002, w.aac003,
+                w.atc9w8, w.aae011, w.aaa005, w.aaa302_1,
+                EXISTS(SELECT 1 FROM tc9w_bp01 b WHERE b.aae002=w.aae002 AND b.atc900=w.atc900
+                       AND b.aaa90w='1' AND b.aae236 IS NOT NULL) AS confirmed_ok,
+                EXISTS(SELECT 1 FROM tc9w_bp01 b WHERE b.aae002=w.aae002 AND b.atc900=w.atc900
+                       AND b.aaa90w='2' AND b.aae236 IS NOT NULL) AS confirmed_no
+                FROM tc9w2 w WHERE w.aae002=${ym.toLong()} AND w.atc9w1='1' AND w.atc9w8<>'9'"""
+            if (aaa030 != null) ssql += " AND w.aaa030=$aaa030"
+            if (!aaa020.isNullOrBlank()) ssql += " AND w.aaa100='${aaa020.replace("'", "''")}'"
+            return jdbc.queryForList("$ssql ORDER BY w.atc9w0")
         }
         if (kind == "medical") {
             var msql = """SELECT w.atc9w0, w.aae002, w.atc900, w.aac001, w.aab001, w.aab004,
@@ -211,7 +302,7 @@ class HzController(private val jdbc: JdbcTemplate, private val tdck: TdckCases,
     @GetMapping("/heads")
     fun heads(@RequestParam ym: String, @RequestParam(required = false) kind: String?): List<Map<String, Any?>> {
         if (!Regex("^\\d{6}$").matches(ym)) return emptyList()
-        val table = when (kind) { "medical" -> "tc9w1"; "housingfund" -> "tc9u"; else -> "tc9w" }
+        val table = when (kind) { "medical" -> "tc9w1"; "housingfund" -> "tc9u"; "smedical" -> "tc9w2"; else -> "tc9w" }
         return jdbc.queryForList(
             """SELECT DISTINCT aaa030, aaa031, aaa100, aaa101 FROM $table
                WHERE aae002=? AND atc9w1='1' AND atc9w8<>'9' AND aaa100 IS NOT NULL ORDER BY aaa030""", ym.toLong())
@@ -231,6 +322,7 @@ class HzController(private val jdbc: JdbcTemplate, private val tdck: TdckCases,
     fun confirm(@RequestBody r: ConfirmReq): Map<String, Any?> {
         audit.log(r.aae011, "wb:hz/confirm", "atc9w0=${r.atc9w0}", r)
         if (r.kind == "housingfund") return confirmHousingFund(r)
+        if (r.kind == "smedical") return confirmSMedical(r)
         if (r.kind == "medical") return confirmMedical(r)
         val w = runCatching {
             jdbc.queryForMap(
@@ -332,6 +424,43 @@ class HzController(private val jdbc: JdbcTemplate, private val tdck: TdckCases,
         return mapOf("appCode" to 1, "msg" to "已登记公积金回盘结果(待校验)")
     }
 
+    /** 省医保回盘结果登记(手动, 等价局方回盘文件→TC9W_BP01 单行): 成功=aaa90w='1'(须个人编号,
+     *  参保年月缺省=业务年月), 失败=aaa90w='2'(须原因 aae013)。之后走 异动回盘校验(整批置
+     *  TC9W2 '4')→异动回盘提交(参保 AAA603/ATC90PA='0'/异议 SAFESIGN='2'/停保消费 TC9W2 报减行)。
+     *  atc9w0 字段此处承载 TC9W2.ATC9W0。 */
+    private fun confirmSMedical(r: ConfirmReq): Map<String, Any?> {
+        val w = runCatching {
+            jdbc.queryForMap(
+                """SELECT aae002, aaa030, aaa031, aaa100, aaa101, atc900, aac002, aac003, aab001,
+                   aab004 FROM tc9w2 WHERE atc9w0=?""", r.atc9w0)
+        }.getOrNull() ?: return mapOf("appCode" to -1, "errMsg" to "名册行不存在")
+        val ymN = (w["aae002"] as Number).toLong()
+        val atc900N = (w["atc900"] as Number).toLong()
+        val aaa90w = if (r.ok) "1" else "2"
+        if (r.ok && r.aaa001.isNullOrBlank())
+            return mapOf("appCode" to -1, "errMsg" to "参保成功须填保险个人编号")
+        if (!r.ok && r.aae013.isNullOrBlank())
+            return mapOf("appCode" to -1, "errMsg" to "报增失败须填原因")
+        // 参保年月: 缺省=业务年月; 手输 yyyy-MM-dd 取前7位转 yyyymm
+        val abp001 = r.abp001?.takeIf { it.isNotBlank() }?.let {
+            if (it.length >= 7 && it.contains('-')) it.substring(0, 7).replace("-", "") else it
+        } ?: ymN.toString()
+        // 逻辑更新: 同键(aae002+atc900+aaa90w)旧行原地覆盖(不物理删)
+        val upd = jdbc.update(
+            """UPDATE tc9w_bp01 SET aaa001=?, abp001=?, aae013=?, aae011=?, aae036=now()
+               WHERE aae002=? AND atc900=? AND aaa90w=?""",
+            if (r.ok) r.aaa001 else null, abp001, r.aae013, r.aae011, ymN, atc900N, aaa90w)
+        if (upd == 0) jdbc.update(
+            """INSERT INTO tc9w_bp01 (id, aae002, atc9w1, aaa90w, aaa030, aaa031, aaa020, aaa021,
+               aaa001, aac002, aac003, abp001, aae013, aae011, aae036, atc900, aab001, aab004)
+               VALUES (nextval('seq_tc9w_bp01_atc9w0'), ?, '1', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, now(), ?, ?, ?)""",
+            ymN, aaa90w, (w["aaa030"] as Number?)?.toLong(), w["aaa031"], w["aaa100"], w["aaa101"],
+            if (r.ok) r.aaa001 else null, w["aac002"], w["aac003"], abp001, r.aae013, r.aae011,
+            atc900N, (w["aab001"] as Number?)?.toLong(), w["aab004"])
+        return mapOf("appCode" to 1,
+            "msg" to (if (r.ok) "已登记参保成功(待异动校验)" else "已登记异议(待异动校验/提交)"))
+    }
+
     /** 批量操作请求(atc900 列表; pass 另带对应 atc9w0) */
     data class BatchReq(val atc900: List<Long>, val atc9w0: List<Long> = emptyList())
 
@@ -386,6 +515,23 @@ class HzController(private val jdbc: JdbcTemplate, private val tdck: TdckCases,
                 """SELECT id, abp002, aac002, aac003, aaa001, abp003, abp004, abp005,
                    aaa90z, aaa303_1, aaa303_2, ace10a, ace10b, atc900
                    FROM tc9w_bp02 WHERE aae002=? AND aaa030=? AND aaa020=? ORDER BY id""",
+                ym.toLong(), aaa030, aaa020)
+        }
+        if (kind == "smedical") return when (bucket ?: "hx") {
+            // 补差桶(TC9W_BP06, 按 ace100 批次)/工资表桶(TC9W_BP07); 异动桶=TC9W_BP01
+            "bj" -> jdbc.queryForList(
+                """SELECT id, ace100, aaa005, aac003, aae002, aae003, abp002, abp003, abp004,
+                   abp005, abp006, abp007, abp008, ace10a, ace10b
+                   FROM tc9w_bp06 WHERE aaa030=? AND aaa020=? ORDER BY ace100 DESC, id LIMIT 200""",
+                ym.toLong(), aaa030, aaa020)
+            "gz" -> jdbc.queryForList(
+                """SELECT id, aac003, abp001, abp002, abp003, abp004, abp005, abp006, abp007, abp008
+                   FROM tc9w_bp07 WHERE aae002=? AND aaa030=? AND aaa020=? ORDER BY id""",
+                ym.toLong(), aaa030, aaa020)
+            else -> jdbc.queryForList(
+                """SELECT id, aaa90w, aac002, aac003, aaa001, abp001, abo003, abo004, aae013,
+                   ace10a, ace10b, aab004, atc900, aae211
+                   FROM tc9w_bp01 WHERE aae002=? AND aaa030=? AND aaa020=? ORDER BY id""",
                 ym.toLong(), aaa030, aaa020)
         }
         if (kind == "medical") return jdbc.queryForList(
@@ -486,9 +632,10 @@ class HzController(private val jdbc: JdbcTemplate, private val tdck: TdckCases,
         }
         wb.use { book ->
             val sheet = book.getSheetAt(0)
+            val rosterTable = when (kind) { "medical" -> "tc9w1"; "smedical" -> "tc9w2"; else -> "tc9w" }
             val ids = jdbc.query(
                 """SELECT atc9w0, atc900, aaa030, aaa031, aaa100, aaa101, aac002, aac003,
-                   aab001, aab004 FROM ${if (kind == "medical") "tc9w1" else "tc9w"}
+                   aab001, aab004 FROM $rosterTable
                    WHERE aae002=? AND atc9w1='1' AND atc9w8<>'9' ORDER BY atc9w0""",
                 { rs, _ -> mapOf(
                     "atc9w0" to (rs.getObject("atc9w0") as Number).toLong(),
@@ -506,7 +653,45 @@ class HzController(private val jdbc: JdbcTemplate, private val tdck: TdckCases,
             var seq = 0 // 行序对齐游标(文件数据行 ↔ 工作表推送序)
             for (r in 1..sheet.lastRowNum) {
                 val row = sheet.getRow(r) ?: continue
-                if (kind == "medical") {
+                if (kind == "smedical") {
+                    // 省医保回盘(实样 baopan/huipan/1.回盘--2026.05省医保): sheet 首页 7 列,
+                    // 数据自 R2 起(无隐藏元行); 按证件优先/报盘行序对齐 TC9W2 名册
+                    val h = hdr(sheet, listOf("申报结果", "保险个人编号", "公民身份证号码", "姓名",
+                        "参保年月", "大病险", "滞纳金"))
+                    val result = cellStr(row, h["申报结果"])
+                    if (result.isNullOrBlank()) continue
+                    val idCard = cellStr(row, h["公民身份证号码"])?.let { id15to18(it) }
+                    val w = (idCard?.let { byId[it] }) ?: ids.getOrNull(seq)
+                    if (w == null) {
+                        unmatched++; rejects.add("R${r + 1}: 无对应名册行"); seq++; continue
+                    }
+                    seq++
+                    val aaa90w = when (result) {
+                        "1" -> "1"; "2" -> "2"; else -> null
+                    }
+                    if (aaa90w == null) {
+                        unmatched++; rejects.add("R${r + 1}: 申报结果 '$result' 非已知值"); continue
+                    }
+                    val upd = jdbc.update(
+                        """UPDATE tc9w_bp01 SET aaa001=?, aac002=?, aac003=?, abp001=?, abo003=?,
+                           abo004=?, aab001=?, aab004=?, aae011=?, aae036=now()
+                           WHERE aae002=? AND atc900=? AND aaa90w=?""",
+                        cellStr(row, h["保险个人编号"]), idCard ?: w["aac002"],
+                        w["aac003"] ?: cellStr(row, h["姓名"]),
+                        cellStr(row, h["参保年月"]), cellStr(row, h["大病险"]), cellStr(row, h["滞纳金"]),
+                        w["aab001"], w["aab004"], aae011, ym.toLong(), w["atc900"], aaa90w)
+                    if (upd == 0) jdbc.update(
+                        """INSERT INTO tc9w_bp01 (id, aae002, atc9w1, aaa90w, aaa030, aaa031, aaa020,
+                           aaa021, aaa001, aac002, aac003, abp001, abo003, abo004, atc900, aab001,
+                           aab004, aae011, aae036)
+                           VALUES (nextval('seq_tc9w_bp01_atc9w0'), ?, '1', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, now())""",
+                        ym.toLong(), aaa90w, w["aaa030"], w["aaa031"], w["aaa100"], w["aaa101"],
+                        cellStr(row, h["保险个人编号"]), idCard ?: w["aac002"],
+                        w["aac003"] ?: cellStr(row, h["姓名"]),
+                        cellStr(row, h["参保年月"]), cellStr(row, h["大病险"]), cellStr(row, h["滞纳金"]),
+                        w["atc900"], w["aab001"], w["aab004"], aae011)
+                    imported++
+                } else if (kind == "medical") {
                     val h = hdr(sheet, listOf("身份证号码", "姓名", "人员类别", "缴费标志", "到账日期",
                         "缴费基数", "缴费金额", "基本医疗", "个人缴纳大额", "个人缴纳医疗",
                         "单位缴纳医疗", "划个人帐户", "单位缴纳工伤", "单位缴纳生育",

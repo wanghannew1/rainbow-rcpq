@@ -11,7 +11,10 @@
     aaa020: "", bucket: "hx", log: "", busy: false });
   const isMed = () => rp.kind === "medical";
   const isHf = () => rp.kind === "housingfund";
-  const procName = (base) => isHf()
+  const isSm = () => rp.kind === "smedical";
+  const procName = (base) => isSm()
+    ? "PKG_保险人员增减.PRC_省医保异动回盘" + base
+    : isHf()
     ? "PKG_保险人员增减.PRC_公积金异动回盘" + base
     : isMed()
     ? "PKG_保险人员增减.PRC_市医保" + base
@@ -156,6 +159,32 @@
   const yyCheck = () => procPair("异议校验", "异议回盘校验", gjBody(), r => `通过 ${r.pass ?? "-"} / 拒绝 ${r.reject ?? "-"}`);
   const yyCommit = () => procPair("异议提交", "异议回盘提交",
     { ...gjBody(), aae011: api.store.oper.aae011 }, r => `启封 ${r.hfApplied ?? 0} / 异议 ${r.yyApplied ?? 0}`);
+  /* W2 省医保: 基数补差回盘(按 ace100 批次, tdcbm) + 省医保工资表(TC9W_BP07 重建, 调险金引擎) */
+  async function bjCheck() {
+    try {
+      const v = await ElMessageBox.prompt("基数补差回盘批次号(ace100)", "补差校验", { inputValue: "" });
+      const r = await api.proc("PKG_保险人员增减.PRC_省医保基数补差回盘校验", { ace100: v.value });
+      bpLog.value = `补差校验(批次 ${v.value}): 通过 ${r.pass ?? "-"} / 拒绝 ${r.reject ?? "-"}`;
+    } catch (e) { if (e !== "cancel") bpLog.value = "补差校验失败: " + e.message; }
+  }
+  async function bjCommit() {
+    try {
+      const v = await ElMessageBox.prompt("基数补差回盘批次号(ace100)", "补差提交", { inputValue: "" });
+      await ElMessageBox.confirm("补差提交将重建 TJ0B2 台账(先物理删旧账, 旧系统同款), 确认?", "补差提交");
+      const r = await api.proc("PKG_保险人员增减.PRC_省医保基数补差回盘提交",
+        { ace100: v.value, aae002: rp.ym, aaa030: rp.aaa030, aaa020: rp.aaa020, aae011: api.store.oper.aae011 });
+      bpLog.value = `补差提交(批次 ${v.value}): 落账 ${r.applied ?? 0} 行`;
+    } catch (e) { if (e !== "cancel") bpLog.value = "补差提交失败: " + e.message; }
+  }
+  async function gzb() {
+    if (!rp.aaa030 || !rp.aaa020) { ElementPlus.ElMessage.warning("先选户头与参保属地"); return; }
+    try {
+      const r = await api.proc("PKG_保险人员增减.PRC_省医保工资表",
+        { aaa030: rp.aaa030, aae002: rp.ym, aaa110: rp.aaa020, aae011: api.store.oper.aae011 });
+      bpLog.value = `省医保工资表: 生成 ${r.rows ?? 0} 行(TC9W_BP07, 险金引擎计算)`;
+      rp.bucket = "gz"; loadBp();
+    } catch (e) { bpLog.value = "工资表生成失败: " + e.message; }
+  }
 
   const stTag = (s) => ({ "1": "待校验", "4": "已校验" }[s] || (s || "-"));
 
@@ -179,6 +208,7 @@
           <el-select v-model="rp.kind" style="width:110px" @change="rows = []; heads = []; bpRows = []; rp.bucket = 'hx'">
             <el-option value="social" label="社保"/>
             <el-option value="medical" label="市医保"/>
+            <el-option value="smedical" label="省医保"/>
             <el-option value="housingfund" label="公积金"/>
           </el-select>
         </el-form-item>
@@ -229,6 +259,13 @@
             <el-option value="hx" label="异动(TC9W_BP02)"/>
             <el-option value="fc" label="封存(TC9U_BP02)"/>
             <el-option value="yy" label="异议(TC9U_BP03)"/>
+          </el-select>
+        </el-form-item>
+        <el-form-item v-if="isSm()" label="回盘桶">
+          <el-select v-model="rp.bucket" style="width:140px" @change="bpRows = []">
+            <el-option value="hx" label="异动(TC9W_BP01)"/>
+            <el-option value="bj" label="补差(TC9W_BP06)"/>
+            <el-option value="gz" label="工资表(TC9W_BP07)"/>
           </el-select>
         </el-form-item>
       </el-form>
@@ -313,11 +350,50 @@
             <el-button size="small" type="danger" plain @click="yyCommit">异议提交</el-button>
           </wb-dsf-tip>
         </template>
+        <template v-if="isSm()">
+          <wb-dsf-tip menu="员工异动/补退费管理(市医保)" page="td/c/bm 医保基数调整补差回盘(10, 省工伤 tdcbs 复用)"
+            area="基数补差回盘弹窗" btn="校验/提交"
+            note="已移植过程 PRC_省医保基数补差回盘校验/提交(按 AAA005 医保个人编号匹配+当月 TC93 校验; 提交重建 TJ0B2 台账, 先物理删旧账忠实)">
+            <el-button size="small" type="primary" plain @click="bjCheck">补差校验</el-button>
+            <el-button size="small" type="danger" plain @click="bjCommit">补差提交</el-button>
+          </wb-dsf-tip>
+          <wb-dsf-tip menu="员工异动/补退费管理(省医保)" page="td/c/bn 员工省医保报增申请(11):412/523"
+            area="省医保缴费工资表" btn="生成"
+            note="已移植过程 PRC_省医保工资表(重建 TC9W_BP07, 险金引擎计算五险扣款; 当月已回盘则拒绝)">
+            <el-button size="small" type="warning" plain @click="gzb">工资表生成</el-button>
+          </wb-dsf-tip>
+        </template>
         <span class="kv">{{ isHf()
           ? "对应东软 tdcae 封存/异议回盘弹窗; 公积金回盘文件实样未到位(W0#4), 桶行由「登记回盘结果」手动写入。"
+          : isSm()
+          ? "对应东软 tdcah 省医保异动报盘回盘(13)/tdcbm 补差(10)/tdcbn 工资表(11); 回盘文件=baopan/huipan 省医保 7 列实样已支持导入。"
           : "对应东软 tdck 成果确认: 校验/提交为已移植过程 PRC_社保异动回盘校验/提交。" }}</span>
       </div>
       <div v-if="bpLog" class="kv">{{ bpLog }}</div>
+      <el-table v-if="bpRows.length && isSm() && rp.bucket === 'bj'" :data="bpRows" size="small" border max-height="260">
+        <el-table-column prop="id" label="行ID" width="90"/>
+        <el-table-column prop="ace100" label="批次" width="90"/>
+        <el-table-column prop="aaa005" label="医保个人编号" width="150"/>
+        <el-table-column prop="aac003" label="姓名" width="90"/>
+        <el-table-column prop="aae003" label="社保年月" width="90"/>
+        <el-table-column prop="abp002" label="基数" width="90"/>
+        <el-table-column prop="abp004" label="医疗单位缴" width="100"/>
+        <el-table-column prop="abp003" label="医疗个人缴" width="100"/>
+        <el-table-column prop="abp006" label="工伤单位缴" width="100"/>
+        <el-table-column prop="abp007" label="生育单位缴" width="100"/>
+        <el-table-column prop="abp008" label="合计" width="90"/>
+        <el-table-column prop="ace10a" label="状态" width="80"/>
+        <el-table-column prop="ace10b" label="说明" min-width="120"/>
+      </el-table>
+      <el-table v-if="bpRows.length && isSm() && rp.bucket === 'gz'" :data="bpRows" size="small" border max-height="260">
+        <el-table-column prop="id" label="行ID" width="90"/>
+        <el-table-column prop="aac003" label="姓名" width="90"/>
+        <el-table-column prop="abp001" label="基本工资" width="100"/>
+        <el-table-column prop="abp002" label="应发工资" width="100"/>
+        <el-table-column prop="abp005" label="医疗(个人)" width="100"/>
+        <el-table-column prop="abp007" label="扣款合计" width="100"/>
+        <el-table-column prop="abp008" label="实发工资" width="100"/>
+      </el-table>
       <el-table v-if="bpRows.length && isHf()" :data="bpRows" size="small" border max-height="260">
         <el-table-column prop="id" label="行ID" width="90"/>
         <el-table-column prop="abp002" label="缴存状态/内容" width="120"/>
@@ -394,7 +470,7 @@
       return { rp, rows, heads, units, bpRows, bpLog, dlg, selRows, bjRows, bjLog,
         isMed, isHf, fileInput, pickFile, uploadBp, push,
         loadHeads, loadRoster, openOk, saveOk, confirmNo, nextMonth, pass, loadBp, check,
-        commit, loadBj, stTag, fcCheck, fcCommit, yyCheck, yyCommit };
+        commit, loadBj, stTag, fcCheck, fcCommit, yyCheck, yyCommit, bjCheck, bjCommit, gzb, isSm };
     },
   };
 })();

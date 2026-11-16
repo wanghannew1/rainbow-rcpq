@@ -56,3 +56,13 @@ COMMENT ON COLUMN tc9u_bp03.ace10a IS '异议桶行校验结果: 3=过 2=拒(原
 COMMENT ON COLUMN tc9w_bp02.abp002 IS '公积金异动回盘缴存状态: 正常=校验/提交消费(匹配+编号+比例校验→TC90.ATC90W 置0), 其他值仅置 ace10a=3 不参与提交';
 COMMENT ON COLUMN tc9w_bp02.aaa90z IS '公积金异动回盘差异码: 10=申报基数与合同 aaa303 不符(差异值记 aaa303_1 旧/aaa303_2 新, 非失败)';
 COMMENT ON COLUMN tc9w_bp02.ace10a IS '公积金异动回盘桶行状态: 3=校验过(待提交) 2=校验拒(ace10b 原因) 1=提交完成';
+
+-- ===== W2 省医保链(2026-11-17, 出处=旧包源码 L2840-3790+AA10 字典+备份库分布) =====
+COMMENT ON COLUMN tc9w2.atc9w8 IS '省医保名单审核状态(AA10): 1=暂存 2=提交审核 3=审核通过 4=结果提交前台(终态)。省医保异动回盘**校验**即整批置4(旧源码 L2929 未注释, 与公积金 W0#1 相反; 库内 4=4696 实证)。9=新系统作废标记(重推逻辑删除, 旧库无此义)';
+COMMENT ON COLUMN tc9w2.atc9w2 IS '省医保业务状态(生成义): 1=合同开始当月 2=非当月(生成过程按 atc90c 写, 与 AA10 字典"申报结果0未申报/1已申报"分叉, W0#2 裁决按生成义忠实; 库内无 0/NULL 印证)';
+COMMENT ON COLUMN tc9w2.aaa90y IS '省医保申报结果(生成默认): 90=默认失败(生成置, 回盘成功由 TC9W_BP01 消费后改写 TC90)';
+COMMENT ON COLUMN tc9w_bp01.aaa90w IS '省医保回盘申报结果: 1=参保成功 2=异议(校验验值, 提交分流)';
+COMMENT ON COLUMN tc9w_bp01.ace10a IS '省医保回盘桶行状态: 3=校验过(待提交) 2=校验拒(ace10b 原因)。注意: 提交完成后不翻 ace10a(与社保/公积金不同), 提交完成标记=aae236 盖章';
+COMMENT ON COLUMN tc9w_bp06.aaa005 IS '省医保基数补差桶匹配键=医保个人编号(tc90.aaa005, 非证件号, 校验/提交均按此匹配)';
+COMMENT ON COLUMN tc9w_bp06.ace10a IS '补差桶行状态: 3=校验过 2=拒(原因 ace10b) 1=已落 TJ0B2 台账; 批次号=ace100(CE10 导入批次)';
+COMMENT ON TABLE tc9w_bp07 IS '省医保缴费工资表(工资表过程重建: 物理删旧批+调险金引擎算五险扣款, 守卫=当月 TC9W2 已回盘则拒绝)';
