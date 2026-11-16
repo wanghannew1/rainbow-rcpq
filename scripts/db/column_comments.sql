@@ -85,3 +85,10 @@ COMMENT ON COLUMN tc9w_bp10.ace10a IS '市工伤回盘桶行状态: 3=校验过 
 COMMENT ON COLUMN tc9w_bp10.aaa90y IS '市工伤回盘差异码串: 11=基数不符 12=灵活就业 14=大额 15=达龄退休 16=退出灵活就业 17=失业代缴(11 时 AAA305 按 abp004 覆写)';
 COMMENT ON COLUMN tc9w_bp10.aac000 IS '市工伤回盘文件个人编号(提交回写 tc90.aaa009; 与 aaa001 列不同源的旧命名)';
 COMMENT ON COLUMN tc9w_bp10.aae001 IS '回盘月: ATC90PB NULL→业务年月(本月新增), 否则→医保参保年月 aaa603(校验写入)';
+
+-- ===== W4a 月情况/月转款(2026-11-17, 出处=PKG_派遣保险月情况 L3-84/L85-313/L4019-4184) =====
+COMMENT ON COLUMN tj0a.aaezzz IS '月转款确认标识: 0=生成未确认(重建写入) 1=已确认(月转款确认置, 经办入 aae111/117/119/120/122); 已确认月重建静默跳过(忠实)';
+COMMENT ON COLUMN tj0a1.aae013 IS '月转款确认联动位: 确认时明细整批置 1(与主表 aaezzz 同步)';
+COMMENT ON COLUMN tj0a1.atj0aa IS '当月新增标识: 合同 aaa208(工资截止年月)=业务年月 → 1, 否则 0(转款情况写入)';
+COMMENT ON COLUMN tj0a.atj0a2 IS '缴费人数: 本单元 atj0a7>0 的员工计数(重建时累加)';
+COMMENT ON COLUMN tj0a1.atj0a5 IS '养老滞纳金合计(源 tc9w_bp.abp002 ::numeric, 回盘文件写入)';
