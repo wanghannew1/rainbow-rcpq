@@ -78,3 +78,10 @@ COMMENT ON COLUMN tc09_bp.atc9eh IS '缴费合计(零值/非数值校验拒)';
 COMMENT ON COLUMN tc9w_bp08.aae003 IS '费款所属期: yyyymm 或 yyyymm-yyyymm 区间; 校验单月=查前一月工资/提交单月=当月(旧系统自体差异忠实)';
 COMMENT ON COLUMN tc9w_bp08.ace10a IS '省工伤补差桶行状态: 3=校验过(缺月也置3, 信息入 ace10b, 忠实) 2=拒 1=已落 TJ0B3';
 COMMENT ON COLUMN tc09.atc091 IS '结算方式: 1=(减免提交固定值)';
+
+-- ===== W3b 市工伤链(2026-11-17, 出处=旧包源码 L8105-8897) =====
+COMMENT ON COLUMN tc9w4.atc9w8 IS '市工伤名单审核状态(AA10): 1=暂存 4=提交前台(终态)。市工伤异动回盘校验置4(旧源码 L8529 未注释=活, 范围=户头+年月无属地)。9=新系统作废标记(重推逻辑删除, 旧库无此义)';
+COMMENT ON COLUMN tc9w_bp10.ace10a IS '市工伤回盘桶行状态: 3=校验过 2=校验拒(提交前置拒全月) 1=提交完成; 桶无申报结果列(aaa90w), 未回盘报增行由提交的 TC90 扫描置 ATC90PB=2';
+COMMENT ON COLUMN tc9w_bp10.aaa90y IS '市工伤回盘差异码串: 11=基数不符 12=灵活就业 14=大额 15=达龄退休 16=退出灵活就业 17=失业代缴(11 时 AAA305 按 abp004 覆写)';
+COMMENT ON COLUMN tc9w_bp10.aac000 IS '市工伤回盘文件个人编号(提交回写 tc90.aaa009; 与 aaa001 列不同源的旧命名)';
+COMMENT ON COLUMN tc9w_bp10.aae001 IS '回盘月: ATC90PB NULL→业务年月(本月新增), 否则→医保参保年月 aaa603(校验写入)';

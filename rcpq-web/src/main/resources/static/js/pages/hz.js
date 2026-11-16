@@ -13,7 +13,10 @@
   const isHf = () => rp.kind === "housingfund";
   const isSm = () => rp.kind === "smedical";
   const isGs = () => rp.kind === "sgongshang";
-  const procName = (base) => isGs()
+  const isMg = () => rp.kind === "mgongshang";
+  const procName = (base) => isMg()
+    ? "PKG_保险人员增减.PRC_市工伤异动回盘" + base
+    : isGs()
     ? "PKG_保险人员增减.PRC_省工伤异动回盘" + base
     : isSm()
     ? "PKG_保险人员增减.PRC_省医保异动回盘" + base
@@ -241,6 +244,7 @@
             <el-option value="medical" label="市医保"/>
             <el-option value="smedical" label="省医保"/>
             <el-option value="sgongshang" label="省工伤"/>
+            <el-option value="mgongshang" label="市工伤"/>
             <el-option value="housingfund" label="公积金"/>
           </el-select>
         </el-form-item>
@@ -523,7 +527,7 @@
       return { rp, rows, heads, units, bpRows, bpLog, dlg, selRows, bjRows, bjLog,
         isMed, isHf, fileInput, pickFile, uploadBp, push,
         loadHeads, loadRoster, openOk, saveOk, confirmNo, nextMonth, pass, loadBp, check,
-        commit, loadBj, stTag, fcCheck, fcCommit, yyCheck, yyCommit, bjCheck, bjCommit, gzb, isSm, isGs, gsJmCheck, gsJmCommit, gsBcCheck, gsBcCommit };
+        commit, loadBj, stTag, fcCheck, fcCommit, yyCheck, yyCommit, bjCheck, bjCommit, gzb, isSm, isGs, isMg, gsJmCheck, gsJmCommit, gsBcCheck, gsBcCommit };
     },
   };
 })();
