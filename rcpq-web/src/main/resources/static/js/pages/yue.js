@@ -20,8 +20,9 @@
       page: "td/c/bq 省工伤月转款情况(25)" },
   ];
 
-  const rp = reactive({ ym: "202611", kind: "social", aab001: null, aaa030: null,
-    aaa020: "", log: "", busy: false });
+  const rp = reactive({ ym: "202611", kind: "social", aab001: null, aaa030: null, bqOnly: false,
+    aaa020: "", log: "", busy: false,
+    dfRows: [], dfBusy: false, dfLog: "" });
   const units = ref([]); const heads = ref([]); const heads2 = ref([]);
   const rows = ref([]); const detailRows = ref([]);
   const cur = () => LINES.find(x => x.key === rp.kind) || LINES[0];
@@ -78,6 +79,43 @@
 
   function stTag(s) {
     return s === "1" ? "已确认" : (s === "0" ? "未确认" : (s || "-"));
+  }
+
+  // ---- W4d-3 补缴列 drill-down: 表头补缴列随险种而异(忠实口径) ----
+  function bqNum(row) {
+    return row.atj0a2_b ?? row.atj0b2_b ?? row.atj0f2_b1 ?? null;
+  }
+  function bqSum(row) {
+    if (row.atj0a7_b != null) return row.atj0a7_b;
+    if (row.atj0b5_b != null) return row.atj0b5_b;
+    if (row.atj0f5_b1 != null || row.atj0f5_b2 != null)
+      return (Number(row.atj0f5_b1) || 0) + (Number(row.atj0f5_b2) || 0);
+    return null;
+  }
+  function bqRows() {
+    return rp.bqOnly ? detailRows.value.filter(r => r.atj000 === "2") : detailRows.value;
+  }
+
+  // ---- W4d-3 月垫付(tdce:53): PRC_月垫付情况 + TJ0Z 读侧 ----
+  const TTYPE_LABEL = { "11": "社保", "21": "省医保", "22": "市医保",
+                        "31": "省工伤", "32": "市工伤", "41": "省公积金", "42": "市公积金" };
+  async function dfCreate() {
+    if (!rp.aaa030) { ElementPlus.ElMessage.warning("先选户头"); return; }
+    rp.dfBusy = true; rp.dfLog = "";
+    try {
+      const r = await api.proc("PKG_派遣保险月情况.PRC_月垫付情况",
+        { aae002: rp.ym, aaa030: rp.aaa030, aae011: api.store.oper.aae011 });
+      rp.dfLog = `垫付台账生成完成: ${r.inserted ?? "-"} 行(硬序 社保→医保→工伤→公积金 清欠级联)`;
+      await dfLoad();
+    } catch (e) { rp.dfLog = "生成失败: " + e.message; }
+    rp.dfBusy = false;
+  }
+  async function dfLoad() {
+    if (!rp.aaa030) { ElementPlus.ElMessage.warning("先选户头"); return; }
+    try {
+      rp.dfRows = (await api.wb(`/wb/yue/df?ym=${rp.ym}&aaa030=${rp.aaa030}`)) || [];
+      rp.dfLog = `垫付台账 ${rp.dfRows.length} 行(垫付 ${rp.dfRows.filter(r => r.dfsign === "1").length})`;
+    } catch (e) { ElementPlus.ElMessage.error(e.message); }
   }
 
   const numCols = ref([]);
@@ -139,28 +177,63 @@
         <el-table-column prop="aab004" label="单位" min-width="150" show-overflow-tooltip/>
         <el-table-column label="人数" width="70"><template #default="{row}">{{ row.atj0a2 ?? row.atj0b2 ?? row.atj0c2 ?? row.atj0d2 ?? row.atj0e2 ?? row.atj0f2 }}</template></el-table-column>
         <el-table-column label="应收合计" width="110"><template #default="{row}">{{ row.atj0a7 ?? row.atj0b5 ?? row.atj0c5 ?? row.atj0d5 ?? row.atj0e5 ?? row.atj0f5 }}</template></el-table-column>
+        <el-table-column label="补缴人数" width="90"><template #default="{row}">{{ bqNum(row) ?? "-" }}</template></el-table-column>
+        <el-table-column label="补缴合计" width="110"><template #default="{row}">{{ bqSum(row) ?? "-" }}</template></el-table-column>
         <el-table-column label="状态" width="80"><template #default="{row}">
           <el-tag size="small" :type="row.aaezzz === '1' ? 'success' : 'info'">{{ stTag(row.aaezzz) }}</el-tag>
         </template></el-table-column>
         <el-table-column prop="aae036" label="经办时间" width="150"/>
       </el-table>
-      <div class="kv">点行看明细; 应收合计口径因险种而异(社保 ATJ0A7 含补缴滞纳金/工伤 ATJ0F5=工伤单位缴 等, 旧系统忠实)。</div>
+      <div class="kv">点行看明细; 应收合计口径因险种而异(社保 ATJ0A7 含补缴滞纳金/工伤 ATJ0F5=工伤单位缴 等, 旧系统忠实)。补缴列仅社保/省医保/工伤有表头 _B 口径(市医保/公积金补缴藏于明细 ATJ000='2' 行)。</div>
 
-      <h4>明细</h4>
-      <el-table v-if="detailRows.length" :data="detailRows" size="small" border max-height="300">
+      <h4>明细
+        <el-checkbox v-model="rp.bqOnly" size="small" style="margin-left:12px">只看补缴(ATJ000='2')</el-checkbox>
+      </h4>
+      <el-table v-if="detailRows.length" :data="bqRows()" size="small" border max-height="300">
         <el-table-column prop="aac003" label="姓名" width="90"/>
         <el-table-column prop="aac002" label="身份证号码" width="170"/>
         <el-table-column prop="aaa001" label="个人编号" width="100"/>
         <el-table-column prop="atb931" label="结算单元" min-width="130" show-overflow-tooltip/>
+        <el-table-column label="缴费/补缴" width="90"><template #default="{row}">
+          <el-tag size="small" :type="row.atj000 === '2' ? 'warning' : 'success'">{{ row.atj000 === '2' ? '补缴' : '缴费' }}</el-tag>
+        </template></el-table-column>
         <el-table-column prop="atj0aa" label="当月新增" width="80"/>
         <template v-for="k in Object.keys(detailRows[0]).filter(k => !['aae002','atc900','atj000','atb930','atb931','aab001','aaa030','aaa031','aaa020','aaa021','aac003','aac002','aaa001','atj0aa','aae011','aae017','aae036','aae019','aae020','aae022'].includes(k))" :key="k">
           <el-table-column :prop="k" :label="k" width="105"/>
         </template>
       </el-table>
+
+      <h4>月垫付台账 (TJ0Z, tdce:53 保险月垫付情况)</h4>
+      <div style="margin-bottom:8px">
+        <wb-dsf-tip menu="员工管理" page="tdce(53) 保险月垫付情况" area="月垫付" btn="生成垫付情况"
+          note="PRC_月垫付情况: 编排器硬序 社保11→医保21/22→工伤31/32→公积金41/42(清欠金额依次扣除, 次序不可调); V_TB96 三分支判定 — 无结算记录/欠费('1','2')→全额垫付, 已到账('0')且额度不足→差额(公式只减 BX_ZJ 不减前序额度, 旧系统忠实)">
+          <el-button type="warning" :loading="rp.dfBusy" @click="dfCreate">生成垫付台账</el-button>
+        </wb-dsf-tip>
+        <el-button size="small" @click="dfLoad">查询垫付台账</el-button>
+      </div>
+      <div v-if="rp.dfLog" class="kv">{{ rp.dfLog }}</div>
+      <el-table v-if="rp.dfRows.length" :data="rp.dfRows" size="small" border max-height="300">
+        <el-table-column label="险种" width="90"><template #default="{row}">{{ ttypeLabel(row.ttype) }}</template></el-table-column>
+        <el-table-column prop="atb931" label="结算单元" min-width="130" show-overflow-tooltip/>
+        <el-table-column prop="aab004" label="单位" min-width="150" show-overflow-tooltip/>
+        <el-table-column prop="pnum_z" label="缴费人数" width="85"/>
+        <el-table-column prop="mnum_sum_z" label="缴费合计" width="105"/>
+        <el-table-column prop="pnum_b" label="补缴人数" width="85"/>
+        <el-table-column prop="mnum_sum_b" label="补缴合计" width="105"/>
+        <el-table-column prop="mnum_sum" label="转款合计" width="105"/>
+        <el-table-column label="垫付" width="80"><template #default="{row}">
+          <el-tag size="small" :type="row.dfsign === '1' ? 'danger' : 'info'">{{ row.dfsign === '1' ? '垫付' : '未垫' }}</el-tag>
+        </template></el-table-column>
+        <el-table-column prop="dfmoney" label="垫付金额" width="105"/>
+        <el-table-column prop="zzz019" label="业务员" width="90"/>
+        <el-table-column prop="aae036" label="经办时间" width="150"/>
+      </el-table>
     </div>`,
     setup() {
       return { rp, LINES, units, heads, rows, detailRows, cur,
-        loadHeads, rebuild, load, loadDetail, confirm, stTag };
+        loadHeads, rebuild, load, loadDetail, confirm, stTag,
+        bqNum, bqSum, bqRows, dfCreate, dfLoad,
+        ttypeLabel: (t) => TTYPE_LABEL[t] || (t || "-") };
     },
   };
 })();

@@ -43,4 +43,14 @@ class YueViewController(private val jdbc: JdbcTemplate) {
         if (atb930 != null) sql += " AND atb930=$atb930"
         return jdbc.queryForList("$sql ORDER BY atc900 NULLS LAST LIMIT 500")
     }
+
+    /** 月垫付台账 TJ0Z 查询(W4d-3, tdce:53 页读侧; 只读, 与 /proc PRC_月垫付情况 配套)。 */
+    @GetMapping("/df")
+    fun df(@RequestParam ym: String, @RequestParam aaa030: Long): List<Map<String, Any?>> {
+        if (!Regex("^\\d{6}$").matches(ym)) return emptyList()
+        return jdbc.queryForList(
+            """SELECT * FROM tj0z WHERE aae002=? AND aaa030=?
+               ORDER BY ttype, xh NULLS LAST LIMIT 500""",
+            ym.toLong(), aaa030)
+    }
 }

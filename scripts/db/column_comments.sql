@@ -115,3 +115,11 @@ COMMENT ON COLUMN tj0f1.atj0f6 IS '工伤补缴滞纳金: TC9W_BP09.ABO004(单�
 COMMENT ON COLUMN tj0d1.atj000 IS '数据来源: 1=月重建 2=补缴情况(省公积金活码重写版走 TC9U_BP01 回盘桶 abp005/006)';
 COMMENT ON COLUMN tj0b1.atj000 IS '数据来源: 1=月重建 2=补缴情况';
 COMMENT ON COLUMN tj0f1.atj000 IS '数据来源: 1=月重建 2=补缴情况';
+
+-- ===== W4d-3 月垫付族(2026-11-17, 出处=PKG_派遣保险月情况 L4882-5999, tdce:53) =====
+COMMENT ON COLUMN tj0z.ttype IS '月转款类别: 11=社保 21=省医保 22=市医保 31=省工伤 32=市工伤 41=省公积金 42=市公积金(工伤按结算单元区划 AAA020 第3-4位=99 分流省/市; 编排器硬序 11→21/22→31/32→41/42 清欠级联)';
+COMMENT ON COLUMN tj0z.dfsign IS '垫付标识: 0=无需垫付 1=垫付(V_TB96 判定: 无结算记录或 ATB96Z 1/2 欠费→全额垫付; ATB96Z=0 已到账且 BX_ZJ-前序险种额度<应收→差额垫付; 注意 dfmoney 公式只减 BX_ZJ 不减前序额度, 旧系统忠实)');
+COMMENT ON COLUMN tj0z.dfmoney IS '垫付金额: 全额垫付=转款合计; 差额垫付=GREATEST(应收-BX_ZJ,0); 省医保 MNUM_SUM=缴费+补缴 无 NVL, 可为 NULL(dfmoney 随之 NULL)';
+COMMENT ON COLUMN tj0z.aaezzz IS '确认标志: 0=未确认(月垫付重建置 0; 旧已确认跳过分支整块被注释, 现行重建直接先删后插)';
+COMMENT ON COLUMN tj0z.dfmsg IS '未到账原因(月垫付重建置 NULL; 业务员后续填写)';
+COMMENT ON COLUMN tj0z.dftime IS '预计到账时间(月垫付重建置 NULL; 业务员后续填写)';
