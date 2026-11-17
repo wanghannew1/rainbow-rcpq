@@ -104,3 +104,7 @@ COMMENT ON COLUMN tj0c1.atj0c3 IS '市医保单位缴费合计=BBA002+BBA004+BBA
 -- ===== W4d 市医保应缴费(2026-11-17, 出处=PKG_派遣保险月情况 L1552-1700) =====
 COMMENT ON COLUMN tj0c2.atj0aa IS '新参保当月标识: 合同 AAE002=业务年月 且 ATC90PA NULL → 1; 此时查 TC9W1.ABP016, 值 1/2 跳过该行(忠实)';
 COMMENT ON COLUMN tj0c2.aaa603 IS '参保时间(合同 AAA603 原值, 明细展示列)';
+
+-- ===== W4d-2 保险当月补缴(2026-11-17, 出处=PKG_保险补退 L84-1010) =====
+COMMENT ON COLUMN ac10.aac101 IS 'AC10 险种归类: 1=社保(养老失业) 2=医保 3=公积金 4=工伤(保险当月补缴 LB=2 滞纳桶写入; DUP→该月金额清零继续)';
+COMMENT ON COLUMN ac10.atc9t4 IS '补缴审核状态固定置 1(保险当月补缴 LB=2 写入)';
