@@ -108,3 +108,10 @@ COMMENT ON COLUMN tj0c2.aaa603 IS '参保时间(合同 AAA603 原值, 明细展�
 -- ===== W4d-2 保险当月补缴(2026-11-17, 出处=PKG_保险补退 L84-1010) =====
 COMMENT ON COLUMN ac10.aac101 IS 'AC10 险种归类: 1=社保(养老失业) 2=医保 3=公积金 4=工伤(保险当月补缴 LB=2 滞纳桶写入; DUP→该月金额清零继续)';
 COMMENT ON COLUMN ac10.atc9t4 IS '补缴审核状态固定置 1(保险当月补缴 LB=2 写入)';
+
+-- ===== W4d-2② 补缴情况×4(2026-11-17, 出处=PKG_派遣保险月情况 L636-810/3047-3211/2469-2623/1941-2107) =====
+COMMENT ON COLUMN tj0b1.atj0b6 IS '省医保补缴滞纳金: TC9W_BP01.ABO004(单行 SELECT INTO; 多行/无行→DAA001 亦 NULL)';
+COMMENT ON COLUMN tj0f1.atj0f6 IS '工伤补缴滞纳金: TC9W_BP09.ABO004(单行 SELECT INTO; 多行/无行→DAA001 亦 NULL)';
+COMMENT ON COLUMN tj0d1.atj000 IS '数据来源: 1=月重建 2=补缴情况(省公积金活码重写版走 TC9U_BP01 回盘桶 abp005/006)';
+COMMENT ON COLUMN tj0b1.atj000 IS '数据来源: 1=月重建 2=补缴情况';
+COMMENT ON COLUMN tj0f1.atj000 IS '数据来源: 1=月重建 2=补缴情况';
