@@ -100,3 +100,7 @@ COMMENT ON COLUMN tj0b1.daa001 IS '省医保个人大病: 引擎 daa001+daa002; 
 COMMENT ON COLUMN tj0c1.daa001 IS '市医保个人大病: TC9W_BP04 sum(abp007)(户头+年月+姓名+证件, rownum=1); hack 220822199710080425+202509→100 忠实';
 COMMENT ON COLUMN tj0b1.atj0b3 IS '省医保单位缴费合计=BBA002(含公务员补助比例额)+ATB90T+BBA005';
 COMMENT ON COLUMN tj0c1.atj0c3 IS '市医保单位缴费合计=BBA002+BBA004+BBA005';
+
+-- ===== W4d 市医保应缴费(2026-11-17, 出处=PKG_派遣保险月情况 L1552-1700) =====
+COMMENT ON COLUMN tj0c2.atj0aa IS '新参保当月标识: 合同 AAE002=业务年月 且 ATC90PA NULL → 1; 此时查 TC9W1.ABP016, 值 1/2 跳过该行(忠实)';
+COMMENT ON COLUMN tj0c2.aaa603 IS '参保时间(合同 AAA603 原值, 明细展示列)';
