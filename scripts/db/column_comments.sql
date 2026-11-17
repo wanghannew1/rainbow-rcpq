@@ -123,3 +123,16 @@ COMMENT ON COLUMN tj0z.dfmoney IS '垫付金额: 全额垫付=转款合计; 差�
 COMMENT ON COLUMN tj0z.aaezzz IS '确认标志: 0=未确认(月垫付重建置 0; 旧已确认跳过分支整块被注释, 现行重建直接先删后插)';
 COMMENT ON COLUMN tj0z.dfmsg IS '未到账原因(月垫付重建置 NULL; 业务员后续填写)';
 COMMENT ON COLUMN tj0z.dftime IS '预计到账时间(月垫付重建置 NULL; 业务员后续填写)';
+
+-- ===== W5a 缴费基数核对/确认(2026-11-17, 出处=PKG_缴费基数 L636-1755, tdcq/tdcab/tdcac/tdch 页) =====
+COMMENT ON COLUMN aa97.aae214_1 IS '社保基数核对状态: 0=未核对(无合同/资格不符被退回) 3=已核对待确认 1=已确认(同时回写 TC90 atc905/aaa301/aaa304←AAA301_1 按同人 MAX(ATC900))';
+COMMENT ON COLUMN aa97.aae214_2 IS '医保基数核对状态: 0=未核对 3=已核对待确认 1=已确认(回写 TC90 aaa302/aaa306←AAA302_1 按自身 ATC900); 核对含 INSTR(aac008,80) 退休旁路, ATC90PA CASE 80+市→NULL/80+省→0';
+COMMENT ON COLUMN aa97.aae214_3 IS '公积金基数核对状态: 0=未核对或现基数=申报 3=已核对待确认(现基数<>申报) 1=已确认(回写 TC90 aaa303←AAA303_1 按同人 MAX(ATC900)); 核对唯一活跃调基数上下限且夹取值写回 AAA303_1, ABP00C/D/E=ROUND(申报×比例/100)省市均整数化HALF_UP';
+COMMENT ON COLUMN aa97.aae214_4 IS '工伤基数核对状态: 0=未核对 3=已核对待确认 1=已确认(回写 TC90 aaa305←AAA305_1 按自身 ATC900); 主路径 ATC90PB=3 项被注释, 另有 ELSIF PB=3 分支: 同年同人 AA97 唯一才过且调医保上下限仅报错不落值';
+COMMENT ON COLUMN aa97.aaa301_1 IS '社保单位申报缴费基数(Excel 导入; 确认时落 TC90; 已确认线 AAE214_1=1 后导入不覆盖)';
+COMMENT ON COLUMN aa97.aaa302_1 IS '医保单位申报缴费基数(省/市按 AAA110 第3-4位择一, 导入提交时选定; 确认落 TC90 aaa302/aaa306)';
+COMMENT ON COLUMN aa97.aaa303_1 IS '公积金调整后缴费基数(省/市择一; 核对时被上下限夹取后写回; 确认落 TC90 aaa303)';
+COMMENT ON COLUMN aa97.aaa305_1 IS '工伤单位申报缴费基数(省/市择一; 确认落 TC90 aaa305)';
+COMMENT ON COLUMN aa97.abp00d IS '单位公积金月缴存额=ROUND(AAA303_1×ATB90S_DW/100) 整数化 HALF_UP(核对生成; PG varchar 存 numeric)';
+COMMENT ON COLUMN aa97.abp00c IS '个人公积金月缴存额=ROUND(AAA303_1×ATB90S_GR/100) 整数化 HALF_UP(核对生成; PG varchar 存 numeric)';
+COMMENT ON COLUMN aa97.abp00e IS '公积金月缴存额合计=ABP00C+ABP00D(核对生成; PG varchar 存 numeric)';
