@@ -146,3 +146,9 @@ COMMENT ON COLUMN aa97.aae100 IS '生效标记: 0=未生效(导入提交初值, 
 COMMENT ON COLUMN tc0a.aae114 IS '公积金上下限调整审核标识: 0=未审(提交/下限托底初值) 1=审核通过(同时 TC90.AAA303←AAA303_1+AA97.AAA303_1←同(按 AAE001=SUBSTR(AAE002,1,4))+AA97_BG 台账 TYPE=4) 2=审核不通过(AAE113=原因; 已审态回滚 TC90/AA97 到 AAA303 原值并删 BG); FLAG=2/3 已审回滚段对 AA97 无 AAE001 条件=源差异';
 COMMENT ON COLUMN tc0a_bp.ace10a IS '公积金上下限调整批次行状态: NULL/0/2/3=校验消费集(NULL新导入 3=过 2=拒原因ace10b) 1=已提交(TC0A已落库); 校验只有省限出窗检查(市不查=源缺陷), 提交前内嵌重跑校验(PKG_缴费基数.PRC_公积金基数上下限调整校验/提交)';
 COMMENT ON COLUMN aa97_bg.aa97type IS '基数变更台账类别: 2=TC9W_BP04 补缴链(TdcAyCases) 4=TC0A 公积金上下限调整(审核 FLAG=1 插入, FLAG=2/3 已审回滚时物理删除=源忠实, 铁律8 改造清单在册)';
+
+-- ===== W5d 未申报清单/名册×4(2026-11-18, 出处=PKG_缴费基数 L2578-3205, tdcq/tdcab/tdcac/tdch 弹层) =====
+COMMENT ON COLUMN aa97_dw.xz IS '未申报清单险种: 1=社保(资格列atc90p/属地列aaa100/已申报列aaa301_1) 2=医保(atc90pa/aaa110/aaa302_1) 3=公积金(atc90w/aaa120/aaa303_1) 4=工伤(atc90pb/**aaa120=源copy-paste bug忠实,应aaa130**/aaa305_1); 资格=(P=0&(生效列null|>年01)) OR(40x=1&P null&R=3) OR(P=2&R=3) AND AAE00P IN(1,5,7) AND AAE002<=年-1||12';
+COMMENT ON COLUMN aa97_dw.psum IS '未申报人数=名册(AA97_GR WHERE FID)行数, 名册生成后回填';
+COMMENT ON COLUMN aa97_gr.bxzt IS '未申报名册保险状态=TC90 线状态列快照(社保 atc90p/医保 atc90pa/公积金 atc90w/工伤 atc90pb), 可 null(未参保空档)';
+COMMENT ON COLUMN aa97_gr.aaa000 IS '未申报名册保险编号=TC90 线编号列快照(社保 aaa001/医保 aaa005/公积金 aaa004/工伤 aaa009)';

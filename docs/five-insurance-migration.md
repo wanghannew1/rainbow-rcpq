@@ -327,7 +327,7 @@ openpyxl/xlrd 校验结构（表头逐字节/合并区/示例行/序列号单元
 >     医保 AAA302+AAA306←302_1 by 自身 ATC900; 公积金 AAA303←303_1 by MAX;
 >     工伤 AAA305←305_1 by 自身。SYSDATE 年度判定=Y 动态(核对仅在当年窗口有效, 忠实)。
 > **W5 分波**: W5a=核对/确认×4(✅); W5b=导入校验/提交(✅); W5c=公积金上下限五过程(✅);
-> W5d=未申报×8。clamp 复用引擎 clampBase(公共.fun_缴费基数, 语义=AA98 夹取;
+> W5d=未申报×8(✅, W5 全链收官)。clamp 复用引擎 clampBase(公共.fun_缴费基数, 语义=AA98 夹取;
 > 未命中窗口 Oracle 侧 985:=0 只影响负基数边缘, PG 侧原样返回, 效果等价)。
 > **✅ W5a 核对/确认×4 完成（2026-11-17）**：`Jishu5Cases.kt` 独立文件（/proc 91, 缴费基数
 > 8 过程在册）——四线核对(已确认 guard 静默跳过→AA97 逐人→TC90 取合同→资格判定 SYSDATE
@@ -384,6 +384,23 @@ openpyxl/xlrd 校验结构（表头逐字节/合并区/示例行/序列号单元
 > 断 tc90.aab001→视图 INNER JOIN ab01 落空)/审核 FLAG 1/3/2+TJ0E1 拦截(桩 aac001/atj000
 > varchar(3) 必填坑)/下限托底真数据 54 行+省市 ABP 不对称)。V17+COMMENT(tc0a.aae114/
 > tc0a_bp.ace10a/aa97_bg.aa97type)。W5c 前端页与 wb-dsf-tip(tdcc 20/tdcd 21)随收尾波补齐。
+> **✅ W5d 未申报清单/名册×4 完成（2026-11-18, W5 全链收官 /proc 102）**：`Jishu5WsbCases.kt`
+> 独立文件（PRC_社保/医保/公积金/工伤未申报, tdcq/tdcab/tdcac/tdch 各 dialog_view2 弹层,
+> 调用面=[aae001,aaa030,aaa020]; 名册 4 过程无前端调用点=清单内部步骤 faithful 保留为内部
+> 函数）。四线同构参数化差异表: XZ 1-4/状态列 atc90p,pa,w,pb/生效列 aaa202,602,502,902/
+> 属地列 aaa100,110,120,**工伤=aaa120(应为 aaa130 的 copy-paste 旧 bug 忠实保留)**/
+> 已申报排除列 aaa301_1,302_1,303_1,305_1/GR.BXZT←状态列/GR.AAA000←编号列 aaa001,005,004,009。
+> 资格=(P='0'&(生效列 null|>年01)) OR(40x='1'&P null&R='3') OR(P='2'&R='3') AND AAE00P IN
+> ('1','5','7') AND AAE002<=年-1||'12'(数字减法=上年12前生效) AND NOT EXISTS(AA97 申报基数>0
+> 同年同人)。清单: DELETE 旧(XZ+户头+属地+年度)→AA12 SELECT INTO(缺行=整过程'出错'忠实)→
+> 按单元: FID 发号→户头信息(AB01.BAE011+子查 AAE019+TB93, 失败 RAISE→复位 code 跳过单元=忠实
+> SkipUnit)→名册逐人插 GR→DW 行(PSUM=人数)。**Oracle 无前缀列作用域坑**: aaa401/aaa030 靠
+> 两表唯一性解析(tc90/ab01 各一), PG 必须显式 a./b. 前缀(冒烟抓到两次)。冒烟 `w5d_smoke.py`
+> 全过(70557 生效列全 null→四线全中+BXZT/AAA000 逐线快照+PSUM=名册数+fid/cid 1e7 序列+
+> NOT EXISTS 排除线间独立(社保苗只挡社保线)+AA12 缺行忠实错+幂等)。V18(seq_aa97_dw_fid/
+> seq_aa97_gr_cid 抬段 1e7)+COMMENT(aa97_dw.xz/psum, aa97_gr.bxzt/aaa000)。**W5 全链收官**
+> (W5a 核对确认/W5b 导入校验提交/W5c 上下限五过程/W5d 未申报×4), 前端页与 wb-dsf-tip 随
+> W5 系列收尾波统一补齐。
 
 | 项 | 内容 |
 |---|---|
