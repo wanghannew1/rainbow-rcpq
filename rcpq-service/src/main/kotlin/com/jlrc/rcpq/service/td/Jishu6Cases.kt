@@ -52,8 +52,8 @@ import java.time.format.DateTimeFormatter
  *    UK_TC08(AAE000,ATC900,AAA000, V19 复刻)命中→静默幂等(铁律4 先探测); OTHERS→
  *    '记录补收基数出错' RETURN。
  * 划走: PRC_计算平均工资(公共包 L1086)→工资域波次(文档 W6 注记)。
- * 不移植: PRC_保险补差确认(W6 清单外, TJ0B2/B3 补差确认属月转款域待勘)、PRC_测试(源即名
- * "测试")。
+ * 补差确认(W2 漏项补齐, 2026-11-19): PRC_保险补差确认 TJ0B2/B3.AAEZZZ 置位。
+ * 不移植: PRC_测试(源即名"测试")。
  */
 @Component
 class Jishu6Cases(
@@ -356,6 +356,27 @@ class Jishu6Cases(
 
     private fun bdL(v: Any?): Long? = nm(v)
 
+    // ==================== 补差确认(W2 漏项补齐: 生成侧已移, 确认置位缺) ====================
+
+    /** PRC_保险补差确认(xz: 2医保→TJ0B2 / 3工伤→TJ0B3; flag: 1确认→AAEZZZ='1'/else→'0')。
+     *  源 L9326-9405, 两 IF 块同构(仅表名差)+COMMIT→/proc 事务化等价。 */
+    @Transactional
+    fun buchaQueRen(xz: String, flag: String, aae002: String, aaa030: String, aaa020: String,
+                    aae011: String): Map<String, Any?> {
+        val user = loadUser(aae011, "查询经办用户出错")
+        val table = when (xz) {
+            "2" -> "tj0b2"; "3" -> "tj0b3"
+            else -> return mapOf("appCode" to -1, "errMsg" to "险种格式不正确")
+        }
+        jdbc.update(
+            """UPDATE $table SET aaezzz=?, aae111=?, aae117=?, aae136=now(),
+               aae119=?, aae120=?, aae122=? WHERE aaa030=? AND aaa020=? AND aae002=?""",
+            if (flag == "1") "1" else "0",
+            user[0], user[1], user[2], user[3], user[4],
+            aaa030.toLongOrNull(), aaa020, aae002.toLongOrNull())
+        return mapOf("appCode" to ok, "errMsg" to null as String?)
+    }
+
     // ==================== ⑦ 保险补收基数_个人(公共包版) ====================
 
     /** 三段参数化: col40/申报列/实参列/实参年月列/状态列/基数列/AAA000/属地两列/额外过滤 */
@@ -522,6 +543,21 @@ class Jishu6BiangengProc(private val c: Jishu6Cases) : ProcHandler {
         val xz = params["xz"]?.toString() ?: return mapOf("appCode" to -1, "errMsg" to "缺少 xz")
         val aaa020 = params["aaa020"]?.toString() ?: ""
         return try { c.biangengCandi(atc900, xz, aaa020) } catch (e: JishuErr) { mapOf("appCode" to -1, "errMsg" to e.m) }
+    }
+}
+
+@Component
+class Jishu6BuchaQueRenProc(private val c: Jishu6Cases) : ProcHandler {
+    override fun procName() = "PKG_保险人员增减.PRC_保险补差确认"
+    override fun handle(params: Map<String, Any?>): Map<String, Any?> {
+        val xz = params["xz"]?.toString() ?: return mapOf("appCode" to -1, "errMsg" to "缺少 xz")
+        val flag = params["flag"]?.toString() ?: return mapOf("appCode" to -1, "errMsg" to "缺少 flag")
+        val aae002 = params["aae002"]?.toString() ?: return mapOf("appCode" to -1, "errMsg" to "缺少 aae002")
+        val aaa030 = params["aaa030"]?.toString() ?: return mapOf("appCode" to -1, "errMsg" to "缺少 aaa030")
+        val aaa020 = params["aaa020"]?.toString() ?: return mapOf("appCode" to -1, "errMsg" to "缺少 aaa020")
+        val aae011 = params["aae011"]?.toString() ?: return mapOf("appCode" to -1, "errMsg" to "缺少 aae011")
+        return try { c.buchaQueRen(xz, flag, aae002, aaa030, aaa020, aae011) }
+        catch (e: JishuErr) { mapOf("appCode" to -1, "errMsg" to e.m) }
     }
 }
 

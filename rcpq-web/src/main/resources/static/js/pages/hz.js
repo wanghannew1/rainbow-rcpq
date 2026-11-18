@@ -182,6 +182,16 @@
       bpLog.value = `补差提交(批次 ${v.value}): 落账 ${r.applied ?? 0} 行`;
     } catch (e) { if (e !== "cancel") bpLog.value = "补差提交失败: " + e.message; }
   }
+  /* W2/W6 补差确认(tdcbm:101/134 · tdcbs:101/134): TJ0B2/TJ0B3.AAEZZZ 置 1/0+经办件套 */
+  async function buchaQueRen(xz, flag) {
+    try {
+      await ElMessageBox.confirm(
+        `确认${flag === "1" ? "" : "取消"}基数补差台账(${xz === "2" ? "TJ0B2 医保" : "TJ0B3 工伤"}, AAEZZZ=${flag === "1" ? 1 : 0})?`, "补差确认");
+      await api.proc("PKG_保险人员增减.PRC_保险补差确认",
+        { xz, flag, aae002: rp.ym, aaa030: rp.aaa030, aaa020: rp.aaa020, aae011: api.store.oper.aae011 });
+      bpLog.value = `补差确认(${xz === "2" ? "医保" : "工伤"}): AAEZZZ=${flag === "1" ? 1 : 0}`;
+    } catch (e) { if (e !== "cancel") bpLog.value = "补差确认失败: " + e.message; }
+  }
   /* W3a 省工伤: 减免(TC09_BP→TC09) / 补差(TC9W_BP08→TJ0B3) */
   const gsBatch = () => ElMessageBox.prompt("批次号(ace100)", "批次", { inputValue: "" });
   const gsBody = (ace) => ({ ace100: ace, aae002: rp.ym, aaa030: rp.aaa030, aaa020: rp.aaa020, aae011: api.store.oper.aae011 });
@@ -399,6 +409,8 @@
             note="已移植过程 PRC_省医保基数补差回盘校验/提交(按 AAA005 医保个人编号匹配+当月 TC93 校验; 提交重建 TJ0B2 台账, 先物理删旧账忠实)">
             <el-button size="small" type="primary" plain @click="bjCheck">补差校验</el-button>
             <el-button size="small" type="danger" plain @click="bjCommit">补差提交</el-button>
+            <el-button size="small" type="success" plain @click="buchaQueRen('2', '1')">补差确认</el-button>
+            <el-button size="small" plain @click="buchaQueRen('2', '0')">取消确认</el-button>
           </wb-dsf-tip>
           <wb-dsf-tip menu="员工异动/补退费管理(省医保)" page="td/c/bn 员工省医保报增申请(11):412/523"
             area="省医保缴费工资表" btn="生成"
@@ -418,6 +430,8 @@
             note="已移植过程 PRC_省工伤基数补差回盘校验/提交(跨年所属期逐月摊分 TJ0B3; 缺月校验仍置'3'忠实; 旧 DELETE TJ0B3 被注释=累积模式)">
             <el-button size="small" type="primary" plain @click="gsBcCheck">补差校验</el-button>
             <el-button size="small" type="danger" plain @click="gsBcCommit">补差提交</el-button>
+            <el-button size="small" type="success" plain @click="buchaQueRen('3', '1')">补差确认</el-button>
+            <el-button size="small" plain @click="buchaQueRen('3', '0')">取消确认</el-button>
           </wb-dsf-tip>
         </template>
         <span class="kv">{{ isHf()
@@ -527,7 +541,7 @@
       return { rp, rows, heads, units, bpRows, bpLog, dlg, selRows, bjRows, bjLog,
         isMed, isHf, fileInput, pickFile, uploadBp, push,
         loadHeads, loadRoster, openOk, saveOk, confirmNo, nextMonth, pass, loadBp, check,
-        commit, loadBj, stTag, fcCheck, fcCommit, yyCheck, yyCommit, bjCheck, bjCommit, gzb, isSm, isGs, isMg, gsJmCheck, gsJmCommit, gsBcCheck, gsBcCommit };
+        commit, loadBj, stTag, fcCheck, fcCommit, yyCheck, yyCommit, bjCheck, bjCommit, buchaQueRen, gzb, isSm, isGs, isMg, gsJmCheck, gsJmCommit, gsBcCheck, gsBcCommit };
     },
   };
 })();
