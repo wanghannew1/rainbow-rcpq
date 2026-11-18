@@ -152,3 +152,13 @@ COMMENT ON COLUMN aa97_dw.xz IS '未申报清单险种: 1=社保(资格列atc90p
 COMMENT ON COLUMN aa97_dw.psum IS '未申报人数=名册(AA97_GR WHERE FID)行数, 名册生成后回填';
 COMMENT ON COLUMN aa97_gr.bxzt IS '未申报名册保险状态=TC90 线状态列快照(社保 atc90p/医保 atc90pa/公积金 atc90w/工伤 atc90pb), 可 null(未参保空档)';
 COMMENT ON COLUMN aa97_gr.aaa000 IS '未申报名册保险编号=TC90 线编号列快照(社保 aaa001/医保 aaa005/公积金 aaa004/工伤 aaa009)';
+
+-- ===== W6 散件收口(2026-11-18, 出处=PKG_保险人员增减 L6952-7468/9267-9325+PKG_人才派遣公共 L1355-1677) =====
+COMMENT ON COLUMN tc90_yy.safesign IS '异议保险类别: 1=社保(ATC90P/AAA201,203/AAA001) 2=医保(ATC90PA/AAA601,603/AAA005,市医保联动TC9W1) 3=工伤(ATC90PB/AAA901,903/AAA009) 4=公积金(ATC90W/AAA501,503/AAA004); UK=(SAFESIGN,ATC900) 一人一险种一条(V19 复刻)';
+COMMENT ON COLUMN tc90_yy.backsign IS '异议反馈标识: 0=未反馈 1=已反馈(异议处理 flag=1/2 置换; flag=3 转入前置; flag=2 取消前置且 INSIGN=1 拒)';
+COMMENT ON COLUMN tc90_yy.insign IS '异议转入标识: 0=未转入 1=已转入(异议处理 flag=3; 医保异议同步 ABP016=0 分支置 1); flag=4 取消转入要求 CBSIGN=2 且 INSIGN<>0';
+COMMENT ON COLUMN tc90_yy.cbsign IS '异议参保标识: 2=未参保(初值) 9=已离职作废(异议离职同步: 合同 ATB90R=5 时置换; 硬编码排除 ATC900 IN(47241,35825,35614)=源活性补丁忠实)';
+COMMENT ON COLUMN tc08.aaa000 IS '补收基数险种: 1=社保(基数=ATC905) 2=医保(基数=AAA302, 仅省 substr(AAA110,3,2)=99) 3=公积金(基数=AAA303); 无工伤段=源缺席; UK=(AAE000,ATC900,AAA000) V19 复刻';
+COMMENT ON COLUMN tc08.aae000 IS '补收基数年份(按年分段: 补发起点至补收年月的前一月, 每年一条; 本年段 NF<补收年恒假不写=源语义)';
+COMMENT ON COLUMN tc08.ksny IS '补收段起月(该年首月 yyyymm)';
+COMMENT ON COLUMN tc08.jsny IS '补收段止月(该年末月 yyyymm)';
