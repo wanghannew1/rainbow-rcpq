@@ -25,3 +25,5 @@ SELECT setval('seq_tc06_atc060',   GREATEST((SELECT COALESCE(max(atc060),0)::big
 SELECT setval('seq_tc92_atc920',   GREATEST((SELECT COALESCE(max(atc920),0)::bigint+1 FROM tc92), 10000001));
 SELECT setval('seq_ce10_ace100',   GREATEST((SELECT COALESCE(max(ace100),0)::bigint+1 FROM ce10), 10000001));
 SELECT setval('seq_tc90_yy_tc90yyid', GREATEST((SELECT COALESCE(max(tc90yyid),0)::bigint+1 FROM tc90_yy), 10000001));
+-- 2026-11-18 W5b: seq_aa97_aaa970 首次启用(基数导入提交发号), 由 V16__aa97_uk_w5b.sql 自动抬段
+--   (aa97 不在同步集合无覆盖风险, 抬段仅为键空间可解释; aa97_bp.id 由导入面显式指定不走序列)

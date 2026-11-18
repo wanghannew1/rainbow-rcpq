@@ -136,3 +136,8 @@ COMMENT ON COLUMN aa97.aaa305_1 IS '工伤单位申报缴费基数(省/市择一
 COMMENT ON COLUMN aa97.abp00d IS '单位公积金月缴存额=ROUND(AAA303_1×ATB90S_DW/100) 整数化 HALF_UP(核对生成; PG varchar 存 numeric)';
 COMMENT ON COLUMN aa97.abp00c IS '个人公积金月缴存额=ROUND(AAA303_1×ATB90S_GR/100) 整数化 HALF_UP(核对生成; PG varchar 存 numeric)';
 COMMENT ON COLUMN aa97.abp00e IS '公积金月缴存额合计=ABP00C+ABP00D(核对生成; PG varchar 存 numeric)';
+
+-- ===== W5b 基数导入校验/提交(2026-11-18, 出处=PKG_缴费基数 L5-635, tdcl(29) 页 导入对话框) =====
+COMMENT ON COLUMN aa97_bp.ace10a IS '基数导入批次行状态: NULL=新导入未校验 3=校验通过 2=校验失败(原因见ace10b) 1=已提交(AA97已落库) 0=提交失败(原因见ace10b); 校验只消费NULL行(复检需重导, Oracle真实分布 NULL/0/1/2/3=11580/2596/69585/32107/30510), 提交消费1/3行(PKG_缴费基数.PRC_基数导入校验/提交)';
+COMMENT ON COLUMN aa97_bp.ace10b IS '基数导入批次行失败原因(校验/提交逐行写回: 未查询到劳动合同/险金户头/缴费基数不能为空为零/必须为整数/比例填写不正确 等)';
+COMMENT ON COLUMN aa97.aae100 IS '生效标记: 0=未生效(导入提交初值, 核对/确认族不写此列)';

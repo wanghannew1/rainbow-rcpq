@@ -59,7 +59,8 @@ def gen_id(seq):
 
 _seq = 1
 ID18 = gen_id(_seq)
-while sql(f"SELECT COUNT(*) FROM ac01 WHERE aac002='{ID18}'") not in ("0", ""):
+while (sql(f"SELECT COUNT(*) FROM ac01 WHERE aac002='{ID18}'") not in ("0", "")
+       or sql(f"SELECT COUNT(*) FROM tc90 WHERE aac002='{ID18}'") not in ("0", "")):
     _seq += 1
     ID18 = gen_id(_seq)
 NAME = "端到端验证员"
@@ -90,7 +91,7 @@ st = sql(f"""SELECT 'ac01='||COALESCE((SELECT COUNT(*)::text FROM ac01 WHERE aac
   ||' atb90r='||COALESCE((SELECT atb90r FROM tc90 WHERE aac002='{ID18}' LIMIT 1),'-')
   ||' tb91='||COALESCE((SELECT atb911||'/'||atb912 FROM tb91 WHERE atb91z=(SELECT MAX(atc900) FROM tc90 WHERE aac002='{ID18}')),'-')""")
 print("  ", st)
-atc900 = sql(f"SELECT atc900 FROM tc90 WHERE aac002='{ID18}' LIMIT 1")
+atc900 = sql(f"SELECT max(atc900) FROM tc90 WHERE aac002='{ID18}'")
 check("AC01 已生成", "ac01=1" in st)
 check("TC90 待审(atb90r=2)", "atb90r=2" in st)
 check("TB91 审核流水(20/2)", "20/2" in st)
@@ -144,29 +145,29 @@ VALUES (COALESCE((SELECT MAX(id)+1 FROM tc93_bp1),1), {ace}, '{ID18}', '{NAME}',
 r = proc("PKG_IMP.PRC_CHECK_TC93",
          {"ace100": ace, "atb930": "37312", "atc931": YM, "atc932": YM, "atc937": "1"})
 check("核对 appCode=1", r.get("appCode") == 1)
-bpstate = sql(f"SELECT ace10a FROM tc93_bp1 WHERE aac002='{ID18}' AND atc93aa='6800'")
+bpstate = sql(f"SELECT ace10a FROM tc93_bp1 WHERE ace100={ace} AND aac002='{ID18}' AND atc93aa='6800'")
 check("核对通过(ace10a=3)", bpstate == "3", "ace10a=" + str(bpstate))
 
 step(7, "工资核对提交(最低工资 80% 门槛 + atc93p='0' 确认)")
 r = proc("PKG_IMP.PRC_COMMIT_TC93",
          {"ace100": ace, "atc932": YM, "atc931": YM, **OPER})
 p93 = sql(f"SELECT atc93p FROM tc93 WHERE atc930={t930}")
-bp1 = sql(f"SELECT ace10a FROM tc93_bp1 WHERE aac002='{ID18}' AND atc93aa='6800'")
+bp1 = sql(f"SELECT ace10a FROM tc93_bp1 WHERE ace100={ace} AND aac002='{ID18}' AND atc93aa='6800'")
 check("工资确认 atc93p=0", p93 == "0", "atc93p=" + str(p93))
 check("核对行完成(ace10a=1)", bp1 == "1", "ace10a=" + str(bp1))
 
 step(8, "出纳·银行到账导入(工行)")
-sql(f"INSERT INTO tb97_bp (id, ace100, abp001, abp002, abp005) VALUES (nextval('seq_tb97_bp_id'), nextval('seq_ce10_ace100'), '2026-11-20', '{NAME}服务费', '5000')")
-ace97 = sql("SELECT ace100 FROM tb97_bp WHERE abp002 LIKE '端到端验证员%' LIMIT 1")
+ace97 = sql("SELECT nextval('seq_ce10_ace100')")
+sql(f"INSERT INTO tb97_bp (id, ace100, abp001, abp002, abp005) VALUES (nextval('seq_tb97_bp_id'), {ace97}, '2026-11-20', '{NAME}服务费', '5000')")
 r = proc("PKG_派遣批量导入.PRC_工行到账导入校验", {"ace100": ace97})
 r = proc("PKG_派遣批量导入.PRC_工行到账导入提交", {"ace100": ace97, "aae011": "jiaq"})
 tb97n = sql(f"SELECT COUNT(*) FROM tb97 WHERE aab004 LIKE '端到端验证员%'")
 check("到账落库 TB97", int(tb97n) >= 1, f"rows={tb97n}")
 
 step(9, "开票岗·发票导入")
+ace99 = sql("SELECT nextval('seq_ce10_ace100')")
 sql(f"""INSERT INTO tb99_bp (id, ace100, aaa030, aaa031, abp001, abp002, abp003, abp004)
-VALUES (nextval('seq_tb99_id'), nextval('seq_ce10_ace100'), 1, '端到端户头', '{NAME}单位发票抬头', '1-借发票', '1-普票', '3000')""")
-ace99 = sql("SELECT ace100 FROM tb99_bp WHERE abp001 LIKE '端到端验证员%' LIMIT 1")
+VALUES (nextval('seq_tb99_id'), {ace99}, 1, '端到端户头', '{NAME}单位发票抬头', '1-借发票', '1-普票', '3000')""")
 r = proc("PKG_派遣批量导入.PRC_发票导入校验", {"ace100": ace99})
 r = proc("PKG_派遣批量导入.PRC_发票导入提交", {"ace100": ace99, "aae011": "jiaq"})
 tb99n = sql("SELECT COUNT(*) FROM tb99 WHERE atb99y LIKE '端到端验证员%'")

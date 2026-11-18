@@ -326,7 +326,7 @@ openpyxl/xlrd 校验结构（表头逐字节/合并区/示例行/序列号单元
 >   - 确认落 TC90 差异: 社保 ATC905+AAA301+AAA304←301_1 by **MAX(ATC900) 同人157**;
 >     医保 AAA302+AAA306←302_1 by 自身 ATC900; 公积金 AAA303←303_1 by MAX;
 >     工伤 AAA305←305_1 by 自身。SYSDATE 年度判定=Y 动态(核对仅在当年窗口有效, 忠实)。
-> **W5 分波**: W5a=核对/确认×4(本波); W5b=导入校验/提交; W5c=公积金上下限五过程;
+> **W5 分波**: W5a=核对/确认×4(✅); W5b=导入校验/提交(✅); W5c=公积金上下限五过程;
 > W5d=未申报×8。clamp 复用引擎 clampBase(公共.fun_缴费基数, 语义=AA98 夹取;
 > 未命中窗口 Oracle 侧 985:=0 只影响负基数边缘, PG 侧原样返回, 效果等价)。
 > **✅ W5a 核对/确认×4 完成（2026-11-17）**：`Jishu5Cases.kt` 独立文件（/proc 91, 缴费基数
@@ -340,6 +340,31 @@ openpyxl/xlrd 校验结构（表头逐字节/合并区/示例行/序列号单元
 > 回滚清桩)。**冒烟撞真数据教训**: PG aa97=迁移快照, 2026 scope 有真实 '1' 行→guard 跳过
 > (行为忠实), 桩须用合成属地层避让; 同人双确认行后行覆盖=旧 last-wins 忠实, 桩设计须避开。
 > W5a 前端页(核对/确认工作台)与 wb-dsf-tip(tdcq 等 7 页码)随 W5 系列收尾波补齐。
+> **✅ W5b 导入校验/提交 完成（2026-11-18）**：`Jishu5ImportCases.kt` 独立文件（/proc 93,
+> PKG_缴费基数.PRC_基数导入校验/提交, tdcl(29) 页 导入对话框, 调用面=ace100+aae001 / ace100+aae011）。
+> AA97_BP 批次流（导入面 Excel→AA97_BP 旧 lemis.imp 写入器未移植, 归后续前端波, 本波消费其产物）：
+> 校验=AA95 时限参数探测('为设置时限参数'错别字忠实)→ACE10A IS NULL 逐行→取有效合同(MAX(ATC900),
+> TOO_MANY 分支忠实保留)→AB01 户头→TC90 富化字段整行写回(UPDATE SET ROW=REC 净效果)→四险种
+> 分支: 社保必填+非空查零(整数校验死键)、医保 PA 同构+80 旁路按 AAA110 3-4 位择一、工伤同构+80
+> 豁免空值、公积金同构无 80 旁路+【整数校验唯一活跃】+比例必填【V_MSG 置后无 RAISE=源活性缺陷】
+> +比例整数段{12,7}(SUBSTR(x,1,INSTR(x,'.')-1) 无小数点→NULL 静默通过=源活性绕过);
+> 提交=ACE10A IN('1','3')→三序列发号(AAA970 首次启用按并行期约定抬段 1e7)→AA97 INSERT(53 列
+> 逐列对位, 申报基数按属地 99/非99 择一, AAE214 全'0'+经办六件套)→UK 命中走 UPDATE(AAE214_k<>'1'
+> 才覆写, SQL 三值 NULL 行走 ELSE=源活性语义, 比例两列同挂 AAE214_3=源 quirks, WHERE AAE001+
+> ATC900 换合同人 0 行静默=忠实)→置'1'。**铁律4 实证**: DUP_VAL_ON_INDEX 再捕续跑在 PG 会
+> 事务毒化, 改先探测 UK(AAE001,AAC001) 分流(V16 复刻 Oracle UK_AA97, 快照 0 违例实证)。
+> TO_NUMBER 格式错: Oracle VALUE_ERROR 内层仅捕 E_EXCEPTION=穿外层整过程报错(源 NO_DATA_FOUND
+> 捕获分支为死分支, 忠实按整批报错+整事务回滚)。TC90.ATB90S 比例串赋值后 UPDATE 被注释=死赋值
+> 不移植。备份库实证(Work DbW5bIdx/DbW5bCol): UK_AA97=UNIQUE(AAE001,AAC001)、AA97.ATB90S_DW/GR
+> =NUMBER(12,2)、AA97_BP.ACE10A 真实分布 NULL/0/1/2/3=11580/2596/69585/32107/30510。
+> 冒烟 `w5b_smoke.py` 全过(富化写回/四险种失败分支×5/dup→UPDATE last-wins/已确认 guard 不可
+> 覆写/提交失败行/TO_NUMBER 致命整批回滚零半账)。**连带修复**: ① W5a 冒烟桩适配 UK(同合同
+> 三桩改合成第二人+各桩位异人——UK 下一人一年一行, 旧桩跨线复用同人非法); ② e2e_business.py
+> 既有脆性修复( stash 对照实验证实与本波无关): ID18 新鲜度只查 ac01(完整跑终止步 doXinqCancle
+> 忠实物理删 ac01 后, 老人被当新人重用→同人双合同, step2 查 MAX 过/step3 用无序 LIMIT1 拿旧
+> 合同→空 JSON 崩), 改查 ac01+tc90+atc900 取 MAX; step6/7 bp1 断言与 step8/9 批次圈定改按
+> 本 run 批次(原 LIKE LIMIT1 捞旧 run 已消费批→发票落库 rows=0)。修复后 e2e 20/20 全链 PASS。
+> W5b 前端页(基数导入工作台)与 wb-dsf-tip(tdcl 页码 29)随 W5 系列收尾波补齐。
 
 | 项 | 内容 |
 |---|---|
