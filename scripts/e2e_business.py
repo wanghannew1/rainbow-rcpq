@@ -14,8 +14,12 @@ import datetime
 BASE = "http://localhost:8080"
 OPER = {"aae011": "jiaq", "aae017": "4101", "aae019": "贾悫",
         "aae020": "吉林省彩虹人才开发咨询服务有限公司", "aae022": "410100000000"}
-YM = "202611"
-NY = "202612"  # 费用开始年月: 每月 a951(=5) 号后当月不可新办(AA95 时限守卫), 桩改下月
+import datetime
+_ym = datetime.date.today().strftime("%Y%m")
+_y = int(_ym[:4]); _m = int(_ym[4:])
+_ny = f"{_y + (_m == 12)}{( _m % 12) + 1:02d}"   # 下月
+YM = _ym          # 办理月(险金计算/工资/到账等当月步骤)
+NY = _ny          # 费用开始年月: 每月 a951(=5)号后当月不可新办(AA95 时限守卫), 恒用下月
 P = subprocess.run(["psql", "-h", "localhost", "-U", "rcpq", "-d", "rainbow_rcpq", "-tAc"],
                    capture_output=True, text=True)
 
