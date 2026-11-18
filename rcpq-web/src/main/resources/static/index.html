@@ -19,6 +19,8 @@
 <script src="/js/pages/hz.js"></script>
 <script src="/js/pages/yue.js"></script>
 <script src="/js/pages/jishu.js"></script>
+<script src="/js/pages/yy.js"></script>
+<script src="/js/pages/insure.js"></script>
 <script src="/js/pages/change.js"></script>
 <style>
   body { margin: 0; background: #f5f7fa; font-family: system-ui, "Microsoft YaHei", sans-serif; }
@@ -78,6 +80,7 @@
       { key: "hz", label: "社保报增回盘" },
       { key: "yue", label: "月转款对账" },
       { key: "jishu", label: "基数申报(年度)" },
+      { key: "yy", label: "异议处理" },
     ]},
     { group: "固定日 · 工资险金", items: [
       { key: "salary", label: "工资核对" },
@@ -88,6 +91,7 @@
     ]},
     { group: "变更 · 退出", items: [
       { key: "change", label: "续签 / 终止" },
+      { key: "insure", label: "参保变更 / 停保" },
     ]},
   ];
   const app = createApp({
