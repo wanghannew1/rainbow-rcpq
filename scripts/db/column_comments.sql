@@ -141,3 +141,8 @@ COMMENT ON COLUMN aa97.abp00e IS '公积金月缴存额合计=ABP00C+ABP00D(核�
 COMMENT ON COLUMN aa97_bp.ace10a IS '基数导入批次行状态: NULL=新导入未校验 3=校验通过 2=校验失败(原因见ace10b) 1=已提交(AA97已落库) 0=提交失败(原因见ace10b); 校验只消费NULL行(复检需重导, Oracle真实分布 NULL/0/1/2/3=11580/2596/69585/32107/30510), 提交消费1/3行(PKG_缴费基数.PRC_基数导入校验/提交)';
 COMMENT ON COLUMN aa97_bp.ace10b IS '基数导入批次行失败原因(校验/提交逐行写回: 未查询到劳动合同/险金户头/缴费基数不能为空为零/必须为整数/比例填写不正确 等)';
 COMMENT ON COLUMN aa97.aae100 IS '生效标记: 0=未生效(导入提交初值, 核对/确认族不写此列)';
+
+-- ===== W5c 公积金上下限五过程(2026-11-18, 出处=PKG_缴费基数 L1756-2577, tdcc(20)/tdcd(21) 页) =====
+COMMENT ON COLUMN tc0a.aae114 IS '公积金上下限调整审核标识: 0=未审(提交/下限托底初值) 1=审核通过(同时 TC90.AAA303←AAA303_1+AA97.AAA303_1←同(按 AAE001=SUBSTR(AAE002,1,4))+AA97_BG 台账 TYPE=4) 2=审核不通过(AAE113=原因; 已审态回滚 TC90/AA97 到 AAA303 原值并删 BG); FLAG=2/3 已审回滚段对 AA97 无 AAE001 条件=源差异';
+COMMENT ON COLUMN tc0a_bp.ace10a IS '公积金上下限调整批次行状态: NULL/0/2/3=校验消费集(NULL新导入 3=过 2=拒原因ace10b) 1=已提交(TC0A已落库); 校验只有省限出窗检查(市不查=源缺陷), 提交前内嵌重跑校验(PKG_缴费基数.PRC_公积金基数上下限调整校验/提交)';
+COMMENT ON COLUMN aa97_bg.aa97type IS '基数变更台账类别: 2=TC9W_BP04 补缴链(TdcAyCases) 4=TC0A 公积金上下限调整(审核 FLAG=1 插入, FLAG=2/3 已审回滚时物理删除=源忠实, 铁律8 改造清单在册)';
