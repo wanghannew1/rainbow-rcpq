@@ -3,7 +3,7 @@
    PKG_保险人员增减 忠实行为) → 成功校验/回盘提交(/proc 已移植过程直调)。
    旧"报增名册导入"为生产 INVALID 死包不移植; 局方回盘文件导入留 M5(TC9W_HZ)。 */
 (() => {
-  const { reactive, ref, onMounted } = Vue;
+  const { reactive, ref, onMounted, computed } = Vue;
   const { api } = WB;
   const { ElMessageBox } = ElementPlus;
 
@@ -255,6 +255,9 @@
   }
 
   const stTag = (s) => ({ "1": "待校验", "4": "已校验" }[s] || (s || "-"));
+  // ⭐首例前端防呆(权威记忆明示一阶段允许): 该月+户头+区划存在 ATC9W8='4' 已回盘行
+  // → 生成名册按键置灰+提示; 后端 PRC_社保人员增减 :903-912 锁检查保留兜底
+  const pushLocked = computed(() => (rows.value || []).some(r => r.atc9w8 === '4'));
 
   /* 补缴明细(M3): 调已移植过程重建 TC9W_BP05 再查询 — 参保成功且缴费截止年月<当月
      且工资截止年月=当月 的合同, 按年分组算单位/个人应补(险金引擎) */
@@ -295,7 +298,8 @@
         <el-form-item>
           <wb-dsf-tip menu="员工异动/补退费管理(社保)" page="报增名册导入(CHECK_TC9W_IMP)/tdb/p 合同新增导入"
             area="名册导入" btn="导入" note="旧报增名册导入为生产即 INVALID 死包未移植; 新系统由合同推导推送 TC9W(等效替代)">
-            <el-button type="primary" :loading="rp.busy" @click="push">生成名册并推送</el-button>
+            <el-button type="primary" :loading="rp.busy" :disabled="pushLocked" @click="push">生成名册并推送</el-button>
+            <div v-if="pushLocked" class="bad">已回盘，数据锁定，可查看历史数据</div>
           </wb-dsf-tip>
           <wb-dsf-tip menu="—" page="—" area="—" btn="—" note="新系统辅助按键, 东软无对应">
             <el-button @click="loadHeads">刷新户头</el-button>
@@ -564,7 +568,7 @@
     setup() {
       loadUnits(); loadHeads();  // 顶层 onMounted 无实例=永不触发, 放 setup 内直调
       return { rp, rows, heads, units, bpRows, bpLog, dlg, selRows, bjRows, bjLog,
-        isMed, isHf, fileInput, pickFile, uploadBp, push,
+        isMed, isHf, fileInput, pickFile, uploadBp, push, pushLocked,
         loadHeads, loadRoster, openOk, saveOk, confirmNo, nextMonth, pass, loadBp, check,
         commit, loadBj, stTag, fcCheck, fcCommit, yyCheck, yyCommit, bjCheck, bjCommit, buchaQueRen, gzb, isSm, isGs, isMg, gsJmCheck, gsJmCommit, gsBcCheck, gsBcCommit };
     },
