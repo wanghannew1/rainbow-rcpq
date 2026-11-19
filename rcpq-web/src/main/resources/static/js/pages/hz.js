@@ -102,6 +102,7 @@
       if (j.appCode !== 1) { ElementPlus.ElMessage.error(j.errMsg || "导入失败"); }
       else {
         rp.log = j.msg + (j.rejects && j.rejects.length ? " 例: " + j.rejects.slice(0, 3).join("; ") : "");
+        ElementPlus.ElMessage.success(j.msg + (j.rejects && j.rejects.length ? `；不匹配 ${j.unmatched || 0} 行(明细见流程日志)` : ""));
         loadBp(); loadRoster();
       }
     } catch (e) { ElementPlus.ElMessage.error(e.message); }
