@@ -736,9 +736,10 @@ class HzController(private val jdbc: JdbcTemplate, private val tdck: TdckCases,
                coalesce(aaa90y,'') AS abp001, coalesce(aae013,'') AS aae013, ace10a, atc900, aab004
                FROM tc9w_bp04 WHERE aae002=? AND aaa030=? AND aaa020=? ORDER BY id""",
             ym.toLong(), aaa030, aaa020)
+        // 回盘行 aaa020 可为 NULL(推送名册属地列空→导入落账 NULL) — NULL 属地行跟随户头展示
         return jdbc.queryForList(
             """SELECT id, aaa90w, aaa001, abp001, aac002, aac003, aae013, ace10a, atc900, aab004
-               FROM tc9w_bp WHERE aae002=? AND aaa030=? AND aaa020=? ORDER BY id""",
+               FROM tc9w_bp WHERE aae002=? AND aaa030=? AND (aaa020=? OR aaa020 IS NULL) ORDER BY id""",
             ym.toLong(), aaa030, aaa020)
     }
 

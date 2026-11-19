@@ -104,9 +104,19 @@
         // 自动回填匹配到的户头/参保属地 — 台账查询依赖二者, 未选时静默跳过会让导入"看起来没反应"
         if (j.aaa030) { rp.aaa030 = j.aaa030; }
         if (j.aaa020) { rp.aaa020 = j.aaa020; }
-        rp.log = j.msg + (j.rejects && j.rejects.length ? " 例: " + j.rejects.slice(0, 3).join("; ") : "");
-        ElementPlus.ElMessage.success(j.msg + (j.rejects && j.rejects.length ? `；不匹配 ${j.unmatched || 0} 行(明细见流程日志)` : ""));
+        const fails = j.rejects || [];
+        rp.log = j.msg + (fails.length ? " 失败明细: " + fails.join("；") : "");
         loadBp(); loadRoster();
+        if (!fails.length) {
+          ElementPlus.ElMessage.success(`导入完成：成功 ${j.imported || 0} 行(待成功校验)`);
+        } else {
+          // 部分失败: 弹明细框逐行列出(旧系统为批次表格红色行+汇总弹窗, 此处等价可读化)
+          ElementPlus.ElMessageBox.alert(
+            `<div style="font-size:13px;line-height:1.9"><b>成功 ${j.imported || 0} 行</b>（已写入回盘台账，待成功校验）；` +
+            `<span style="color:#f56c6c">失败 ${fails.length} 行</span>：<br/>` +
+            fails.map(x => `· ${x.replace(/</g, "&lt;")}`).join("<br/>") + "</div>",
+            "导入结果", { dangerouslyUseHTMLString: true, type: "warning" });
+        }
       }
     } catch (e) { ElementPlus.ElMessage.error(e.message); }
     ev.target.value = "";
