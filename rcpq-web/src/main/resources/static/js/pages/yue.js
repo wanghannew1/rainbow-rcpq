@@ -27,19 +27,18 @@
   const rows = ref([]); const detailRows = ref([]);
   const cur = () => LINES.find(x => x.key === rp.kind) || LINES[0];
 
+  const districts = ref([]);
   async function loadHeads() {
-    console.log("[yue] loadHeads begin");
     let pushed = [];
     try { pushed = (await api.wb(`/hz/heads?ym=${rp.ym}&kind=social`)) || []; } catch (e) { console.log("[yue] hz/heads err", e.message); }
-    console.log("[yue] pushed =", pushed.length);
-    const hs = (await api.wb("/aaa030s").catch(e => { console.log("[yue] aaa030s err", e.message); return []; })) || [];
-    const ds = (await api.wb("/districts").catch(e => { console.log("[yue] districts err", e.message); return []; })) || [];
-    console.log("[yue] hs =", hs.length, "ds =", ds.length);
-    const master = hs.flatMap(h => ds.map(d => ({
-      aaa030: h.aaa030, aaa031: h.aaa031, aaa100: d.id, aaa101: d.label })));
-    const seen = new Set(master.map(m => m.aaa030 + "-" + m.aaa100));
-    heads.value = master.concat(pushed.filter(x => !seen.has(x.aaa030 + "-" + x.aaa100)));
-    console.log("[yue] heads.value =", heads.value.length);
+    // 主档案兜底: 户头(去重 4 项)与属地(独立 2 项)分列, 不做笛卡尔合并(合并导致户头重复)
+    const hs = (await api.wb("/aaa030s").catch(() => [])) || [];
+    const ds = (await api.wb("/districts").catch(() => [])) || [];
+    if (!headsMaster.value.length)
+      headsMaster.value = hs.map(h => ({ aaa030: h.aaa030, aaa031: h.aaa031, aaa100: "", aaa101: "" }));
+    districts.value = ds;
+    const seen = new Set(headsMaster.value.map(m => m.aaa030 + "-" + m.aaa100));
+    heads.value = headsMaster.value.concat(pushed.filter(x => !seen.has(x.aaa030 + "-" + x.aaa100)));
   }
 
   async function rebuild() {
@@ -163,8 +162,7 @@
         </el-form-item>
         <el-form-item label="参保属地">
           <el-select v-model="rp.aaa020" clearable style="width:200px">
-            <el-option v-for="h in heads.filter(x => !rp.aaa030 || x.aaa030 === rp.aaa030)"
-                       :key="h.aaa100" :value="h.aaa100" :label="(h.aaa101 || '') + ' ' + h.aaa100"/>
+            <el-option v-for="d in districts" :key="d.id" :value="d.id" :label="(d.label || '') + ' ' + d.id"/>
           </el-select>
         </el-form-item>
         <el-form-item>
@@ -238,7 +236,7 @@
       // 顶层 onMounted 无组件实例=永不触发(Vue 生产版静默 no-op), 加载放 setup 内直调
       api.wb("/units").then(u => { units.value = u || []; }).catch(() => {});
       loadHeads();
-      return { rp, LINES, units, heads, rows, detailRows, cur,
+      return { rp, LINES, units, heads, districts, rows, detailRows, cur,
         loadHeads, rebuild, load, loadDetail, confirm, stTag,
         bqNum, bqSum, bqRows, dfCreate, dfLoad,
         ttypeLabel: (t) => TTYPE_LABEL[t] || (t || "-") };

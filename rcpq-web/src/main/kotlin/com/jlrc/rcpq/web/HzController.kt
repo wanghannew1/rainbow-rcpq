@@ -859,11 +859,15 @@ class HzController(private val jdbc: JdbcTemplate, private val tdck: TdckCases,
                     val result = cellStr(row, h["申报结果"])
                     if (result.isNullOrBlank()) continue
                     val idCard = cellStr(row, h["公民身份证号码"])?.let { id15to18(it) }
-                    val w = (idCard?.let { byId[it] }) ?: ids.getOrNull(seq)
+                    // 源行为=证件优先+报盘行序兜底(回盘文件行序=推送行序的前提);
+                    // 新系统修正: 回盘文件自带证件号, 证件未命中推送名册=名册与回盘不一致,
+                    // 行序硬对齐会把结果写到别人台账(错配比拒绝危险) → 未命中即拒(2026-11-19)
+                    val w = idCard?.let { byId[it] }
                     if (w == null) {
-                        unmatched++; rejects.add("R${r + 1}: 无对应名册行"); seq++; continue
+                        unmatched++
+                        rejects.add("R${r + 1}: 证件 ${idCard ?: "?"} 无对应推送名册行(该人可能不在本月报增名单)")
+                        continue
                     }
-                    seq++
                     val aaa90w = when (result) {
                         "1" -> "1"; "2" -> "2"; else -> null
                     }
@@ -937,11 +941,15 @@ class HzController(private val jdbc: JdbcTemplate, private val tdck: TdckCases,
                     val result = cellStr(row, h["申报结果"])
                     if (result.isNullOrBlank()) continue
                     val idCard = cellStr(row, h["公民身份证号码"])?.let { id15to18(it) }
-                    val w = (idCard?.let { byId[it] }) ?: ids.getOrNull(seq)
+                    // 源行为=证件优先+报盘行序兜底(回盘文件行序=推送行序的前提);
+                    // 新系统修正: 回盘文件自带证件号, 证件未命中推送名册=名册与回盘不一致,
+                    // 行序硬对齐会把结果写到别人台账(错配比拒绝危险) → 未命中即拒(2026-11-19)
+                    val w = idCard?.let { byId[it] }
                     if (w == null) {
-                        unmatched++; rejects.add("R${r + 1}: 无对应名册行"); seq++; continue
+                        unmatched++
+                        rejects.add("R${r + 1}: 证件 ${idCard ?: "?"} 无对应推送名册行(该人可能不在本月报增名单)")
+                        continue
                     }
-                    seq++
                     val aaa90w = when (result) {
                         "1" -> "1"; "2" -> "2"; else -> null
                     }
