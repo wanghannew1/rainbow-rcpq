@@ -29,12 +29,20 @@
 
   onMounted(async () => {
     try { units.value = (await api.wb("/units")) || []; } catch (e) { /* 保底 */ }
+    await loadHeads();  // 户头/属地下拉主档案初始化(推送态叠加)
   });
 
+  const headsMaster = ref([]);
   async function loadHeads() {
-    try {
-      heads.value = (await api.wb(`/hz/heads?ym=${rp.ym}&kind=social`)) || [];
-    } catch (e) { heads.value = []; }
+    let pushed = [];
+    try { pushed = (await api.wb(`/hz/heads?ym=${rp.ym}&kind=social`)) || []; } catch (e) {}
+    if (!headsMaster.value.length) {
+      const hs = (await api.wb("/aaa030s")) || [];
+      const ds = (await api.wb("/districts")) || [];
+      headsMaster.value = hs.flatMap(h => ds.map(d => ({
+        aaa030: h.aaa030, aaa031: h.aaa031, aaa100: d.id, aaa101: d.label })));
+    }
+    heads.value = pushed.length ? pushed : headsMaster.value;
   }
 
   async function rebuild() {

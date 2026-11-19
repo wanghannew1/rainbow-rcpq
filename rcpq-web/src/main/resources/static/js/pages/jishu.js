@@ -18,7 +18,7 @@
       const api = window.WB.api;
       const tab = ref("hd");
       const rp = reactive({ aae001: "2026", aaa030: null, aaa020: null, busy: false,
-                            aae002: "202607", msg: "" });
+                            aae002: "202607", msg: "", heads: [], districts: [] });
       const rows = ref([]);
 
       // ---- 核对/确认 ----
@@ -139,7 +139,13 @@
         wsb.detail = (await api.wb("/wb/jishu/gr?fid=" + row.fid)) || [];
       }
 
-      onMounted(() => { loadBatches(); });
+      onMounted(async () => {
+        loadBatches();
+        try {
+          rp.heads = (await api.wb("/aaa030s")) || [];
+          rp.districts = (await api.wb("/districts")) || [];
+        } catch (e) { /* 保底手输 */ }
+      });
 
       const stLabel = s => ST_LABEL[s] || (s || "未校验");
       return { api, tab, rp, rows, LINES, hd, qr, load, stLabel,
@@ -151,8 +157,17 @@
     <div class="page">
       <el-form inline>
         <el-form-item label="调整年度"><el-input v-model="rp.aae001" style="width:90px"/></el-form-item>
-        <el-form-item label="户头"><el-input v-model.number="rp.aaa030" placeholder="AAA030" style="width:110px"/></el-form-item>
-        <el-form-item label="参保属地(区划)"><el-input v-model="rp.aaa020" placeholder="如 220100000000" style="width:150px"/></el-form-item>
+        <el-form-item label="户头">
+          <el-select v-model="rp.aaa030" filterable clearable style="width:240px" placeholder="AAA030 户头">
+            <el-option v-for="h in rp.heads" :key="h.aaa030" :value="h.aaa030"
+                       :label="h.aaa030 + ' ' + (h.aaa031 || '')"/>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="参保属地">
+          <el-select v-model="rp.aaa020" filterable clearable style="width:180px" placeholder="区划">
+            <el-option v-for="d in rp.districts" :key="d.id" :value="d.id" :label="(d.label || '') + ' ' + d.id"/>
+          </el-select>
+        </el-form-item>
       </el-form>
       <el-tabs v-model="tab">
         <el-tab-pane label="核对 / 确认×4" name="hd">

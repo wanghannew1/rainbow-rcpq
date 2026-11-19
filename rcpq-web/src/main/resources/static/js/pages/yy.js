@@ -10,7 +10,8 @@
       const api = window.WB.api;
       const rp = reactive({ busy: false, msg: "", rows: [], detail: null,
                             fBacksign: "0", fInsign: "", fCbsign: "2", fSafesign: "",
-                            syncAae002: "202611", syncAaa030: null, syncAaa100: "220100000000" });
+                            syncAae002: "202611", syncAaa030: null, syncAaa100: "220100000000",
+                            heads: [], districts: [] });
 
       async function load() {
         // 旧系统 tdcf/tdcg doQuery 首步隐式跑异议离职同步——本页保持该行为
@@ -51,6 +52,12 @@
       const INS = { "0": "未转入", "1": "已转入" };
       const CBS = { "2": "未参保", "9": "离职作废" };
 
+      onMounted(async () => {
+        try {
+          rp.heads = (await api.wb("/aaa030s")) || [];
+          rp.districts = (await api.wb("/districts")) || [];
+        } catch (e) { /* 保底手输 */ }
+      });
       return { api, rp, rows, load, deal, ybSync, show, SAFE, BS, INS, CBS };
     },
     template: `
@@ -133,8 +140,17 @@
       <h4>医保异议同步(tdcad: TC9W1 回盘结果 → 异议行/参保状态)</h4>
       <el-form inline>
         <el-form-item label="年月"><el-input v-model="rp.syncAae002" style="width:100px"/></el-form-item>
-        <el-form-item label="户头 AAA030"><el-input v-model.number="rp.syncAaa030" style="width:110px"/></el-form-item>
-        <el-form-item label="属地"><el-input v-model="rp.syncAaa100" style="width:150px"/></el-form-item>
+        <el-form-item label="户头">
+          <el-select v-model="rp.syncAaa030" filterable clearable style="width:220px" placeholder="AAA030">
+            <el-option v-for="h in rp.heads" :key="h.aaa030" :value="h.aaa030"
+                       :label="h.aaa030 + ' ' + (h.aaa031 || '')"/>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="属地">
+          <el-select v-model="rp.syncAaa100" filterable style="width:180px">
+            <el-option v-for="d in rp.districts" :key="d.id" :value="d.id" :label="(d.label || '') + ' ' + d.id"/>
+          </el-select>
+        </el-form-item>
         <el-form-item>
           <wb-dsf-tip menu="员工异动/补退费管理" page="td/c/ad 医保异议 (an:46)" area="同步" btn="执行同步"
             note="TC9W1 扫描(ATC9W1<>3): ABP016=0→异议行 INSIGN=1+TC90.ATC90PA=NULL; =2→重录异议+ATC90PA='2'">

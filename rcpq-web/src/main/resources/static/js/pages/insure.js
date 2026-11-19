@@ -9,7 +9,8 @@
   WB.pages.insure = {
     setup() {
       const api = window.WB.api;
-      const rp = reactive({ busy: false, msg: "", q: "", contracts: [], cur: null, last: "" });
+      const rp = reactive({ busy: false, msg: "", q: "", contracts: [], cur: null, last: "",
+                            districts: [], bgXz: "3", bgAaa020: "229900000000" });
 
       async function search() {
         if (!rp.q) { ElementPlus.ElMessage.warning("输入姓名/身份证/合同号"); return; }
@@ -17,6 +18,9 @@
         if (!rp.contracts.length) ElementPlus.ElMessage.info("无匹配合同");
       }
       function pick(row) { rp.cur = row; rp.last = ""; }
+      onMounted(async () => {
+        try { rp.districts = (await api.wb("/districts")) || []; } catch (e) { /* 保底手输 */ }
+      });
       const ok = r => r.appCode === 1;
 
       async function sbStop() {
@@ -113,7 +117,11 @@
               <el-radio-button value="3">公积金</el-radio-button>
             </el-radio-group>
           </el-form-item>
-          <el-form-item label="新参保地"><el-input v-model="rp.bgAaa020" placeholder="AA12 区划如 229900000000" style="width:160px"/></el-form-item>
+          <el-form-item label="新参保地">
+            <el-select v-model="rp.bgAaa020" filterable style="width:200px">
+              <el-option v-for="d in rp.districts" :key="d.id" :value="d.id" :label="(d.label || '') + ' ' + d.id"/>
+            </el-select>
+          </el-form-item>
           <el-form-item>
             <wb-dsf-tip menu="员工异动/补退费管理" page="td/c/g 变更参保地 (30)" area="参保地变更" btn="执行"
               note="守卫链(属地未变/未选参保/未参保成功/当月已结算)+旧合同置'5'跨险种'4'+新合同发号; 属地字典暂缓=忠实逗号串语义">

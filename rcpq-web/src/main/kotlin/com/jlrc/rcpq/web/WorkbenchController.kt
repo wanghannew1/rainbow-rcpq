@@ -227,6 +227,23 @@ class WorkbenchController(private val jdbcTemplate: JdbcTemplate,
         else jdbcTemplate.queryForList(
             "SELECT atb930, atb931, aab001, atb900 FROM tb93 WHERE aab001=? ORDER BY atb930", aab001)
 
+    /** 险金户头主档案(AB01.AAA030 全量 distinct) — 各工作台户头下拉的主数据源
+     *  (hz/heads 为推送态下拉, 未推送月份为空时用此兜底) */
+    @GetMapping("/aaa030s")
+    fun aaa030s(): List<Map<String, Any?>> = jdbcTemplate.queryForList(
+        """SELECT aaa030, max(aaa031) AS aaa031, count(*) AS units
+           FROM ab01 WHERE aaa030 IS NOT NULL GROUP BY aaa030 ORDER BY aaa030""")
+
+    /** 参保属地(AA12 × TC90 四线属地列实际使用值; 全量 AA12 有 1.4 万区划, 只给真实使用域) */
+    @GetMapping("/districts")
+    fun districts(): List<Map<String, Any?>> = jdbcTemplate.queryForList(
+        """SELECT a.id, a.label FROM (
+             SELECT DISTINCT aaa100 AS d FROM tc90 UNION
+             SELECT DISTINCT aaa110 FROM tc90 UNION
+             SELECT DISTINCT aaa120 FROM tc90 UNION
+             SELECT DISTINCT aaa130 FROM tc90) x
+           JOIN aa12 a ON a.id = x.d WHERE x.d IS NOT NULL ORDER BY a.id""")
+
     /** 经办人(SYS_ORG_USER_UNIT) */
     @GetMapping("/opers")
     fun opers(): List<Map<String, Any?>> = jdbcTemplate.queryForList(
