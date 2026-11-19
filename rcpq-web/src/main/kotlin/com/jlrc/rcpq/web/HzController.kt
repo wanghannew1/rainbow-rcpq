@@ -416,8 +416,9 @@ class HzController(private val jdbc: JdbcTemplate, private val tdck: TdckCases,
         if (!Regex("^\\d{6}$").matches(ym)) return emptyList()
         val table = when (kind) { "medical" -> "tc9w1"; "housingfund" -> "tc9u"; "smedical" -> "tc9w2"; "sgongshang" -> "tc9w3"; "mgongshang" -> "tc9w4"; else -> "tc9w" }
         return jdbc.queryForList(
-            """SELECT DISTINCT aaa030, aaa031, aaa100, aaa101 FROM $table
-               WHERE aae002=? AND atc9w1='1' AND atc9w8<>'9' AND aaa100 IS NOT NULL ORDER BY aaa030""", ym.toLong())
+            """SELECT aaa030, max(aaa031) AS aaa031, aaa100, max(aaa101) AS aaa101 FROM $table
+               WHERE aae002=? AND atc9w1='1' AND atc9w8<>'9' AND aaa100 IS NOT NULL
+               GROUP BY aaa030, aaa100 ORDER BY aaa030""", ym.toLong())
     }
 
     /** 成果确认请求: atc9w0 + 险种 + 成功(参保日期 abp001 + 个人编号 aaa001; 医保另可带申报基数
