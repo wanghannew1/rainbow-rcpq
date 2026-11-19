@@ -32,17 +32,16 @@
     await loadHeads();  // 户头/属地下拉主档案初始化(推送态叠加)
   });
 
-  const headsMaster = ref([]);
   async function loadHeads() {
     let pushed = [];
     try { pushed = (await api.wb(`/hz/heads?ym=${rp.ym}&kind=social`)) || []; } catch (e) {}
-    if (!headsMaster.value.length) {
-      const hs = (await api.wb("/aaa030s")) || [];
-      const ds = (await api.wb("/districts")) || [];
-      headsMaster.value = hs.flatMap(h => ds.map(d => ({
-        aaa030: h.aaa030, aaa031: h.aaa031, aaa100: d.id, aaa101: d.label })));
-    }
-    heads.value = pushed.length ? pushed : headsMaster.value;
+    // 主档案(AB01 户头×实际使用属地)始终并入 — 推送态只是叠加标记, 不可能让下拉变空
+    const hs = (await api.wb("/aaa030s").catch(() => [])) || [];
+    const ds = (await api.wb("/districts").catch(() => [])) || [];
+    const master = hs.flatMap(h => ds.map(d => ({
+      aaa030: h.aaa030, aaa031: h.aaa031, aaa100: d.id, aaa101: d.label })));
+    const seen = new Set(master.map(m => m.aaa030 + "-" + m.aaa100));
+    heads.value = master.concat(pushed.filter(x => !seen.has(x.aaa030 + "-" + x.aaa100)));
   }
 
   async function rebuild() {

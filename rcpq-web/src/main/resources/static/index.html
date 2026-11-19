@@ -96,7 +96,7 @@
   ];
   const app = createApp({
     setup() {
-      const tab = ref("hire");
+      const tab = ref(new URLSearchParams(location.search).get("tab") || "hire");  // ?tab=yue 深链接
       const current = computed(() => WB.pages[tab.value] || WB.pages.hire);
       const store = WB.api.store;
       onMounted(() => WB.api.loadOpers());
