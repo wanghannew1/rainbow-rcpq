@@ -27,21 +27,19 @@
   const rows = ref([]); const detailRows = ref([]);
   const cur = () => LINES.find(x => x.key === rp.kind) || LINES[0];
 
-  onMounted(async () => {
-    try { units.value = (await api.wb("/units")) || []; } catch (e) { /* 保底 */ }
-    await loadHeads();  // 户头/属地下拉主档案初始化(推送态叠加)
-  });
-
   async function loadHeads() {
+    console.log("[yue] loadHeads begin");
     let pushed = [];
-    try { pushed = (await api.wb(`/hz/heads?ym=${rp.ym}&kind=social`)) || []; } catch (e) {}
-    // 主档案(AB01 户头×实际使用属地)始终并入 — 推送态只是叠加标记, 不可能让下拉变空
-    const hs = (await api.wb("/aaa030s").catch(() => [])) || [];
-    const ds = (await api.wb("/districts").catch(() => [])) || [];
+    try { pushed = (await api.wb(`/hz/heads?ym=${rp.ym}&kind=social`)) || []; } catch (e) { console.log("[yue] hz/heads err", e.message); }
+    console.log("[yue] pushed =", pushed.length);
+    const hs = (await api.wb("/aaa030s").catch(e => { console.log("[yue] aaa030s err", e.message); return []; })) || [];
+    const ds = (await api.wb("/districts").catch(e => { console.log("[yue] districts err", e.message); return []; })) || [];
+    console.log("[yue] hs =", hs.length, "ds =", ds.length);
     const master = hs.flatMap(h => ds.map(d => ({
       aaa030: h.aaa030, aaa031: h.aaa031, aaa100: d.id, aaa101: d.label })));
     const seen = new Set(master.map(m => m.aaa030 + "-" + m.aaa100));
     heads.value = master.concat(pushed.filter(x => !seen.has(x.aaa030 + "-" + x.aaa100)));
+    console.log("[yue] heads.value =", heads.value.length);
   }
 
   async function rebuild() {
@@ -237,6 +235,9 @@
       </el-table>
     </div>`,
     setup() {
+      // 顶层 onMounted 无组件实例=永不触发(Vue 生产版静默 no-op), 加载放 setup 内直调
+      api.wb("/units").then(u => { units.value = u || []; }).catch(() => {});
+      loadHeads();
       return { rp, LINES, units, heads, rows, detailRows, cur,
         loadHeads, rebuild, load, loadDetail, confirm, stTag,
         bqNum, bqSum, bqRows, dfCreate, dfLoad,

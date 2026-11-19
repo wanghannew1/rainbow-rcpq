@@ -31,9 +31,9 @@
   const bjRows = ref([]); const bjLog = ref("");
   const dlg = reactive({ show: false, atc9w0: null, name: "", abp001: "", abp004: "", aaa001: "" });
 
-  onMounted(async () => {
+  async function loadUnits() {
     try { units.value = (await api.wb("/units")) || []; } catch (e) { /* 保底 */ }
-  });
+  }
 
   async function push() {
     rp.busy = true; rp.log = "";
@@ -538,6 +538,7 @@
       </el-dialog>
     </div>`,
     setup() {
+      loadUnits(); loadHeads();  // 顶层 onMounted 无实例=永不触发, 放 setup 内直调
       return { rp, rows, heads, units, bpRows, bpLog, dlg, selRows, bjRows, bjLog,
         isMed, isHf, fileInput, pickFile, uploadBp, push,
         loadHeads, loadRoster, openOk, saveOk, confirmNo, nextMonth, pass, loadBp, check,

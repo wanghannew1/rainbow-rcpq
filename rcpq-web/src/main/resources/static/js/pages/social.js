@@ -14,9 +14,9 @@
   const kindName = () => rp.kind === "social" ? "社保" : "医保";
   const flowName = () => rp.flow === "add" ? "报增名册" : "报减名册";
 
-  onMounted(async () => {
+  async function loadUnits() {
     try { units.value = (await api.wb("/units")) || []; } catch (e) { /* 保底 */ }
-  });
+  }
 
   async function load() {
     if (!rp.ym) { ElementPlus.ElMessage.warning("选年月"); return; }
@@ -87,6 +87,9 @@
         医保按参保属地拆省(2299)/市两文件→打包 zip(001批量新参保 / 批量减员申报.xls)。
         单位过滤时社保增员模板回填单位编号/名称。个人编号由局端分配, 报盘中留空。</div>
     </div>`,
-    setup() { return { rp, cols, rows, units, load, exportXls }; },
+    setup() {
+      loadUnits();  // 顶层 onMounted 无实例=永不触发, 放 setup 内直调
+      return { rp, cols, rows, units, load, exportXls };
+    },
   };
 })();
