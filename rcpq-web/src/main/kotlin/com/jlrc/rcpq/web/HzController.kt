@@ -824,10 +824,24 @@ class HzController(private val jdbc: JdbcTemplate, private val tdck: TdckCases,
     @PostMapping("/import-bp")
     fun importBp(@RequestParam ym: String, @RequestParam kind: String,
                  @RequestParam aae011: String,
+                 @RequestParam aaa030: Long, @RequestParam aaa020: String,
                  @RequestParam("file") file: org.springframework.web.multipart.MultipartFile): Map<String, Any?> {
-        audit.log(aae011, "wb:hz/import-bp", "ym=$ym kind=$kind",
+        audit.log(aae011, "wb:hz/import-bp", "ym=$ym kind=$kind aaa030=$aaa030",
             mapOf("ym" to ym, "kind" to kind, "file" to file.originalFilename, "size" to file.size))
+        // 源对话框必选户头/参保属地(AAE002/AAA030/AAA020 取自对话框参数, 导入文档 §2 ②)
+        val headAaa031 = jdbc.queryForList(
+            """SELECT (array_agg(aaa031 ORDER BY aae036 DESC NULLS LAST))[1] AS n
+               FROM ab01 WHERE aaa030=?""", aaa030).firstOrNull()?.get("n")?.toString()
+            ?: return mapOf("appCode" to -1, "errMsg" to "户头不存在")
+        val headAaa021 = jdbc.queryForList("SELECT label FROM aa12 WHERE id=?", aaa020)
+            .firstOrNull()?.get("label")?.toString() ?: aaa020
         if (!Regex("^\\d{6}$").matches(ym)) return mapOf("appCode" to -1, "errMsg" to "年月格式不正确")
+        // 源对话框重导语义(导入文档 §6.3): "该月已存在数据，是否删除后重新导入？" →
+        // 按 月+户头+区划 清暂存后重写; 同户头 aaa020=NULL 的遗留行一并清(源清不掉=记档差异)
+        jdbc.update(
+            """DELETE FROM tc9w_bp WHERE aae002=? AND aaa030=?
+               AND (aaa020=? OR aaa020 IS NULL)""",
+            ym.toLong(), aaa030, aaa020)
         val wb = try {
             org.apache.poi.ss.usermodel.WorkbookFactory.create(file.inputStream)
         } catch (e: Exception) {
@@ -941,60 +955,49 @@ class HzController(private val jdbc: JdbcTemplate, private val tdck: TdckCases,
                         w["atc900"], w["aab001"], w["aab004"], aae011)
                     matchedKeys.add((w["atc900"] as Number?)?.toLong())
                     imported++
-                } else {
+                } else if (kind == "social") {
+                    // 社保回盘: 源 ImportUtil 语义=Excel 原样落暂存表(不匹配不打标,
+                    // AAE002/AAA030/AAA020/AAA031/AAA021 取对话框参数), 逐行证件匹配/
+                    // 打标(ace10a 3=符合 2=不符合+ace10b 原因)由 PRC_社保异动回盘校验
+                    // (W3b 已移 TdckCases.fallbackCheck, 按身份证查 TC90 取 MAX(ATC900))完成;
+                    // 姓名不参与匹配(源 :1617-1623 注释禁用)=源行为忠实
                     val h = hdr(sheet, listOf("申报结果", "保险个人编号", "公民身份证号码", "姓名",
                         "户口性质", "业务年月", "备注", "养老滞纳金", "失业滞纳金"))
                     val result = cellStr(row, h["申报结果"])
                     if (result.isNullOrBlank()) continue
-                    val idCard = cellStr(row, h["公民身份证号码"])?.let { id15to18(it) }
-                    // 源行为=证件优先+报盘行序兜底(回盘文件行序=推送行序的前提);
-                    // 新系统修正: 回盘文件自带证件号, 证件未命中推送名册=名册与回盘不一致,
-                    // 行序硬对齐会把结果写到别人台账(错配比拒绝危险) → 未命中即拒(2026-11-19)
-                    val w = idCard?.let { byId[it] }
-                    if (w == null) {
-                        unmatched++
-                        rejects.add("R${r + 1}: 证件 ${idCard ?: "?"} 无对应推送名册行(该人可能不在本月报增名单)")
-                        continue
-                    }
-                    val aaa90w = when (result) {
-                        "1" -> "1"; "2" -> "2"; else -> null
-                    }
-                    if (aaa90w == null) {
-                        unmatched++; rejects.add("R${r + 1}: 申报结果 '$result' 非已知值"); continue
-                    }
-                    // 逻辑更新: 同键(aae002+atc900+aaa90w)已有行原地覆盖(不物理删)
-                    val updSoc = jdbc.update(
-                        """UPDATE tc9w_bp SET aaa001=?, aac002=?, aac003=?, aac009=?, abp001=?,
-                           abp002=?, abp003=?, aab001=?, aab004=?, aae011=?, aae036=now(), aae013=?
-                           WHERE aae002=? AND atc900=? AND aaa90w=?""",
-                        cellStr(row, h["保险个人编号"]),
-                        idCard ?: w["aac002"], w["aac003"] ?: cellStr(row, h["姓名"]),
-                        cellStr(row, h["户口性质"]), toIsoDate(cellStr(row, h["业务年月"])),
+                    jdbc.update(
+                        """INSERT INTO tc9w_bp (id, aae002, aaa030, aaa031, aaa020, aaa021,
+                        aaa001, aac002, aac003, aac009, abp001, abp002, abp003, ace10a,
+                        aaa90w, aae011, aae036, aae013)
+                        VALUES (nextval('seq_tc9w_id'), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+                        NULL, ?, ?, now(), ?)""",
+                        ym.toLong(), aaa030, headAaa031, aaa020, headAaa021,
+                        cellStr(row, h["保险个人编号"]), cellStr(row, h["公民身份证号码"]),
+                        cellStr(row, h["姓名"]), cellStr(row, h["户口性质"]),
+                        toIsoDate(cellStr(row, h["业务年月"])),
                         cellStr(row, h["养老滞纳金"]), cellStr(row, h["失业滞纳金"]),
-                        w["aab001"], w["aab004"], aae011, cellStr(row, h["备注"]),
-                        ym.toLong(), w["atc900"], aaa90w)
-                    if (updSoc == 0) jdbc.update(
-                        """INSERT INTO tc9w_bp (id, aae002, aaa030, aaa031, aaa020, aaa021, aaa001,
-                        aac002, aac003, aac009, abp001, abp002, abp003, ace10a, aaa90w, atc900,
-                        aab001, aab004, aae011, aae036, aae013)
-                        VALUES (nextval('seq_tc9w_id'), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?, ?, ?, ?, now(), ?)""",
-                        ym.toLong(), w["aaa030"], w["aaa031"], w["aaa100"], w["aaa101"],
-                        cellStr(row, h["保险个人编号"]),
-                        idCard ?: w["aac002"], w["aac003"] ?: cellStr(row, h["姓名"]),
-                        cellStr(row, h["户口性质"]), toIsoDate(cellStr(row, h["业务年月"])),
-                        cellStr(row, h["养老滞纳金"]), cellStr(row, h["失业滞纳金"]),
-                        aaa90w, w["atc900"], w["aab001"], w["aab004"], aae011,
-                        cellStr(row, h["备注"]))
-                    matchedKeys.add((w["atc900"] as Number?)?.toLong())
+                        result, aae011, cellStr(row, h["备注"]))
                     imported++
                 }
             }
-            val first = ids.firstOrNull { w -> matchedKeys.contains(w["atc900"]) }
-                ?: ids.firstOrNull()
-            return mapOf("appCode" to 1, "imported" to imported, "unmatched" to unmatched,
-                "rosterRows" to ids.size, "rejects" to rejects,
-                "aaa030" to first?.get("aaa030"), "aaa020" to first?.get("aaa100"),
-                "msg" to "导入 $imported 行(待成功校验)" + if (unmatched > 0) "; 未匹配 $unmatched 行" else "")
+            // 导入后自动校验(源对话框 doImport 即调 CHECK proc; 逐行按身份证查 TC90
+            // MAX(ATC900) 打标, 未命中行 ace10a='2' '匹配员工信息出错|' 留在不符合视图)
+            if (kind == "social") tdck.fallbackCheck(ym, aaa030.toString(), aaa020)
+            val stat = jdbc.queryForList(
+                """SELECT ace10a, count(*) AS n FROM tc9w_bp
+                   WHERE aae002=? AND aaa030=? AND aaa020=? GROUP BY ace10a""",
+                ym.toLong(), aaa030, aaa020)
+            val passed = (stat.firstOrNull { it["ace10a"] == "3" }?.get("n") as Number?)?.toInt() ?: 0
+            val failed = (stat.firstOrNull { it["ace10a"] == "2" }?.get("n") as Number?)?.toInt() ?: 0
+            val rejectList = jdbc.queryForList(
+                """SELECT 'R' || row_number() OVER (ORDER BY id) || ': ' || ace10b AS why
+                   FROM tc9w_bp WHERE aae002=? AND aaa030=? AND aaa020=? AND ace10a='2'
+                   ORDER BY id""", ym.toLong(), aaa030, aaa020)
+                .map { it["why"].toString() }
+            return mapOf("appCode" to 1, "imported" to imported, "unmatched" to failed,
+                "rosterRows" to imported, "rejects" to rejectList,
+                "msg" to ("导入完成：成功 $passed 行，失败 $failed 行" +
+                    (if (failed > 0) "（失败明细见弹窗/台账不符合视图）" else "")))
         }
     }
 }

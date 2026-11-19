@@ -93,10 +93,20 @@
      按证件或报盘行序对齐名册写 TC9W_BP/BP04 待校验, 之后走成功校验→回盘提交 */
   async function uploadBp(ev) {
     const f = ev.target.files[0]; if (!f) return;
+    // 源对话框必选户头/参保属地(AAE002/AAA030/AAA020 取自对话框参数)
+    if (!rp.aaa030 || !rp.aaa020) { ElementPlus.ElMessage.warning("先选户头与参保属地"); ev.target.value = ""; return; }
+    // 源对话框重导语义: 该月已存在数据时确认"删除后重新导入"(§6.3)
+    if ((bpRows.value || []).length) {
+      try {
+        await ElMessageBox.confirm(
+          `该月(${rp.ym})已存在 ${bpRows.value.length} 行回盘暂存数据，删除后重新导入？`, "重新导入确认");
+      } catch (e) { ev.target.value = ""; return; }
+    }
     try {
       const fd = new FormData();
       fd.append("file", f);
-      const r = await fetch(`/wb/hz/import-bp?ym=${rp.ym}&kind=${rp.kind}&aae011=${api.store.oper.aae011}`,
+      const r = await fetch(`/wb/hz/import-bp?ym=${rp.ym}&kind=${rp.kind}&aae011=${api.store.oper.aae011}` +
+        `&aaa030=${rp.aaa030}&aaa020=${encodeURIComponent(rp.aaa020)}`,
         { method: "POST", body: fd });
       const j = await r.json();
       if (j.appCode !== 1) { ElementPlus.ElMessage.error(j.errMsg || "导入失败"); }
