@@ -162,3 +162,6 @@ COMMENT ON COLUMN tc08.aaa000 IS '补收基数险种: 1=社保(基数=ATC905) 2=
 COMMENT ON COLUMN tc08.aae000 IS '补收基数年份(按年分段: 补发起点至补收年月的前一月, 每年一条; 本年段 NF<补收年恒假不写=源语义)';
 COMMENT ON COLUMN tc08.ksny IS '补收段起月(该年首月 yyyymm)';
 COMMENT ON COLUMN tc08.jsny IS '补收段止月(该年末月 yyyymm)';
+
+-- ===== TC9W 表注释(2026-11-19, 出处=Oracle user_tab_comments+PKG_保险人员增减 源码) =====
+COMMENT ON TABLE tc9w IS '派遣员工社保异动信息表(东软原注释) = 报增/报减推送名册: 报盘生成按月写入(atc9w8=1), 回盘校验办结(→4), 名册重推置 9 作废(新系统约定); ATC9W8 东软原注释仅"审核状态"无值含义, 1/4/9 值含义经 PKG_保险人员增减 源码验证(2026-11-19)';
