@@ -231,7 +231,8 @@ class WorkbenchController(private val jdbcTemplate: JdbcTemplate,
      *  (hz/heads 为推送态下拉, 未推送月份为空时用此兜底) */
     @GetMapping("/aaa030s")
     fun aaa030s(): List<Map<String, Any?>> = jdbcTemplate.queryForList(
-        """SELECT aaa030, max(aaa031) AS aaa031, count(*) AS units
+        """SELECT aaa030, (array_agg(aaa031 ORDER BY aae036 DESC NULLS LAST))[1] AS aaa031,
+                  count(*) AS units
            FROM ab01 WHERE aaa030 IS NOT NULL GROUP BY aaa030 ORDER BY aaa030""")
 
     /** 参保属地(AA12 × TC90 四线属地列实际使用值; 全量 AA12 有 1.4 万区划, 只给真实使用域) */
