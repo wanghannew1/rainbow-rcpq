@@ -846,6 +846,7 @@ class HzController(private val jdbc: JdbcTemplate, private val tdck: TdckCases,
             val byId = ids.associateBy { it["aac002"] }
             var imported = 0
             var unmatched = 0
+            val matchedKeys = mutableSetOf<Long?>()
             val rejects = mutableListOf<String>()
             var seq = 0 // 行序对齐游标(文件数据行 ↔ 工作表推送序)
             for (r in 1..sheet.lastRowNum) {
@@ -887,6 +888,7 @@ class HzController(private val jdbc: JdbcTemplate, private val tdck: TdckCases,
                         w["aac003"] ?: cellStr(row, h["姓名"]),
                         cellStr(row, h["参保年月"]), cellStr(row, h["大病险"]), cellStr(row, h["滞纳金"]),
                         w["atc900"], w["aab001"], w["aab004"], aae011)
+                    matchedKeys.add((w["atc900"] as Number?)?.toLong())
                     imported++
                 } else if (kind == "medical") {
                     val h = hdr(sheet, listOf("身份证号码", "姓名", "人员类别", "缴费标志", "到账日期",
@@ -927,6 +929,7 @@ class HzController(private val jdbc: JdbcTemplate, private val tdck: TdckCases,
                         cellStr(row, h["单位缴纳医疗"]), cellStr(row, h["单位缴纳工伤"]),
                         cellStr(row, h["划个人帐户"]), cellStr(row, h["单位缴纳生育"]),
                         w["atc900"], w["aab001"], w["aab004"], aae011)
+                    matchedKeys.add((w["atc900"] as Number?)?.toLong())
                     imported++
                 } else {
                     val h = hdr(sheet, listOf("申报结果", "保险个人编号", "公民身份证号码", "姓名",
@@ -968,11 +971,15 @@ class HzController(private val jdbc: JdbcTemplate, private val tdck: TdckCases,
                         cellStr(row, h["养老滞纳金"]), cellStr(row, h["失业滞纳金"]),
                         aaa90w, w["atc900"], w["aab001"], w["aab004"], aae011,
                         cellStr(row, h["备注"]))
+                    matchedKeys.add((w["atc900"] as Number?)?.toLong())
                     imported++
                 }
             }
+            val first = ids.firstOrNull { w -> matchedKeys.contains(w["atc900"]) }
+                ?: ids.firstOrNull()
             return mapOf("appCode" to 1, "imported" to imported, "unmatched" to unmatched,
                 "rosterRows" to ids.size, "rejects" to rejects,
+                "aaa030" to first?.get("aaa030"), "aaa020" to first?.get("aaa100"),
                 "msg" to "导入 $imported 行(待成功校验)" + if (unmatched > 0) "; 未匹配 $unmatched 行" else "")
         }
     }

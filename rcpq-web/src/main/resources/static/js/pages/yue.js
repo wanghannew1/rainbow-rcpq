@@ -59,14 +59,14 @@
   async function load() {
     if (!rp.aaa030 || !rp.aaa020) { ElementPlus.ElMessage.warning("先选户头与参保属地"); return; }
     try {
-      rows.value = (await api.wb(`/wb/yue/main?ym=${rp.ym}&tab=${cur().tab}&aaa030=${rp.aaa030}&aaa020=${encodeURIComponent(rp.aaa020)}`)) || [];
+      rows.value = (await api.wb(`/yue/main?ym=${rp.ym}&tab=${cur().tab}&aaa030=${rp.aaa030}&aaa020=${encodeURIComponent(rp.aaa020)}`)) || [];
       rp.log = `汇总 ${rows.value.length} 行(已确认 ${rows.value.filter(r => r.aaezzz === "1").length})`;
     } catch (e) { ElementPlus.ElMessage.error(e.message); }
   }
 
   async function loadDetail(row) {
     try {
-      detailRows.value = (await api.wb(`/wb/yue/detail?ym=${rp.ym}&tab=${cur().tab}&aaa030=${rp.aaa030}&aaa020=${encodeURIComponent(rp.aaa020)}&atb930=${row.atb930}`)) || [];
+      detailRows.value = (await api.wb(`/yue/detail?ym=${rp.ym}&tab=${cur().tab}&aaa030=${rp.aaa030}&aaa020=${encodeURIComponent(rp.aaa020)}&atb930=${row.atb930}`)) || [];
     } catch (e) { ElementPlus.ElMessage.error(e.message); }
   }
 
@@ -118,7 +118,7 @@
   async function dfLoad() {
     if (!rp.aaa030) { ElementPlus.ElMessage.warning("先选户头"); return; }
     try {
-      rp.dfRows = (await api.wb(`/wb/yue/df?ym=${rp.ym}&aaa030=${rp.aaa030}`)) || [];
+      rp.dfRows = (await api.wb(`/yue/df?ym=${rp.ym}&aaa030=${rp.aaa030}`)) || [];
       rp.dfLog = `垫付台账 ${rp.dfRows.length} 行(垫付 ${rp.dfRows.filter(r => r.dfsign === "1").length})`;
     } catch (e) { ElementPlus.ElMessage.error(e.message); }
   }

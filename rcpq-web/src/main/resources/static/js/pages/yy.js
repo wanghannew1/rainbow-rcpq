@@ -11,7 +11,7 @@
       const rp = reactive({ busy: false, msg: "", rows: [], detail: null,
                             fBacksign: "0", fInsign: "", fCbsign: "2", fSafesign: "",
                             syncAae002: "202611", syncAaa030: null, syncAaa100: "220100000000",
-                            heads: [], districts: [] });
+                            heads: [], districts: [], onlyMine: false });
 
       async function load() {
         // 旧系统 tdcf/tdcg doQuery 首步隐式跑异议离职同步——本页保持该行为
@@ -21,8 +21,10 @@
         if (rp.fInsign) q.set("insign", rp.fInsign);
         if (rp.fCbsign) q.set("cbsign", rp.fCbsign);
         if (rp.fSafesign) q.set("safesign", rp.fSafesign);
-        q.set("bae011", api.store.oper.aae011);
-        rp.rows = (await api.wb("/wb/yy/list?" + q.toString())) || [];
+        // 旧系统按经办隔离(bae011=当前用户), 但参保异议赋值写入的是户头经办(AB01.BAE011)
+        // → 新系统默认全员可见; 需隔离时切全局经办人+勾"仅本经办"
+        if (rp.onlyMine) q.set("bae011", api.store.oper.aae011);
+        rp.rows = (await api.wb("/yy/list?" + q.toString())) || [];
       }
 
       async function deal(id, flag, label) {
@@ -58,7 +60,7 @@
           rp.districts = (await api.wb("/districts")) || [];
         } catch (e) { /* 保底手输 */ }
       });
-      return { api, rp, rows, load, deal, ybSync, show, SAFE, BS, INS, CBS };
+      return { api, rp, load, deal, ybSync, show, SAFE, BS, INS, CBS };
     },
     template: `
     <div class="page">
@@ -85,6 +87,9 @@
             <el-option value="1" label="社保"/><el-option value="2" label="医保"/>
             <el-option value="3" label="工伤"/><el-option value="4" label="公积金"/>
           </el-select>
+        </el-form-item>
+        <el-form-item>
+          <el-checkbox v-model="rp.onlyMine">仅本经办</el-checkbox>
         </el-form-item>
         <el-form-item>
           <wb-dsf-tip menu="员工异动/补退费管理" page="td/c/f 异议处理 (44) · td/c/g (45)" area="异议列表" btn="查询"

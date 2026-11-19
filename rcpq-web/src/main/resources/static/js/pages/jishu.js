@@ -46,7 +46,7 @@
       }
       async function load() {
         if (!rp.aaa030) return;
-        rows.value = (await api.wb(`/wb/jishu/aa97?aae001=${rp.aae001}&aaa030=${rp.aaa030}` +
+        rows.value = (await api.wb(`/jishu/aa97?aae001=${rp.aae001}&aaa030=${rp.aaa030}` +
           `&aaa020=${encodeURIComponent(rp.aaa020)}&line=${rp.line}`)) || [];
       }
 
@@ -54,7 +54,7 @@
       const imp = reactive({ ace100: null, rows: [] });
       async function loadBp() {
         if (!imp.ace100) { ElementPlus.ElMessage.warning("先选/输入批次号"); return; }
-        imp.rows = (await api.wb("/wb/jishu/bp?ace100=" + imp.ace100)) || [];
+        imp.rows = (await api.wb("/jishu/bp?ace100=" + imp.ace100)) || [];
       }
       async function impCheck() {
         rp.busy = true;
@@ -72,7 +72,7 @@
         } catch (e) { ElementPlus.ElMessage.error(e.message); } finally { rp.busy = false; }
       }
       async function loadBatches() {
-        try { imp.batches = (await api.wb("/wb/jishu/batches")) || []; } catch (e) { imp.batches = []; }
+        try { imp.batches = (await api.wb("/jishu/batches")) || []; } catch (e) { imp.batches = []; }
       }
 
       // ---- 上下限 ----
@@ -85,7 +85,7 @@
         } catch (e) { ElementPlus.ElMessage.error(e.message); } finally { rp.busy = false; }
       }
       async function loadSxBp() {
-        if (sx.ace100) sx.rows = (await api.wb("/wb/jishu/tc0a_bp?ace100=" + sx.ace100)) || [];
+        if (sx.ace100) sx.rows = (await api.wb("/jishu/tc0a_bp?ace100=" + sx.ace100)) || [];
       }
       async function sxCheck() {
         rp.busy = true;
@@ -106,7 +106,7 @@
         const q = new URLSearchParams();
         if (sx.aae002) q.set("aae002", sx.aae002);
         if (sx.aae114) q.set("aae114", sx.aae114);
-        sx.audits = (await api.wb("/wb/jishu/tc0a?" + q.toString())) || [];
+        sx.audits = (await api.wb("/jishu/tc0a?" + q.toString())) || [];
       }
       async function audit(flag) {
         if (!sx.sel.length) { ElementPlus.ElMessage.warning("先勾选待审行"); return; }
@@ -131,12 +131,12 @@
         } catch (e) { ElementPlus.ElMessage.error(e.message); } finally { rp.busy = false; }
       }
       async function wsbLoad() {
-        wsb.rows = (await api.wb(`/wb/jishu/dw?aae001=${rp.aae001}&aaa030=${rp.aaa030}` +
+        wsb.rows = (await api.wb(`/jishu/dw?aae001=${rp.aae001}&aaa030=${rp.aaa030}` +
           `&aaa020=${encodeURIComponent(rp.aaa020)}&line=${wsb.line}`)) || [];
       }
       async function wsbDetail(row) {
         wsb.cur = row;
-        wsb.detail = (await api.wb("/wb/jishu/gr?fid=" + row.fid)) || [];
+        wsb.detail = (await api.wb("/jishu/gr?fid=" + row.fid)) || [];
       }
 
       onMounted(async () => {

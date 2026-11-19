@@ -101,6 +101,9 @@
       const j = await r.json();
       if (j.appCode !== 1) { ElementPlus.ElMessage.error(j.errMsg || "导入失败"); }
       else {
+        // 自动回填匹配到的户头/参保属地 — 台账查询依赖二者, 未选时静默跳过会让导入"看起来没反应"
+        if (j.aaa030) { rp.aaa030 = j.aaa030; }
+        if (j.aaa020) { rp.aaa020 = j.aaa020; }
         rp.log = j.msg + (j.rejects && j.rejects.length ? " 例: " + j.rejects.slice(0, 3).join("; ") : "");
         ElementPlus.ElMessage.success(j.msg + (j.rejects && j.rejects.length ? `；不匹配 ${j.unmatched || 0} 行(明细见流程日志)` : ""));
         loadBp(); loadRoster();

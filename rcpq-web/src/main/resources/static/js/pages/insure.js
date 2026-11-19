@@ -14,7 +14,7 @@
 
       async function search() {
         if (!rp.q) { ElementPlus.ElMessage.warning("输入姓名/身份证/合同号"); return; }
-        rp.contracts = (await api.wb("/wb/contract-search?q=" + encodeURIComponent(rp.q))) || [];
+        rp.contracts = (await api.wb("/contract-search?q=" + encodeURIComponent(rp.q))) || [];
         if (!rp.contracts.length) ElementPlus.ElMessage.info("无匹配合同");
       }
       function pick(row) { rp.cur = row; rp.last = ""; }
