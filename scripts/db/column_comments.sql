@@ -172,3 +172,17 @@ COMMENT ON TABLE tc9w1 IS '派遣员工市医保异动信息表(东软原注释)
 COMMENT ON TABLE tc9w2 IS '派遣员工省医保异动信息表(东软原注释)';
 COMMENT ON TABLE tc9w3 IS '派遣员工省工伤异动信息表(东软原注释)';
 COMMENT ON TABLE tc9w4 IS '派遣员工市工伤异动信息表(东软原注释)';
+-- 2026-11-21 补: 回盘台账族东软原注释(备份库 user_tab_comments 实取)
+COMMENT ON TABLE tc9w_bp  IS '社保异动回盘表(东软原注释)';
+COMMENT ON TABLE tc9w_bp01 IS '省医保异动回盘表(东软原注释)';
+COMMENT ON TABLE tc9w_bp02 IS '公积金异动回盘表(东软原注释)';
+COMMENT ON TABLE tc9u_bp01 IS '公积金补缴报盘表(东软原注释)';
+COMMENT ON TABLE tc9u_bp02 IS '公积金封存回盘(东软原注释)';
+COMMENT ON TABLE tc9u_bp03 IS '公积金异议回盘表(东软原注释)';
+COMMENT ON TABLE tc9w_bp04 IS '市医保回盘(分区版)(东软原注释)';
+COMMENT ON TABLE tc9w_bp05 IS '社保补缴申报(东软原注释)';
+COMMENT ON TABLE tc9w_bp06 IS '省医保基数调整补差回盘(东软原注释)';
+COMMENT ON TABLE tc9w_bp07 IS '省医保工资表(东软原注释)';
+COMMENT ON TABLE tc9w_bp08 IS '省工伤基数调整补差回盘(东软原注释)';
+COMMENT ON TABLE tc9w_bp09 IS '省工伤异动回盘表(东软原注释)';
+COMMENT ON TABLE tc9w_bp10 IS '市工伤异动回盘表(东软原注释)';

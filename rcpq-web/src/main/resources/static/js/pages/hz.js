@@ -403,7 +403,10 @@
         </el-table-column>
       </el-table>
 
-      <h4>回盘批次({{ isHf() ? "公积金三桶 TC9W_BP02/TC9U_BP02/TC9U_BP03" : "TC9W_BP" }}) — 校验 → 提交</h4>
+      <h4>回盘台账({{ { social: "TC9W_BP 社保异动回盘表", medical: "TC9W_BP04 市医保回盘表",
+        smedical: "TC9W_BP01 省医保异动回盘表", sgongshang: "TC9W_BP09 省工伤异动回盘表",
+        mgongshang: "TC9W_BP10 市工伤异动回盘表",
+        housingfund: "TC9W_BP02 公积金异动回盘表 / TC9U_BP02 公积金封存回盘 / TC9U_BP03 公积金异议回盘表" }[rp.kind] }}) — 校验 → 提交</h4>
       <div style="margin-bottom:6px">
         <wb-dsf-tip :menu="isHf() ? '员工异动/补退费管理(公积金)' : '员工异动/补退费管理(社保)'"
           :page="isHf() ? 'td/c/ae 员工公积金报增申请(15)' : 'td/c/k 社保异动回盘/补退费'"
@@ -529,7 +532,7 @@
         报增查询 → 成果确认(报增成功=登记实际参保时间+局端个人编号; 报增失败=登记异议) →
         成功校验 → 回盘提交(按 TC9W_BP 更新 TC90: 成功置 aaa203/atc90p='0', 异议转参保异议, 停保置 atc90p='1')。</div>
 
-      <h4 v-if="!isHf()">补缴明细(TC9W_BP05) — 参保成功且 缴费截止年月&lt;当月≤工资截止年月 的合同按年算补</h4>
+      <h4 v-if="!isHf()">补缴明细(TC9W_BP05 社保补缴申报) — 参保成功且 缴费截止年月&lt;当月≤工资截止年月 的合同按年算补</h4>
       <div style="margin-bottom:6px" v-if="!isHf()">
         <wb-dsf-tip menu="员工异动/补退费管理(社保)" page="td/c/k 社保异动回盘/补退费"
           area="补缴明细" btn="补缴明细查询" note="已移植过程 PRC_社保补缴明细(重建 TC9W_BP05, 险金引擎逐年分组计算)">
