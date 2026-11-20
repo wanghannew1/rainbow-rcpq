@@ -434,13 +434,16 @@ class HzController(private val jdbc: JdbcTemplate, private val tdck: TdckCases,
     fun heads(@RequestParam ym: String, @RequestParam(required = false) kind: String?): List<Map<String, Any?>> {
         if (!Regex("^\\d{6}$").matches(ym)) return emptyList()
         val table = when (kind) { "medical" -> "tc9w1"; "housingfund" -> "tc9u"; "smedical" -> "tc9w2"; "sgongshang" -> "tc9w3"; "mgongshang" -> "tc9w4"; else -> "tc9w" }
+        // 公积金表列名异体: atc9u1/atc9u8(其余表=atc9w1/atc9w8) — 此前硬编码致公积金户头查询 500
+        val flagCol = if (kind == "housingfund") "atc9u1" else "atc9w1"
+        val statCol = if (kind == "housingfund") "atc9u8" else "atc9w8"
         return jdbc.queryForList(
             """SELECT t.aaa030,
                    (SELECT (array_agg(x.aaa031 ORDER BY x.aae036 DESC NULLS LAST))[1]
                       FROM ab01 x WHERE x.aaa030 = t.aaa030) AS aaa031,
                    t.aaa100, max(t.aaa101) AS aaa101
                FROM $table t
-               WHERE t.aae002=? AND t.atc9w1='1' AND t.atc9w8<>'9' AND t.aaa100 IS NOT NULL
+               WHERE t.aae002=? AND t.$flagCol='1' AND t.$statCol<>'9' AND t.aaa100 IS NOT NULL
                GROUP BY t.aaa030, t.aaa100 ORDER BY t.aaa030""", ym.toLong())
     }
 
