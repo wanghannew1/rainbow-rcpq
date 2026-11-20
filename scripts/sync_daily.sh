@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # sync_daily.sh — Oracle(备份库 .60)→PG 每晚同步(定时触发, 独立 JVM, 与业务服务隔离)
 #
-# 用法: scripts/sync_daily.sh [表名...]   无参=全量 21 表(15 底账+6 名单表族历史月)(TC90/TC90_LIST/TC90_YY/AC01/TB90/...)
+# 用法: scripts/sync_daily.sh [表名...]   无参=全量自动发现(有用表 ~182 张: Oracle 有数据+双方主键+非死表, 动态随库变化)
 #
 # 定时(生产): 30 3 * * * 上面本脚本 >> work/sync.log 2>&1
 #   — 03:30 是为避开每晚 dmp 重建窗口(现网 dmp 约 01:40 起重建); 若 dmp 完成时间更晚,
