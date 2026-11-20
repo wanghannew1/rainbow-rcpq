@@ -509,14 +509,18 @@
       </el-table>
       <el-table v-if="bpRows.length && !isHf()" :data="bpRows" size="small" border max-height="260">
         <el-table-column label="结果" width="80"><template #default="{row}">
-          <el-tag size="small" :type="row.aaa90w === '1' ? 'success' : 'danger'">{{ row.aaa90w === '1' ? '参保成功' : '异议' }}</el-tag>
+          <el-tag size="small" :type="row.aaa90w === '1' ? 'success' : row.aaa90w === '2' ? 'danger' : 'info'">{{ row.aaa90w === '1' ? '参保成功' : row.aaa90w === '2' ? '异议' : '—' }}</el-tag>
         </template></el-table-column>
         <el-table-column prop="aac003" label="姓名" width="90"/>
         <el-table-column prop="aac002" label="身份证号码" width="170"/>
         <el-table-column prop="aaa001" :label="rp.kind === 'medical' ? '申报基数' : '个人编号'" width="100"/>
         <el-table-column prop="abp001" :label="rp.kind === 'medical' ? '校验码串' : '实际参保时间'" width="110"/>
-        <el-table-column prop="aae013" label="原因" min-width="140" show-overflow-tooltip/>
-        <el-table-column prop="aab004" label="单位" min-width="150" show-overflow-tooltip/>
+        <el-table-column label="校验" width="80"><template #default="{row}">
+          <el-tag size="small" :type="row.ace10a === '3' ? 'success' : row.ace10a === '2' ? 'danger' : 'info'">{{ row.ace10a === '3' ? '符合' : row.ace10a === '2' ? '不符合' : '待校验' }}</el-tag>
+        </template></el-table-column>
+        <el-table-column prop="ace10b" label="校验说明" min-width="140" show-overflow-tooltip/>
+        <el-table-column prop="aae013" label="原因" min-width="120" show-overflow-tooltip/>
+        <el-table-column prop="aab004" label="单位" min-width="130" show-overflow-tooltip/>
       </el-table>
 
       <div class="kv">流程=生成名册并推送(合同推导, 替代生产即 INVALID 的报增名册导入) →
