@@ -54,13 +54,13 @@ class OracleSyncJob(private val pg: JdbcTemplate) {
         Spec("TC06", listOf("ATC060")),
         Spec("TC92", listOf("ATC920")),
         Spec("CE10", listOf("ACE100")),
-        // 名单表族(2026-11-21 用户拍板): 历史月 <=202610 东软的账每晚同步, 202611+ 新系统专属
-        Spec("TC9W",  listOf("ATC9W0"), maxAae002 = 202610),
-        Spec("TC9W1", listOf("ATC9W0"), maxAae002 = 202610),
-        Spec("TC9W2", listOf("ATC9W0"), maxAae002 = 202610),
-        Spec("TC9W3", listOf("ATC9W0"), maxAae002 = 202610),
-        Spec("TC9W4", listOf("ATC9W0"), maxAae002 = 202610),
-        Spec("TC9U",  listOf("ATC9U0"), maxAae002 = 202610),
+        // 名单表族(2026-11-21 用户拍板): 原封不动全量同步, 无月份界限
+        Spec("TC9W",  listOf("ATC9W0")),
+        Spec("TC9W1", listOf("ATC9W0")),
+        Spec("TC9W2", listOf("ATC9W0")),
+        Spec("TC9W3", listOf("ATC9W0")),
+        Spec("TC9W4", listOf("ATC9W0")),
+        Spec("TC9U",  listOf("ATC9U0")),
     )
 
     /** latestBy 非空时源侧按 PK 去重取该列最新行(源表主键失效的兜底, 如 TC90_LIST.IKEY)
@@ -88,10 +88,21 @@ class OracleSyncJob(private val pg: JdbcTemplate) {
         if (!running.compareAndSet(false, true))
             return mapOf("appCode" to -1, "errMsg" to "同步进行中, 请稍后(防重入)")
         try {
-            val chosen = if (filter.isNullOrEmpty()) specs
-            else specs.filter { s -> filter.any { it.equals(s.table, ignoreCase = true) } }
-            if (chosen.isEmpty()) return mapOf("appCode" to -1, "errMsg" to "无匹配的同步表")
             DriverManager.getConnection(oraUrl, oraUser, oraPass).use { ora ->
+                // 自动发现: Oracle∩PG 双方带主键的共有表全量纳入(用户拍板: 东软有的表原封不动全同步;
+                // 新系统独有的表 PG 独有, 天然被交集排除=自留地)。人工 specs 保留为特殊钩子覆盖项。
+                val manual = if (filter.isNullOrEmpty()) specs
+                else specs.filter { s -> filter.any { it.equals(s.table, ignoreCase = true) } }
+                val chosen = if (filter.isNullOrEmpty()) {
+                    val byName = manual.associateBy { it.table.uppercase() }
+                    val discovered = discoverSpecs(ora).filter { it.table.uppercase() !in byName }
+                    manual + discovered
+                } else {
+                    val auto = discoverSpecs(ora).filter { s -> filter.any { it.equals(s.table, ignoreCase = true) } }
+                    val byName = manual.associateBy { it.table.uppercase() }
+                    (manual + auto.filter { it.table.uppercase() !in byName })
+                }
+                if (chosen.isEmpty()) return mapOf("appCode" to -1, "errMsg" to "无匹配的同步表")
                 val results = chosen.map { spec ->
                     val t0 = System.currentTimeMillis()
                     try {
@@ -118,6 +129,61 @@ class OracleSyncJob(private val pg: JdbcTemplate) {
     }
 
     private data class Result(val read: Long, val upsert: Long, val ins: Long, val upd: Long, val skipped: Long = 0)
+
+    /** 死表排除清单(2026-11-21 全源交叉体检: 应用SQL未引用+过程/页面源码无引用+数据陈旧,
+     *  工具 work/AppSqlProbe.java + unref/proc_ref 交叉; 含日期戳备份残表正则二次兜底) */
+    val deadTables = setOf(
+        "MAP_ICON", "MAP_LAYER", "MAP_PIC", "SYS_MSG", "SYS_USER", "TC75", "TC81",
+        "TJ0A1_20260725", "TJ0B1_20260725", "TJ0C1_20260725", "TJ0D1_20260725", "TJ0E1_20260725",
+        "TJ0F1_20260725", "TJ101", "TJ213", "TJ214", "TJ215", "TJ216", "TJBB5", "TJBB6", "TJBB7",
+        "TJBH4", "TJBH5", "TJB_WORK", "TJDA1", "TJDA2", "TJDB1", "TJDB2", "TJDB3", "TJDC2",
+        "TJDC3", "TJDC4", "VB01", "VB40", "VB42", "VB45", "VB46", "VC01", "VC02", "VC03_BP",
+        "VC0M", "VD20", "VD23", "VD24", "VD25", "VV91", "VV92", "V_AC10", "V_AC10_ZCXJ",
+        "V_TB93_TC93_ZCXJ", "WTS_CODE", "ZE09", "ZE10", "ZE12", "ZE30", "ZE32", "ZE33", "ZH_CH_DWHZ",
+    )
+
+    /** 自动发现共有表(双方带主键): Oracle user_constraints(P) ∩ PG information_schema PK。
+     *  新系统独有的表(PG 独有)=交集自动排除=自留地; 东软独有(Oracle 独有)亦排除(无 PG 落点)。 */
+    private fun discoverSpecs(ora: Connection): List<Spec> {
+        val pgPks = HashMap<String, String>()
+        pg.query(
+            "SELECT tc.table_name, string_agg(kcu.column_name, ',' ORDER BY kcu.ordinal_position) pk " +
+            "FROM information_schema.table_constraints tc " +
+            "JOIN information_schema.key_column_usage kcu " +
+            "  ON kcu.constraint_name=tc.constraint_name AND kcu.table_name=tc.table_name " +
+            "WHERE tc.constraint_type='PRIMARY KEY' AND tc.table_schema='public' " +
+            "GROUP BY tc.table_name") { rs, _ ->
+            pgPks[rs.getString(1).uppercase()] = rs.getString(2)
+        }
+        val out = mutableListOf<Spec>()
+        val seen = HashSet<String>()
+        ora.prepareStatement(
+            "SELECT cc.table_name, LISTAGG(cc.column_name, ',') WITHIN GROUP (ORDER BY cc.position) pk " +
+            "FROM user_constraints k JOIN user_cons_columns cc ON k.constraint_name=cc.constraint_name " +
+            "WHERE k.constraint_type='P' GROUP BY cc.table_name ORDER BY cc.table_name").use { ps ->
+            val rs = ps.executeQuery()
+            while (rs.next()) {
+                val tab = rs.getString(1)
+                val pk = rs.getString(2) ?: continue
+                if (pgPks[tab.uppercase()] == null) continue
+                if (tab.uppercase() in deadTables) continue
+                if (seen.add(tab.uppercase())) out.add(Spec(tab, pk.split(",").map { it.trim() }))
+            }
+        }
+        // 无用表过滤: Oracle 空表(从未使用)不同步; 带日期戳的备份残表(TC9W_BP04_20260725 类)不同步
+        // 游标纪律: 每张表 count(*) 的 Statement/ResultSet 必须 close(泄漏 → ORA-01000 全程崩)
+        val useful = out.filter { s ->
+            if (s.table.matches(Regex(".*_20\\d{6}$"))) return@filter false
+            try {
+                ora.createStatement().use { st ->
+                    st.executeQuery("SELECT count(*) FROM ${s.table}").use { r ->
+                        r.next(); r.getLong(1) > 0
+                    }
+                }
+            } catch (e: Exception) { false }
+        }
+        return useful
+    }
 
     /** dedupeKey 路径: 全量读源→按业务键分组保留 PK 最大行(W6 "保留后插"语义)→组内删 PG 旧行→upsert 保留行。
      *  调和 uk_tc90_yy(SAFESIGN,ATC900) 与 Oracle 历史重复组; dedupeKey 含 NULL 的行不分组(=PG NULL 相异语义)。 */
