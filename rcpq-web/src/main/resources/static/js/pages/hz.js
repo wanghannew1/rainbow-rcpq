@@ -387,6 +387,16 @@
             <el-tag v-else-if="row.confirmed_no" size="small" type="danger">异议</el-tag>
           </template>
         </el-table-column>
+        <el-table-column label="合同落地" width="190">
+          <template #default="{row}">
+            <span v-if="row.bax203" style="font-size:12px">
+              参保年月 {{ row.bax203 }} / 编号 {{ row.bax001 || '—' }}
+              <el-tag size="small" :type="row.bax90p === '0' ? 'success' : row.bax90p === '2' ? 'danger' : row.bax90p === '1' ? 'warning' : 'info'"
+                style="margin-left:4px">{{ row.bax90p === '0' ? '参保' : row.bax90p === '2' ? '异议' : row.bax90p === '1' ? '停保' : '—' }}</el-tag>
+            </span>
+            <span v-else style="color:#909399;font-size:12px">未落地(未回盘提交)</span>
+          </template>
+        </el-table-column>
         <el-table-column label="成果确认" width="150">
           <template #default="{row}">
             <wb-dsf-tip :menu="isHf() ? '员工异动/补退费管理(公积金)' : '员工异动/补退费管理(社保)'"

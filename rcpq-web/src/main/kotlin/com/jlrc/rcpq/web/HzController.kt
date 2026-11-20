@@ -422,8 +422,10 @@ class HzController(private val jdbc: JdbcTemplate, private val tdck: TdckCases,
             EXISTS(SELECT 1 FROM tc9w_bp b WHERE b.aae002=w.aae002 AND b.atc900=w.atc900
                    AND b.aaa90w='1') AS confirmed_ok,
             EXISTS(SELECT 1 FROM tc9w_bp b WHERE b.aae002=w.aae002 AND b.atc900=w.atc900
-                   AND b.aaa90w='2') AS confirmed_no
-            FROM tc9w w WHERE w.aae002=${ym.toLong()} AND w.atc9w1='1' AND w.atc9w8<>'9'"""
+                   AND b.aaa90w='2') AS confirmed_no,
+            t.aaa203 AS bax203, t.aaa001 AS bax001, t.atc90p AS bax90p
+            FROM tc9w w LEFT JOIN tc90 t ON t.atc900 = w.atc900
+            WHERE w.aae002=${ym.toLong()} AND w.atc9w1='1' AND w.atc9w8<>'9'"""
         if (aaa030 != null) sql += " AND w.aaa030=$aaa030"
         if (!aaa020.isNullOrBlank()) sql += " AND w.aaa100='${aaa020.replace("'", "''")}'"
         return jdbc.queryForList("$sql ORDER BY w.atc9w0")
