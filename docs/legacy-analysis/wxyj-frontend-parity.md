@@ -304,8 +304,17 @@ interactions.json 承载（tc9w/tc9w1/tc9w2/tc9w3/tc9u 均在册）但 hz 页未
   → 全部 `31000 存储过程[PKG_保险人员增减.PRC_*人员增减]指定回滚 当月数据已经回盘…` 入 SYS_ERR_LOG+回滚。
   公积金/市工伤两生成器**不可实弹**：备份库全库无 '4' 行（公积金=被注释终态的根因 W0#1；市工伤名单从未走完
   回盘终态），守卫源码在册（L5003/L8150）。
+- **导入族实测（2026-11-21 补做，通道级打通+根因勘定）**：模板源=反编译项目 `lemis/impTemplate/`（141 个，
+  六桶模板 tc9w_bp01/02/04/06/08/09 齐备；tc9w_bp.xls=社保异动回盘 9 列）。doImport multipart 通道全链勘定：
+  `method=doImport` + 字段 uploadFile/importId/parameters(年月户头区划 JSON)/javabean；sys_import 配置
+  (DATA_FROM=1, 9 列映射=实样同构)与模板头逐字对上；本地实测报文被完整消费（配置查询→ACE100/BAZ001 取号×行数
+  →两行入队）。**失败点=东软业务事件链切面**（LemisBusinessEventMgr→`PKG_COMMON.P_GET_AA01` 取 AA01 后置
+  事件链→链上过程指令回滚，rollbackMsg 空 → `{succeed:false}`+整事务回滚零落库）——与锁文案同一 31000 回滚
+  家族，属东软自家后置校验机制对合成数据的拒绝，非通道/形状/文件格式问题；现网 11-19 zhanghsh 同通道导入
+  成功先例（隔离文档 TC9W_BP ID=41122/CE10 60125）证明生产链路完好。新系统侧导入通道（importBp+/import/sys）
+  独立已冒烟（M5 真实文件 141 行/tdbp 六配置）。
 - **未测域（按裁决点选，不在覆盖跑批内）**：写库键族（月情况重建/减免/补差提交/月转款确认——按键分析
-  [实测] 已有先例+黄金对照常态）、导入族（doImport multipart 需实样）、导出族（method=export 二进制流）、
+  [实测] 已有先例+黄金对照常态）、导出族（method=export 二进制流）、
   M 型行编辑保存（整行 UPDATE 语义已由新系统 interaction 通道等价承接）。
 
 **新系统侧（localhost:8080 实测）**：
