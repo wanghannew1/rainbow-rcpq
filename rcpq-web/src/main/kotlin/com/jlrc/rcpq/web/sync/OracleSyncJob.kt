@@ -41,7 +41,7 @@ class OracleSyncJob(private val pg: JdbcTemplate) {
     val specs: List<Spec> = listOf(
         Spec("TC90", listOf("ATC900")),
         Spec("TC90_LIST", listOf("IKEY"), latestBy = "AAE036"), // 源表 IKEY 有重复(旧库 PK 失效), 取最新行
-        Spec("TC90_YY", listOf("TC90YYID")),
+        Spec("TC90_YY", listOf("TC90YYID"), dedupeKey = listOf("SAFESIGN", "ATC900")), // 历史重复组保留最大主键(W6 uk_tc90_yy)
         Spec("AC01", listOf("AAC001")),
         Spec("TB90", listOf("ATB900")),
         Spec("TB91", listOf("ATB910")),
@@ -56,8 +56,11 @@ class OracleSyncJob(private val pg: JdbcTemplate) {
         Spec("CE10", listOf("ACE100")),
     )
 
-    /** latestBy 非空时源侧按 PK 去重取该列最新行(源表主键失效的兜底, 如 TC90_LIST.IKEY) */
-    data class Spec(val table: String, val pk: List<String>, val latestBy: String? = null)
+    /** latestBy 非空时源侧按 PK 去重取该列最新行(源表主键失效的兜底, 如 TC90_LIST.IKEY)
+     *  dedupeKey 非空时按业务键去重保留 PK 最大行(W6 "保留后插"语义), 影子 PG 行先删后插;
+     *  dedupeKey 任一列为 NULL 的行不参与去重(=PG 唯一约束 NULL 相异语义) */
+    data class Spec(val table: String, val pk: List<String>, val latestBy: String? = null,
+                    val dedupeKey: List<String>? = null)
 
     private val running = AtomicBoolean(false)
 
@@ -83,7 +86,9 @@ class OracleSyncJob(private val pg: JdbcTemplate) {
                 val results = chosen.map { spec ->
                     val t0 = System.currentTimeMillis()
                     try {
-                        val r = if (mode.equals("INCR", true)) incrOne(ora, spec) else syncOne(ora, spec)
+                        // dedupeKey 表走 FULL(W6 去重语义需全量分组, INCR 流式合并不适用)
+                        val r = if (spec.dedupeKey != null) syncOne(ora, spec)
+                        else if (mode.equals("INCR", true)) incrOne(ora, spec) else syncOne(ora, spec)
                         logRun(spec.table, mode, r.read, r.upsert, r.skipped, System.currentTimeMillis() - t0, "OK", null)
                         mapOf("table" to spec.table, "status" to "OK", "mode" to mode, "read" to r.read,
                             "upsert" to r.upsert, "skipped" to r.skipped,
@@ -105,6 +110,74 @@ class OracleSyncJob(private val pg: JdbcTemplate) {
 
     private data class Result(val read: Long, val upsert: Long, val ins: Long, val upd: Long, val skipped: Long = 0)
 
+    /** dedupeKey 路径: 全量读源→按业务键分组保留 PK 最大行(W6 "保留后插"语义)→组内删 PG 旧行→upsert 保留行。
+     *  调和 uk_tc90_yy(SAFESIGN,ATC900) 与 Oracle 历史重复组; dedupeKey 含 NULL 的行不分组(=PG NULL 相异语义)。 */
+    private fun syncOneDedupe(ora: Connection, spec: Spec, cols: List<String>): Result {
+        val pkIdx = spec.pk.map { p -> cols.indexOfFirst { it.equals(p, true) } }
+        val dkIdx = spec.dedupeKey!!.map { d -> cols.indexOfFirst { it.equals(d, true) } }
+        require(pkIdx.all { it >= 0 } && dkIdx.all { it >= 0 }) { "${spec.table} dedupeKey/PK 列缺失: ${cols}" }
+        val colList = cols.joinToString(",")
+        val ph = cols.joinToString(",") { "?" }
+        val pkList = spec.pk.joinToString(",")
+        val nonPk = cols.filter { c -> spec.pk.none { p -> p.equals(c, true) } }
+        val upsertSql = if (nonPk.isEmpty())
+            "INSERT INTO ${spec.table.lowercase()} ($colList) VALUES ($ph) ON CONFLICT ($pkList) DO NOTHING"
+        else "INSERT INTO ${spec.table.lowercase()} ($colList) VALUES ($ph) ON CONFLICT ($pkList) DO UPDATE SET " +
+            nonPk.joinToString(",") { "${it}=EXCLUDED.${it}" }
+        val delSql = "DELETE FROM ${spec.table.lowercase()} WHERE " +
+            spec.dedupeKey.joinToString(" AND ") { "${it}=?" }
+
+        fun pkVal(v: Any?): Double = (v as? Number)?.toDouble()
+            ?: v?.toString()?.toDoubleOrNull() ?: 0.0
+
+        var read = 0L
+        val kept = LinkedHashMap<String, Triple<Array<Any?>, Double, Array<Any?>>>() // 键串→(行值, 保留PK值, 业务键原值)
+        val solo = mutableListOf<Array<Any?>>()
+        ora.prepareStatement("SELECT $colList FROM ${spec.table}").use { ps ->
+            ps.fetchSize = 2000
+            val rs = ps.executeQuery()
+            while (rs.next()) {
+                read++
+                val vals = Array(cols.size) { i -> rs.getObject(i + 1) }
+                val dkVals = Array(dkIdx.size) { i -> vals[dkIdx[i]] }
+                if (dkVals.any { it == null }) { solo.add(vals); continue }
+                val key = dkVals.joinToString("\u0001")
+                val pkMax = pkVal(vals[pkIdx[0]])
+                val cur = kept[key]
+                if (cur == null || pkMax > cur.second) kept[key] = Triple(vals, pkMax, dkVals)
+            }
+        }
+        val conn = requireNotNull(pg.dataSource).connection
+        conn.autoCommit = false
+        var deleted = 0L
+        var written = 0L
+        try {
+            conn.prepareStatement(delSql).use { del ->
+                for ((_, t) in kept) {
+                    for (i in dkIdx.indices) del.setObject(i + 1, t.third[i])
+                    deleted += del.executeUpdate().toLong()
+                }
+            }
+            conn.prepareStatement(upsertSql).use { batch ->
+                for ((_, t) in kept) {
+                    for (i in cols.indices) batch.setObject(i + 1, t.first[i])
+                    batch.addBatch()
+                }
+                // dedupeKey 含 NULL 的行: PG 唯一约束视 NULL 相异, 直接 upsert
+                for (vals in solo) {
+                    for (i in cols.indices) batch.setObject(i + 1, vals[i])
+                    batch.addBatch()
+                }
+                written += batch.executeBatch().sumOf { if (it == Statement_SUCCESS_NO_INFO) 1L else it.coerceAtLeast(0).toLong() }
+            }
+            conn.commit() // 小表单事务: 删+插全量原子, 不留半组状态
+        } finally {
+            conn.autoCommit = true
+            conn.close()
+        }
+        return Result(read, written, 0, 0, deleted)
+    }
+
     private fun syncOne(ora: Connection, spec: Spec): Result {
         // 列交集: Oracle user_tab_columns ∩ PG information_schema, 保持 Oracle 顺序
         val oraCols = mutableListOf<String>()
@@ -119,6 +192,7 @@ class OracleSyncJob(private val pg: JdbcTemplate) {
             { rs, _ -> rs.getString(1) }, spec.table.lowercase()).toSet()
         val cols = oraCols.filter { it in pgCols }
         require(cols.containsAll(spec.pk)) { "${spec.table} 主键列缺失: ${spec.pk} ∩ $cols" }
+        if (spec.dedupeKey != null) return syncOneDedupe(ora, spec, cols)
         val pkUpper = spec.pk.map { it.uppercase() }
         val nonPk = cols.filter { it.uppercase() !in pkUpper }
 
