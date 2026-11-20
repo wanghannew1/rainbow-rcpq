@@ -3,6 +3,8 @@ package com.jlrc.rcpq.web
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.stereotype.Component
+import org.springframework.transaction.annotation.Propagation
+import org.springframework.transaction.annotation.Transactional
 
 /**
  * 操作留痕(2026-11-11 定调: 用户操作一律留痕, 避免纠纷不可追溯)。
@@ -12,7 +14,10 @@ import org.springframework.stereotype.Component
 @Component
 class AuditLog(private val jdbcTemplate: JdbcTemplate, private val om: ObjectMapper) {
 
-    /** 记一条操作; detail 任意对象(序列化为 JSON, 截断 2000 字), target 为主对象标识 */
+    /** 记一条操作; detail 任意对象(序列化为 JSON, 截断 2000 字), target 为主对象标识。
+     *  REQUIRES_NEW(2026-11-20): 留痕独立事务提交 — 业务端点补 @Transactional 后,
+     *  失败回滚不再连带吞掉操作留痕(失败操作恰是最需要追溯的)。 */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     fun log(aae011: String?, action: String, target: String?, detail: Any?, ip: String? = null) {
         val json = runCatching {
             when (detail) {

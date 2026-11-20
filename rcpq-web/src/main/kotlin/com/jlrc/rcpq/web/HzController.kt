@@ -2,6 +2,7 @@ package com.jlrc.rcpq.web
 
 import com.jlrc.rcpq.service.td.TdckCases
 import org.springframework.jdbc.core.JdbcTemplate
+import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -42,9 +43,24 @@ class HzController(private val jdbc: JdbcTemplate, private val tdck: TdckCases,
      *  同合同同月旧行置 atc9w8='9' 作废(逻辑删除, 不物理删; 重推可追溯),
      *  查询面一律排除 '9'; atc9w1='1' 报增, 新行 atc9w8='1' 待校验。 */
     @PostMapping("/push")
+    @Transactional
     fun push(@RequestBody r: PushReq): Map<String, Any?> {
         audit.log(r.aae011, "wb:hz/push", "ym=${r.ym}", r)
         if (!Regex("^\\d{6}$").matches(r.ym)) return mapOf("appCode" to -1, "errMsg" to "年月格式不正确")
+        // ⭐回盘锁(P0 修正 2026-11-20): 东软 PRC_社保人员增减 L901-912 忠实兜底 — 目标名单表该年月
+        // 已存在 atc9w8='4'(已回盘办结)行 → 拒绝重推; 带单位过滤则锁限该单位(推送粒度=月+单位,
+        // 旧锁粒度=户头+区划, 随推送作用域对齐)。此前仅 2001a43 前端置灰为防线, 可被筛选/未加载/直调绕过。
+        val ymN = r.ym.toLong()
+        val lockTable = when (r.kind) {
+            "medical" -> "tc9w1"; "housingfund" -> "tc9u"; "smedical" -> "tc9w2"
+            "sgongshang" -> "tc9w3"; "mgongshang" -> "tc9w4"; else -> "tc9w"
+        }
+        val lockCol = if (r.kind == "housingfund") "atc9u8" else "atc9w8"
+        val n4 = jdbc.queryForObject(
+            "SELECT count(*) FROM $lockTable WHERE aae002=? AND $lockCol='4'" +
+                (if (r.aab001 != null) " AND aab001=${r.aab001}" else ""), Long::class.java, ymN) ?: 0L
+        if (n4 > 0) return mapOf("appCode" to -1,
+            "errMsg" to "当月数据已经回盘，不能重新生成，请点击查询查看历史数据")
         val unitFilter = if (r.aab001 != null) " AND t.aab001=${r.aab001}" else ""
         val medFilter = if (r.kind == "medical") " AND t.aaa402='1' AND t.aaa110 IS NOT NULL" else ""
         val hfFilter = if (r.kind == "housingfund") " AND t.aaa407='1'" else ""
@@ -79,7 +95,6 @@ class HzController(private val jdbc: JdbcTemplate, private val tdck: TdckCases,
                FROM tc90 t LEFT JOIN ab01 u ON u.aab001 = t.aab001
                WHERE $where
                ORDER BY t.atc900""")
-        val ymN = r.ym.toLong()
         if (r.kind == "medical") return pushMedical(r, rows, ymN)
         if (r.kind == "housingfund") return pushHousingFund(r, rows, ymN)
         if (r.kind == "smedical") return pushSMedical(r, rows, ymN)
@@ -91,7 +106,9 @@ class HzController(private val jdbc: JdbcTemplate, private val tdck: TdckCases,
             val aaa030 = (row["aaa030"] as Number?)?.toLong()
             if (aaa030 == null) { skipped.add("${row["aac003"]}(无险金户头)"); continue }
             jdbc.update(
-                "UPDATE tc9w SET atc9w8='9' WHERE aae002=? AND atc900=? AND atc9w1='1' AND atc9w8<>'9'",
+                // 重推清理收窄(P0 修正): 仅作废待校验行(atc9w8='1'), 忠实旧预删 ATC9W8='1' —
+                // '4' 已回盘行不可被作废(旧 `<>'9'` 会把回盘历史一并置 9)
+                "UPDATE tc9w SET atc9w8='9' WHERE aae002=? AND atc900=? AND atc9w1='1' AND atc9w8='1'",
                 ymN, (row["atc900"] as Number).toLong())
             jdbc.update(
                 """INSERT INTO tc9w (atc9w0, aae002, atc900, aab001, aab004, atc9w1,
@@ -121,7 +138,7 @@ class HzController(private val jdbc: JdbcTemplate, private val tdck: TdckCases,
                 continue
             }
             jdbc.update(
-                "UPDATE tc9w1 SET atc9w8='9' WHERE aae002=? AND atc900=? AND atc9w1='1' AND atc9w8<>'9'",
+                "UPDATE tc9w1 SET atc9w8='9' WHERE aae002=? AND atc900=? AND atc9w1='1' AND atc9w8='1'",
                 ymN, (row["atc900"] as Number).toLong())
             jdbc.update(
                 """INSERT INTO tc9w1 (atc9w0, aae002, atc900, aab001, aab004, atc9w1,
@@ -167,7 +184,7 @@ class HzController(private val jdbc: JdbcTemplate, private val tdck: TdckCases,
             // 出生 yyyymmdd(原 to_char(aac006,'yyyymmdd')); aac006 为 date/timestamp 列
             val birth = ymd8(row["aac006"])
             jdbc.update(
-                "UPDATE tc9u SET atc9u8='9' WHERE aae002=? AND atc900=? AND atc9u1='1' AND atc9u8<>'9'",
+                "UPDATE tc9u SET atc9u8='9' WHERE aae002=? AND atc900=? AND atc9u1='1' AND atc9u8='1'",
                 ymN, (row["atc900"] as Number).toLong())
             jdbc.update(
                 """INSERT INTO tc9u (baz001, baz002, atc9u0, aae002, atc900, atb900, aab001, aab004,
@@ -226,7 +243,7 @@ class HzController(private val jdbc: JdbcTemplate, private val tdck: TdckCases,
             val isCurMonth = start != null &&
                 java.time.YearMonth.from(start).format(java.time.format.DateTimeFormatter.ofPattern("yyyyMM")) == nowYm
             jdbc.update(
-                "UPDATE tc9w2 SET atc9w8='9' WHERE aae002=? AND atc900=? AND atc9w1='1' AND atc9w8<>'9'",
+                "UPDATE tc9w2 SET atc9w8='9' WHERE aae002=? AND atc900=? AND atc9w1='1' AND atc9w8='1'",
                 ymN, (row["atc900"] as Number).toLong())
             jdbc.update(
                 """INSERT INTO tc9w2 (baz001, baz002, atc9w0, aae002, abpzzz, atc900, atb900, aab001,
@@ -291,7 +308,7 @@ class HzController(private val jdbc: JdbcTemplate, private val tdck: TdckCases,
             val isCurMonth = start != null &&
                 java.time.YearMonth.from(start).format(java.time.format.DateTimeFormatter.ofPattern("yyyyMM")) == nowYm
             jdbc.update(
-                "UPDATE $table SET atc9w8='9' WHERE aae002=? AND atc900=? AND atc9w1='1' AND atc9w8<>'9'",
+                "UPDATE $table SET atc9w8='9' WHERE aae002=? AND atc900=? AND atc9w1='1' AND atc9w8='1'",
                 ymN, (row["atc900"] as Number).toLong())
             jdbc.update(
                 """INSERT INTO $table (baz001, baz002, atc9w0, aae002, abpzzz, atc900, atb900, aab001,
@@ -335,9 +352,10 @@ class HzController(private val jdbc: JdbcTemplate, private val tdck: TdckCases,
                @RequestParam(required = false) kind: String?): List<Map<String, Any?>> {
         if (!Regex("^\\d{6}$").matches(ym)) return emptyList()
         if (kind == "housingfund") {
+            // atc9u8 别名 atc9w8(P1 修正 2026-11-20): 前端状态列/回盘防呆(pushLocked)统一按 atc9w8 取值
             var hsql = """SELECT w.atc9u0 AS atc9w0, w.aae002, w.atc900, w.aac001, w.aab001, w.aab004,
                 w.atc9u1, w.aaa030, w.aaa031, w.aaa100, w.aaa101, w.aac002, w.aac003,
-                w.atc9u8, w.aae011, w.aaa004, w.abp009,
+                w.atc9u8 AS atc9w8, w.aae011, w.aaa004, w.abp009,
                 EXISTS(SELECT 1 FROM tc9w_bp02 b WHERE b.aae002=w.aae002 AND b.atc900=w.atc900
                        AND b.ace10a='1' AND b.abp002='正常') AS confirmed_ok,
                 EXISTS(SELECT 1 FROM tc9u_bp03 y WHERE y.aae002=w.aae002 AND y.atc900=w.atc900
@@ -436,6 +454,7 @@ class HzController(private val jdbc: JdbcTemplate, private val tdck: TdckCases,
      *  同键(aae002+atc900+aaa90w)已有行则原地 UPDATE 覆盖(逻辑更新, 不物理删, 重确认可追溯);
      *  abp001 存 'yyyy-MM-dd' — 回盘提交 PRC 按前 10 位 ISO 解析。 */
     @PostMapping("/confirm")
+    @Transactional
     fun confirm(@RequestBody r: ConfirmReq): Map<String, Any?> {
         audit.log(r.aae011, "wb:hz/confirm", "atc9w0=${r.atc9w0}", r)
         if (r.kind == "housingfund") return confirmHousingFund(r)
@@ -822,12 +841,18 @@ class HzController(private val jdbc: JdbcTemplate, private val tdck: TdckCases,
      *  TC9W_BP(社保)/TC9W_BP04(市医保) 待校验行 → 复用 /proc 校验/提交。
      *  东软对应: tdck 申报结果导入弹窗/tdcay 导入弹窗(通用导入通道写批次表)。 */
     @PostMapping("/import-bp")
+    @Transactional
     fun importBp(@RequestParam ym: String, @RequestParam kind: String,
                  @RequestParam aae011: String,
                  @RequestParam aaa030: Long, @RequestParam aaa020: String,
                  @RequestParam("file") file: org.springframework.web.multipart.MultipartFile): Map<String, Any?> {
         audit.log(aae011, "wb:hz/import-bp", "ym=$ym kind=$kind aaa030=$aaa030",
             mapOf("ym" to ym, "kind" to kind, "file" to file.originalFilename, "size" to file.size))
+        // P1 修正(2026-11-20): 公积金/工伤回盘文件实样未到位(W0#4) — 显式拒收,
+        // 替代原先落入三分支全不匹配的静默 no-op(解析白做、0 行无提示)
+        if (kind == "housingfund" || kind == "sgongshang" || kind == "mgongshang")
+            return mapOf("appCode" to -1,
+                "errMsg" to "该险种回盘文件导入待局方实样(W0#4), 未开放")
         // 源对话框必选户头/参保属地(AAE002/AAA030/AAA020 取自对话框参数, 导入文档 §2 ②)
         val headAaa031 = jdbc.queryForList(
             """SELECT (array_agg(aaa031 ORDER BY aae036 DESC NULLS LAST))[1] AS n

@@ -321,9 +321,9 @@
                        :key="h.aaa100" :value="h.aaa100" :label="(h.aaa101 || '') + ' ' + h.aaa100"/>
           </el-select>
         </el-form-item>
-        <el-form-item v-if="!isHf()">
+        <el-form-item v-if="!isHf() && !isGs() && !isMg()">
           <wb-dsf-tip menu="员工异动/补退费管理(社保)" page="td/c/k 社保异动回盘/补退费"
-            area="申报结果导入弹窗" btn="导入" note="局方回盘 .xls: 社保=社保异动回盘 9 列/市医保=个人缴费信息 17 列(样本见 baopan/huipan); 按证件或报盘行序对齐名册, 写 TC9W_BP/BP04 待校验">
+            area="申报结果导入弹窗" btn="导入" note="局方回盘 .xls: 社保=社保异动回盘 9 列/市医保=个人缴费信息 17 列/省医保=回盘 7 列(样本见 baopan/huipan); 按证件或报盘行序对齐名册, 写 TC9W_BP/BP04/BP01 待校验; 公积金/工伤待局方实样(W0#4)未开放">
             <el-button size="small" type="warning" @click="pickFile">导入回盘文件</el-button>
           </wb-dsf-tip>
           <input ref="fileInput" type="file" accept=".xls,.xlsx" style="display:none" @change="uploadBp"/>
