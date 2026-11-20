@@ -54,13 +54,22 @@ class OracleSyncJob(private val pg: JdbcTemplate) {
         Spec("TC06", listOf("ATC060")),
         Spec("TC92", listOf("ATC920")),
         Spec("CE10", listOf("ACE100")),
+        // 名单表族(2026-11-21 用户拍板): 历史月 <=202610 东软的账每晚同步, 202611+ 新系统专属
+        Spec("TC9W",  listOf("ATC9W0"), maxAae002 = 202610),
+        Spec("TC9W1", listOf("ATC9W0"), maxAae002 = 202610),
+        Spec("TC9W2", listOf("ATC9W0"), maxAae002 = 202610),
+        Spec("TC9W3", listOf("ATC9W0"), maxAae002 = 202610),
+        Spec("TC9W4", listOf("ATC9W0"), maxAae002 = 202610),
+        Spec("TC9U",  listOf("ATC9U0"), maxAae002 = 202610),
     )
 
     /** latestBy 非空时源侧按 PK 去重取该列最新行(源表主键失效的兜底, 如 TC90_LIST.IKEY)
      *  dedupeKey 非空时按业务键去重保留 PK 最大行(W6 "保留后插"语义), 影子 PG 行先删后插;
-     *  dedupeKey 任一列为 NULL 的行不参与去重(=PG 唯一约束 NULL 相异语义) */
+     *  dedupeKey 任一列为 NULL 的行不参与去重(=PG 唯一约束 NULL 相异语义)
+     *  maxAae002 非空时源侧限定 aae002<=该值(名单表族历史月只读: <=202610 为东软的账,
+     *  202611+ 为新系统自留地, Oracle 不得写入防新旧两套当月名单混账) */
     data class Spec(val table: String, val pk: List<String>, val latestBy: String? = null,
-                    val dedupeKey: List<String>? = null)
+                    val dedupeKey: List<String>? = null, val maxAae002: Long? = null)
 
     private val running = AtomicBoolean(false)
 
@@ -208,7 +217,8 @@ class OracleSyncJob(private val pg: JdbcTemplate) {
 
         var read = 0L
         var written = 0L
-        val selectSql = if (spec.latestBy == null) "SELECT $colList FROM ${spec.table}"
+        val srcWhere = if (spec.maxAae002 != null) " WHERE aae002<=" + spec.maxAae002 else ""
+        val selectSql = if (spec.latestBy == null) "SELECT $colList FROM ${spec.table}$srcWhere"
         else "SELECT $colList FROM (SELECT t.*, ROW_NUMBER() OVER (PARTITION BY $pkList " +
             "ORDER BY ${spec.latestBy} DESC NULLS LAST, ROWID) rn FROM ${spec.table} t) WHERE rn = 1"
         ora.prepareStatement(selectSql).use { ps ->
@@ -261,7 +271,8 @@ class OracleSyncJob(private val pg: JdbcTemplate) {
         val pkIdx = spec.pk.map { p -> cols.indexOfFirst { it.equals(p, true) } }
         val pkList = spec.pk.joinToString(",")
         val colList = cols.joinToString(",")
-        val selectSql = if (spec.latestBy == null) "SELECT $colList FROM ${spec.table} ORDER BY $pkList"
+        val srcWhere = if (spec.maxAae002 != null) " WHERE aae002<=" + spec.maxAae002 else ""
+        val selectSql = if (spec.latestBy == null) "SELECT $colList FROM ${spec.table}$srcWhere ORDER BY $pkList"
         else "SELECT $colList FROM (SELECT t.*, ROW_NUMBER() OVER (PARTITION BY $pkList " +
             "ORDER BY ${spec.latestBy} DESC NULLS LAST, ROWID) rn FROM ${spec.table} t) WHERE rn = 1 ORDER BY $pkList"
 
