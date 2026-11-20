@@ -165,3 +165,10 @@ COMMENT ON COLUMN tc08.jsny IS '补收段止月(该年末月 yyyymm)';
 
 -- ===== TC9W 表注释(2026-11-19, 出处=Oracle user_tab_comments+PKG_保险人员增减 源码) =====
 COMMENT ON TABLE tc9w IS '派遣员工社保异动信息表(东软原注释) = 报增/报减推送名册: 报盘生成按月写入(atc9w8=1), 回盘校验办结(→4), 名册重推置 9 作废(新系统约定); ATC9W8 东软原注释仅"审核状态"无值含义, 1/4/9 值含义经 PKG_保险人员增减 源码验证(2026-11-19)';
+
+-- 2026-11-21 补: 名单表族东软原注释(备份库 user_tab_comments 实取, 与 tc9w 同源)
+COMMENT ON TABLE tc9u  IS '派遣员工公积金异动信息表(东软原注释)';
+COMMENT ON TABLE tc9w1 IS '派遣员工市医保异动信息表(东软原注释)';
+COMMENT ON TABLE tc9w2 IS '派遣员工省医保异动信息表(东软原注释)';
+COMMENT ON TABLE tc9w3 IS '派遣员工省工伤异动信息表(东软原注释)';
+COMMENT ON TABLE tc9w4 IS '派遣员工市工伤异动信息表(东软原注释)';

@@ -355,7 +355,9 @@
       </el-form>
       <div v-if="rp.log" class="kv">{{ rp.log }}</div>
 
-      <h4>名册工作表({{ isHf() ? "TC9U 公积金" : "TC9W 社保/医保" }}, 报增)</h4>
+      <h4>{{ { social: "TC9W 派遣员工社保异动信息表", medical: "TC9W1 派遣员工市医保异动信息表",
+        smedical: "TC9W2 派遣员工省医保异动信息表", sgongshang: "TC9W3 派遣员工省工伤异动信息表",
+        mgongshang: "TC9W4 派遣员工市工伤异动信息表", housingfund: "TC9U 派遣员工公积金异动信息表" }[rp.kind] }}（报增）</h4>
       <div style="margin-bottom:6px" v-if="!isHf()">
         <wb-dsf-tip menu="员工异动/补退费管理(社保)" page="td/c/k 社保异动回盘/补退费"
           area="报增结果列表" btn="审核(doPass)" note="tc90.atc90p='0'; TC9W 更新沿用旧系统报错行为">
