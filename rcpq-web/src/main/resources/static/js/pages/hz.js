@@ -121,9 +121,12 @@
           ElementPlus.ElMessage.success(`导入完成：成功 ${j.imported || 0} 行(待成功校验)`);
         } else {
           // 部分失败: 弹明细框逐行列出(旧系统为批次表格红色行+汇总弹窗, 此处等价可读化)
+          // 行数口径: imported=写入台账总行; 其中校验符合 = imported - unmatched(不符行已标 2)
+          const matched = (j.imported || 0) - (j.unmatched || 0);
           ElementPlus.ElMessageBox.alert(
-            `<div style="font-size:13px;line-height:1.9"><b>成功 ${j.imported || 0} 行</b>（已写入回盘台账，待成功校验）；` +
-            `<span style="color:#f56c6c">失败 ${fails.length} 行</span>：<br/>` +
+            `<div style="font-size:13px;line-height:1.9"><b>导入 ${j.imported || 0} 行</b>（写入回盘台账）：` +
+            `<b style="color:#67c23a">符合 ${matched} 行</b>（可点"成功校验→回盘提交"）；` +
+            `<span style="color:#f56c6c">不符合 ${fails.length} 行</span>（匹配不到社保在保合同，改数据后重新导入或跳过）：<br/>` +
             fails.map(x => `· ${x.replace(/</g, "&lt;")}`).join("<br/>") + "</div>",
             "导入结果", { dangerouslyUseHTMLString: true, type: "warning" });
         }
