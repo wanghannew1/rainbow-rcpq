@@ -112,9 +112,10 @@ class HzController(private val jdbc: JdbcTemplate, private val tdck: TdckCases,
                 ymN, (row["atc900"] as Number).toLong())
             jdbc.update(
                 """INSERT INTO tc9w (atc9w0, aae002, atc900, aab001, aab004, atc9w1,
-                   aaa030, aaa031, aaa100, aaa101, abp001, aac002, aac003, atc9w8, aae011, aae036)
+                   aaa030, aaa031, aaa100, aaa101, abp001, aac002, aac003, atc9w8,
+                   atc9w2, abpzzz, aaa90x, aae011, aae036)
                    VALUES (nextval('seq_tc9w_atc9w0'), ?, ?, ?, ?, '1', ?, ?, ?, ?,
-                   '居民身份证（户口簿）', ?, ?, '1', ?, now())""",
+                   '居民身份证（户口簿）', ?, ?, '1', '0', '0', '90', ?, now())""",
                 ymN, (row["atc900"] as Number).toLong(),
                 (row["aab001"] as Number?)?.toLong(), row["aab004"],
                 aaa030, row["aaa031"], row["aaa100"], row["aaa101"],
