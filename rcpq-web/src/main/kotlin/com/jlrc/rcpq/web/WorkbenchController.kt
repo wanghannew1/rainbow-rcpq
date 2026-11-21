@@ -159,8 +159,16 @@ class WorkbenchController(private val jdbcTemplate: JdbcTemplate,
             "tc90_bp1" to listOf("aac002", "aac003", "atc90i", "aae003", "atc90k", "ace10a", "ace10b"),
             "tc90_bp3" to listOf("aac002", "aac003", "atc90a", "atc90c", "atc90d", "ace10a", "ace10b"),
             "tc93_bp1" to listOf("aac002", "aac003", "atc93aa", "ace10a", "ace10b"),
-            "tb97_bp" to listOf("abp001", "abp002", "abp005", "ace10a", "ace10b"),
+            "tb97_bp" to listOf("abp001", "abp002", "abp003", "abp005", "ace10a", "ace10b"),
+            "tb97_bp01" to listOf("abp001", "abp002", "abp003", "abp005", "ace10a", "ace10b"),
+            "tb97_bp02" to listOf("abp001", "abp002", "abp003", "abp004", "ace10a", "ace10b"),
             "tb99_bp" to listOf("abp001", "abp002", "abp004", "ace10a", "ace10b"),
+            // 专项五套批次表(2026-11-21, 特殊登记导入页)
+            "tc04_bp" to listOf("aac003", "aaa005", "aae002", "atc042", "ace10a", "ace10b"),
+            "tc05_bp" to listOf("aac002", "aac003", "atb9b1", "atc051", "atc052", "atc053", "ace10a", "ace10b"),
+            "tc06_bp" to listOf("aac002", "aac003", "atc061", "atc06a", "atc06c", "ace10a", "ace10b"),
+            "tc07_bp" to listOf("aac002", "aac003", "bba200", "baa200", "ace10a", "ace10b"),
+            "td04_bp" to listOf("aac002", "aac003", "atd041", "atd042", "atd043", "ace10a", "ace10b"),
         )
         for ((table, cols) in specs) {
             val rows = jdbcTemplate.queryForList(

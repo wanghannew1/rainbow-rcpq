@@ -27,3 +27,36 @@ SELECT setval('seq_ce10_ace100',   GREATEST((SELECT COALESCE(max(ace100),0)::big
 SELECT setval('seq_tc90_yy_tc90yyid', GREATEST((SELECT COALESCE(max(tc90yyid),0)::bigint+1 FROM tc90_yy), 10000001));
 -- 2026-11-18 W5b: seq_aa97_aaa970 首次启用(基数导入提交发号), 由 V16__aa97_uk_w5b.sql 自动抬段
 --   (aa97 不在同步集合无覆盖风险, 抬段仅为键空间可解释; aa97_bp.id 由导入面显式指定不走序列)
+-- 2026-11-21 W7: 通用导入通道(/import/sys)接入时发现 bp 族批次表序列漏抬——
+-- 六序列全停在迁移数据段内(seq_tc90_id=174407 撞 tc90_bp 迁移行, bp2 序列 51119 < 表内 max 51222),
+-- 首次 Excel 上传即主键冲突。bp 批次表 id 为 varchar, 需 ::bigint 转。逐条已跑(2026-11-21):
+SELECT setval('seq_tc90_id',     GREATEST((SELECT COALESCE(max(id),0)::bigint+1 FROM tc90_bp),  10000001));
+SELECT setval('seq_tc90_bp1_id', GREATEST((SELECT COALESCE(max(id),0)::bigint+1 FROM tc90_bp1), 10000001));
+SELECT setval('seq_tc90_bp2_id', GREATEST((SELECT COALESCE(max(id),0)::bigint+1 FROM tc90_bp2), 10000001));
+SELECT setval('seq_tc90_bp3_id', GREATEST((SELECT COALESCE(max(id),0)::bigint+1 FROM tc90_bp3), 10000001));
+SELECT setval('seq_tc90_bp4_id', GREATEST((SELECT COALESCE(max(id),0)::bigint+1 FROM tc90_bp4), 10000001));
+SELECT setval('seq_ac01_gx_id',  GREATEST((SELECT COALESCE(max(id),0)::bigint+1 FROM ac01_gx),  10000001));
+-- 同坑未接: tc90_imp 模板(→TC90_IMP 表)无 ID 序列配置, 导入报"未配置目标表ID序列"(见 import-channel.md)
+-- 2026-11-21 W7 重大修正: seq_tb91_atb910 抬段窗口失效——tb91 在每日同步集合, Oracle 侧键
+-- 已发到 27,152,330(远超 2026-11-12 设想的"5 万级"), PG 从 1e7 发号直接撞同步行
+-- (2026-11-21 06:22 同步行 27152330 > PG seq 27151966, /proc 员工导入提交 500 实证)。
+-- 修正: PG 键段抬到 5e7(Oracle 27M 之上的不相交段, Oracle ~1.5 万/日, 余量数年)。
+-- 其余 11 序列复核(2026-11-21): 表内 max 全部 ≤1e7+82(PG 自发号), 无同病。
+-- 教训: 凡在同步集合的表, 抬段前必查 Oracle 侧实际键域(备份库 max), 不能按 1e7 一刀切。
+SELECT setval('seq_tb91_atb910', 50000001);
+-- 2026-11-21 W7 续: seq_tc90_qdls_id 同病(续签提交写 TC90_QDLS 主键撞迁移行, appCode=-1
+-- "记录合同签订历史出错" 实证), 抬段同规则。逐条已跑(2026-11-21):
+SELECT setval('seq_tc90_qdls_id', GREATEST((SELECT COALESCE(max(id),0)::bigint+1 FROM tc90_qdls), 10000001));
+-- 2026-11-21 W7 专项五套批次表序列接入(/import/sys tc04/05/06/07/td04_bp, hbm 权威=SEQ_TC0x_ID):
+-- seq_tc05_id(34317<max34360 落后)/seq_tc06_id(从未调用, next=1 撞 max102)/seq_tc07_id(65663<max70638)
+-- 三例同病, 统一抬段(逐条已跑):
+SELECT setval('seq_tc04_id', GREATEST((SELECT COALESCE(max(id),0)::bigint+1 FROM tc04_bp), 10000001));
+SELECT setval('seq_tc05_id', GREATEST((SELECT COALESCE(max(id),0)::bigint+1 FROM tc05_bp), 10000001));
+SELECT setval('seq_tc06_id', GREATEST((SELECT COALESCE(max(id),0)::bigint+1 FROM tc06_bp), 10000001));
+SELECT setval('seq_tc07_id', GREATEST((SELECT COALESCE(max(id),0)::bigint+1 FROM tc07_bp), 10000001));
+SELECT setval('seq_td04_id', GREATEST((SELECT COALESCE(max(id),0)::bigint+1 FROM td04_bp), 10000001));
+-- 2026-11-21 W7 三银行到账批次表接入(/import/sys tb97_bp/bp01/bp02, hbm 权威=SEQ_TB97_BP*_ID):
+-- bp 4824<max4843 / bp01 33142<max33429 均落后(撞迁移行), bp02 恰好齐平。统一抬段(已跑):
+SELECT setval('seq_tb97_bp_id',   GREATEST((SELECT COALESCE(max(id),0)::bigint+1 FROM tb97_bp),  10000001));
+SELECT setval('seq_tb97_bp01_id', GREATEST((SELECT COALESCE(max(id),0)::bigint+1 FROM tb97_bp01), 10000001));
+SELECT setval('seq_tb97_bp02_id', GREATEST((SELECT COALESCE(max(id),0)::bigint+1 FROM tb97_bp02), 10000001));
