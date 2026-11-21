@@ -11,7 +11,7 @@ Oracle∩PG **双方带主键**的共有表 **579 张**（`scripts/db/DiscoverSh
 
 | 证据 | 工具 | 含义 |
 |---|---|---|
-| ① .70 应用近期 SQL 是否引用 | `scripts/db/AppSqlProbe.java`（v$sql 按 JDBC 会话过滤，排除 dmp 导入噪音） | 应用层读写证据（666 条 SQL/237KB 文本池） |
+| ① v$sql 应用引用(仅辅助) | `scripts/db/AppSqlProbe.java` | **已被勘误降级**：同步自读污染同一 JDBC 模块, 不能作为业务证据（AA73/AA74 误标案例） |
 | ② PL/SQL 包体/页面源码是否引用 | 反编译源码全库逐名 grep（`rainbowpq/work/pkg_all/*.sql` + webapp + java） | **过程内部读写的表不在应用 SQL 里，必须交叉**，否则误杀 |
 | ③ 数据新鲜度 | `scripts/db/DeadTableProbe.java`（日期列 max 值 + v$sql 引用） | 停在远古且无人引用 = 死表 |
 
