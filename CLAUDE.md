@@ -6,9 +6,11 @@
 
 ## 必读文档（都在 docs/）
 - business-process.md — 业务全景/业务员月度节拍/数据表地图/**端点映射**
-- operations-manual.md — 新人 API 操作指导书(三类入口/请求体实例/状态机/排错速查)
+- operations-manual.md — 新人 API 操作指导书(三类入口/请求体实例/状态机/排错速查/**§10 合同批量导入**)
+- import-channel.md — **通用导入通道业务逻辑**(/import/sys 引擎契约/批次状态机/四模板语义/忠实坑)
 - legacy-analysis/module-inventory.md — 波次状态与坏功能八例总账
 - scripts/e2e_business.py — 端到端可执行参照(新业务员先读它)
+- scripts/e2e_import_sys.py — 导入通道 e2e(合同四路+专项五路+三银行, 45 断言)
 
 ## 构建与启动（老坑必踩）
 ```bash
