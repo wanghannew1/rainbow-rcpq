@@ -18,6 +18,9 @@
       page: "td/c/bc 市公积金月转款情况(18)" },
     { key: "sgongshang", label: "省工伤", tab: "TJ0F", proc: "PRC_工伤月情况",
       page: "td/c/bq 省工伤月转款情况(25)" },
+    // 第七线(2026-11-21): 市医保应缴费明细(东软 td/c/bj, 独有——生成后查 TJ06 明细, 无月转款确认)
+    { key: "tj06", label: "市医保应缴费", tab: "TJ06", proc: "PRC_市医保应缴费情况",
+      page: "td/c/bj 市医保应缴费情况(26)", tj06: true },
   ];
 
   const rp = reactive({ ym: "202611", kind: "social", aab001: null, aaa030: null, bqOnly: false,
@@ -56,6 +59,16 @@
   }
 
   async function load() {
+    // 市医保应缴费(td/c/bj): 过程重建 TJ0C2(户头+属地+年月键), 读面走专用端点, 无月转款确认
+    if (cur().tj06) {
+      if (!rp.aaa030 || !rp.aaa020) { ElementPlus.ElMessage.warning("先选户头与参保属地"); return; }
+      try {
+        detailRows.value = (await api.wb(`/yue/tj0c2?ym=${rp.ym}&aaa030=${rp.aaa030}&aaa020=${encodeURIComponent(rp.aaa020)}`)) || [];
+        rows.value = [];
+        rp.log = `应缴费明细 ${detailRows.value.length} 行(生成走【重建】)`;
+      } catch (e) { ElementPlus.ElMessage.error(e.message); }
+      return;
+    }
     if (!rp.aaa030 || !rp.aaa020) { ElementPlus.ElMessage.warning("先选户头与参保属地"); return; }
     try {
       rows.value = (await api.wb(`/yue/main?ym=${rp.ym}&tab=${cur().tab}&aaa030=${rp.aaa030}&aaa020=${encodeURIComponent(rp.aaa020)}`)) || [];
@@ -168,7 +181,7 @@
         <el-form-item>
           <wb-dsf-tip menu="员工异动/补退费管理(六险种)" :page="cur().page"
             area="月转款确认" btn="月转款确认" note="PRC_月转款确认: TABNAME 白名单(TJ0A~F)→主表 AAEZZZ='1'+经办, 明细 AAE013='1'; 已确认月重建静默跳过">
-            <el-button size="small" type="danger" @click="confirm">月转款确认</el-button>
+            <el-button v-if="!cur().tj06" size="small" type="danger" @click="confirm">月转款确认</el-button>
           </wb-dsf-tip>
         </el-form-item>
       </el-form>

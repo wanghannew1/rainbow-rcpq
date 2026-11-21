@@ -356,6 +356,49 @@ for bid, brow in BANK_ROWS.items():
     except Exception as e:
         check(f"{bid} 全链", False, str(e)[:100])
 
+# 9) 费用结算确认/取消(PKG_RCPQ_FZ, 东软 td/d/d 8b): TC93 未结算行→确认落账→取消(忠实坏功能第六例)
+print("\n=== 9. 费用结算确认/取消(td/d/d 8b) ===")
+t930 = sql(f"""SELECT nextval('seq_tc93_atc930')""")
+c900 = sql(f"SELECT MAX(atc900) FROM tc90 WHERE aac002='{ID18}'")
+sql(f"""INSERT INTO tc93 (atc930, atc900, atb900, aab001, aab004, atb930, aac001, aac002, aac003,
+  atc931, atc932, atc937, atc93aa, atc93x, atc93p, atc93g, aae011)
+SELECT {t930}, {c900}, atb900, aab001, aab004, atb930, aac001, aac002, aac003,
+  {_ym}, {_ym}, '1', 6800, 6800, '0', '0', 'jiaq'
+  FROM tc90 WHERE atc900={c900}""")
+check("§9 TC93 未结算行就绪(atc93g='0')", sql(
+    f"SELECT COUNT(*) FROM tc93 WHERE atc930={t930} AND atc93g='0'") == "1")
+r = proc("PKG_RCPQ_FZ.PRC_SALARYCOMPUTE",
+         {"atb930": "37312", "atc931": _ym, "atc932": _ym, "atc937": "1", "aae011": "jiaq"})
+check("§9 结算确认 appCode=1", r.get("appCode") == 1, str(r.get("errMsg"))[:60])
+check("§9 本行落账 atc93g='1'", sql(f"SELECT atc93g FROM tc93 WHERE atc930={t930}") == "1",
+      f"settled={r.get('settled')}")
+r = proc("PKG_RCPQ_FZ.PRC_CANCLESALARYCOMPUTE",
+         {"atb930": "37312", "atc931": _ym, "atc932": _ym, "atc937": "1"})
+faithful = r.get("appCode") == -1 and "00904" in str(r.get("errMsg", ""))
+check("§9 取消=忠实坏功能第六例(appCode=-1 ORA-00904 TC31 无列, 旧系统同样报错)", faithful,
+      str(r.get("errMsg"))[:80])
+
+# 10) 市医保应缴费(td/c/bj): PRC_市医保应缴费情况 生成 TJ06 + /wb/yue/tj06 读面
+print("\n=== 10. 市医保应缴费(td/c/bj) ===")
+# 户头遍历取首个成功(户头 1 存在迁移破损链: 单元 37230 不在 v_ab01_tb90_tb93 →
+# 过程忠实报"结算单元不存在", 数据级问题与遗留同构, 跳过)
+rows06 = []
+for a030 in ("2", "4", "3", "1"):
+    r = proc("PKG_派遣保险月情况.PRC_市医保应缴费情况",
+             {"aae002": _ym, "aaa020": "220100000000", "aaa030": a030, "aae011": "jiaq"})
+    print(f"  户头 {a030}: appCode={r.get('appCode')} rows={r.get('rows')} {str(r.get('errMsg'))[:50]}")
+    if r.get("appCode") == 1:
+        check(f"§10 应缴费生成 appCode=1(户头 {a030})", True)
+        req = urllib.request.urlopen(BASE + "/wb/yue/tj0c2?ym=" + _ym
+                                     + "&aaa030=" + a030 + "&aaa020=220100000000", timeout=60)
+        rows06 = json.load(req)
+        break
+else:
+    check("§10 应缴费生成 appCode=1", False, "全部户头失败")
+check("§10 /wb/yue/tj0c2 读面返回明细", isinstance(rows06, list) and len(rows06) >= 1,
+      f"{len(rows06)} 行")
+print(f"  TJ06 明细: {len(rows06)} 行")
+
 passed = sum(1 for _, ok in results if ok)
 print(f"\n=== 结果: {passed}/{len(results)} PASS ===")
 raise SystemExit(0 if passed == len(results) else 1)

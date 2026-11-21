@@ -271,11 +271,17 @@ class TddSettlementProcs(private val s: TddSettlementCases) : ProcHandler {
 class TddCancelProcs(private val s: TddSettlementCases) : ProcHandler {
     override fun procName() = "PKG_RCPQ_FZ.PRC_CANCLESALARYCOMPUTE"
     override fun handle(params: Map<String, Any?>): Map<String, Any?> {
-        val r = s.cancelSalaryCompute(
-            params["atb930"]?.toString() ?: return mapOf("appCode" to -1, "errMsg" to "缺少 atb930"),
-            params["atc931"]?.toString() ?: return mapOf("appCode" to -1, "errMsg" to "缺少 atc931"),
-            params["atc937"]?.toString() ?: return mapOf("appCode" to -1, "errMsg" to "缺少 atc937"),
-            params["atc932"]?.toString() ?: return mapOf("appCode" to -1, "errMsg" to "缺少 atc932"))
+        // 忠实形状: 旧 Java 服务层 catch 顶层异常返回 appCode=-1 errMsg(非 HTTP 500 裸抛)——
+        // 坏功能第六例(非孤儿行 TC31 无 atc930 列)在此以 JSON 透出
+        val r = try {
+            s.cancelSalaryCompute(
+                params["atb930"]?.toString() ?: return mapOf("appCode" to -1, "errMsg" to "缺少 atb930"),
+                params["atc931"]?.toString() ?: return mapOf("appCode" to -1, "errMsg" to "缺少 atc931"),
+                params["atc937"]?.toString() ?: return mapOf("appCode" to -1, "errMsg" to "缺少 atc937"),
+                params["atc932"]?.toString() ?: return mapOf("appCode" to -1, "errMsg" to "缺少 atc932"))
+        } catch (e: Exception) {
+            return mapOf("appCode" to -1, "errMsg" to (e.message ?: e.javaClass.simpleName), "cancelled" to 0)
+        }
         return mapOf("appCode" to r["appCode"], "errMsg" to r["errMsg"], "cancelled" to r["cancelled"])
     }
 }

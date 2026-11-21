@@ -53,4 +53,17 @@ class YueViewController(private val jdbc: JdbcTemplate) {
                ORDER BY ttype, xh NULLS LAST LIMIT 500""",
             ym.toLong(), aaa030)
     }
+
+    /** 市医保应缴费明细 TJ0C2 查询(2026-11-21, td/c/bj 页读侧 tj0c2Store 等价; 只读, 与
+     *  /proc PRC_市医保应缴费情况 配套——该过程重建 tj0c2(aaa020+aaa030+aae002 键)。
+     *  注: TJ06 是另一张历史表, 本页不用。 */
+    @GetMapping("/tj0c2")
+    fun tj0c2(@RequestParam ym: String, @RequestParam aaa030: Long,
+              @RequestParam aaa020: String): List<Map<String, Any?>> {
+        if (!Regex("^\\d{6}$").matches(ym)) return emptyList()
+        return jdbc.queryForList(
+            """SELECT * FROM tj0c2 WHERE aae002=? AND aaa030=? AND aaa020=?
+               ORDER BY atc900 NULLS LAST LIMIT 500""",
+            ym.toLong(), aaa030, aaa020)
+    }
 }
