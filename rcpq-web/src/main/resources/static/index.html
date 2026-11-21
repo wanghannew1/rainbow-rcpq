@@ -12,6 +12,7 @@
 <script src="/js/components.js"></script>
 <script src="/js/pages/calc.js"></script>
 <script src="/js/pages/hire.js"></script>
+<script src="/js/pages/imports.js"></script>
 <script src="/js/pages/audit.js"></script>
 <script src="/js/pages/salary.js"></script>
 <script src="/js/pages/money.js"></script>
@@ -22,6 +23,7 @@
 <script src="/js/pages/yy.js"></script>
 <script src="/js/pages/insure.js"></script>
 <script src="/js/pages/change.js"></script>
+<script src="/js/pages/special.js"></script>
 <style>
   body { margin: 0; background: #f5f7fa; font-family: system-ui, "Microsoft YaHei", sans-serif; }
   .brand { color: #fff; padding: 18px 16px 10px; }
@@ -73,6 +75,7 @@
   const MENU = [
     { group: "月初 · 增员", items: [
       { key: "hire", label: "新签导入" },
+      { key: "imports", label: "合同批量导入" },
       { key: "audit", label: "新签审核台" },
     ]},
     { group: "每月中 · 五险一金", items: [
@@ -92,6 +95,9 @@
     { group: "变更 · 退出", items: [
       { key: "change", label: "续签 / 终止" },
       { key: "insure", label: "参保变更 / 停保" },
+    ]},
+    { group: "专项 · 按需", items: [
+      { key: "special", label: "专项登记导入" },
     ]},
   ];
   const app = createApp({
