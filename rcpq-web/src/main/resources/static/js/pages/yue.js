@@ -27,6 +27,7 @@
     aaa020: "", log: "", busy: false,
     dfRows: [], dfBusy: false, dfLog: "" });
   const units = ref([]); const heads = ref([]); const heads2 = ref([]);
+  const headsMaster = ref([]);   // 户头主档案兜底(hz/heads 未推送月时合并源)
   const rows = ref([]); const detailRows = ref([]);
   const cur = () => LINES.find(x => x.key === rp.kind) || LINES[0];
 

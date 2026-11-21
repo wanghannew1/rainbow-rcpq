@@ -18,7 +18,7 @@
       const api = window.WB.api;
       const tab = ref("hd");
       const rp = reactive({ aae001: "2026", aaa030: null, aaa020: null, busy: false,
-                            aae002: "202607", msg: "", heads: [], districts: [] });
+                            aae002: "202607", msg: "", heads: [], districts: [], line: "sb" });
       const rows = ref([]);
 
       // ---- 核对/确认 ----

@@ -3,7 +3,7 @@
    对接 PKG_保险人员增减 停保/变更参保地 + PKG_人才派遣公共.PRC_保险补收基数_个人。
    TC90 在同步集合: 停保/变更对存量行=「退役后启用」语义(变更另发新合同 1e7 段)。 */
 (() => {
-  const { reactive, ref } = Vue;
+  const { reactive, ref, onMounted } = Vue;
   const ZR = "PKG_保险人员增减.";
 
   WB.pages.insure = {
