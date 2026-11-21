@@ -132,7 +132,7 @@ class OracleSyncJob(private val pg: JdbcTemplate) {
 
     /** 死表排除清单(2026-11-21 全源交叉体检: 应用SQL未引用+过程/页面源码无引用+数据陈旧,
      *  工具 work/AppSqlProbe.java + unref/proc_ref 交叉; 含日期戳备份残表正则二次兜底) */
-    val deadTables = setOf( // v6: 并集定版 235 张(三重证据+业务语义深挖+死表全家族)
+    val deadTables = setOf( // v7 定版: 并集 236 张(含 CA05 郑州村组残留)
         "AA05",
         "AA10_XAEG_CONT",
         "AA13",
@@ -143,6 +143,7 @@ class OracleSyncJob(private val pg: JdbcTemplate) {
         "AC07",
         "AT70",
         "AT71",
+        "CA05",
         "CA11",
         "CA111",
         "CA112",
