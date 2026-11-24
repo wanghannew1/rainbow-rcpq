@@ -257,6 +257,9 @@ try:
     st = batch_state2("tc90_bp4", ace4)
     print(f"  新增保险校验后 ace10a={st} 原因={sql(f'SELECT ace10b FROM tc90_bp4 WHERE ace100={ace4} LIMIT 1')}")
     check("新增保险校验过程可执行(appCode=1)", True)
+    pr4 = proc("PKG_派遣批量导入.PRC_新增保险提交", {"ace100": str(ace4), "aae011": "jiaq"})
+    check("新增保险提交过程结构化返回", pr4.get("appCode") in (1, -1) and ("errMsg" in pr4),
+          f"appCode={pr4.get('appCode')} {str(pr4.get('errMsg'))[:60]}")
 except AssertionError as e:
     check("新增保险校验过程可执行(appCode=1)", False, str(e)[:100])
 
@@ -316,6 +319,15 @@ for sp in SPECIALS:
         reason = sql(f"SELECT COALESCE(ace10b, '') FROM {tbl} WHERE ace100={ace_s} LIMIT 1")
         print(f"  {tid}: appCode={pr.get('appCode')} ace10a={st_row} 原因={reason[:60]}")
         check(f"专项 {tid} 校验过程可执行(appCode=1)", pr.get("appCode") == 1)
+        # 提交段(2026-11-24 覆盖补齐): 校验全过(ace10a=3)的批次走提交; 未过批次验结构化拒绝
+        commit_name = {"tc04_bp": "PRC_生育补贴提交", "tc05_bp": "PRC_意外险导入提交",
+                       "tc06_bp": "PRC_特殊情况导入提交", "tc07_bp": "PRC_保险补贴导入提交",
+                       "td04_bp": "PRC_补偿金导入提交"}[tid]
+        pr2 = proc("PKG_派遣批量导入." + commit_name, dict(body))
+        check(f"专项 {tid} 提交过程结构化返回", pr2.get("appCode") in (1, -1)
+              and ("errMsg" in pr2), f"appCode={pr2.get('appCode')} {str(pr2.get('errMsg'))[:60]}")
+        if st_row == "3":
+            check(f"专项 {tid} 提交全过批次 appCode=1", pr2.get("appCode") == 1, str(pr2)[:100])
     except Exception as e:
         check(f"专项 {tid} 全链", False, str(e)[:100])
 
