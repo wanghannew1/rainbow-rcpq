@@ -96,6 +96,8 @@ AA92.hbm String PK、幽灵过程×2、PRC_GET_MONEY 10IN、AA10 7341/AA94 183/A
 
 - `rainbowpq/docs/写入重放战役/58`：真批次端到端 11/11（导入契约交叉验证+终止必填五项+
   状态机勘定）——已吸收进 import-channel §1.1/parity-tdb。
+- `rainbowpq/docs/写入重放战役/64`：待复测 20 页装载批量 20/20（59 标记清零）——
+  "整包编译失败"类页面死亡在装载级全面证伪；tdcbq/tdlu 两处孤儿 store=死引用假阴性。
 - `rainbowpq/docs/写入重放战役/63`：tdbf 六同族弹窗批量 13/13——**随行面定律**
   （saveWithOther 缺随行 store=NPE 500）+交互三分类；tdbf 处理层八弹窗全谱收官。
   已吸收进 00-形状律。
