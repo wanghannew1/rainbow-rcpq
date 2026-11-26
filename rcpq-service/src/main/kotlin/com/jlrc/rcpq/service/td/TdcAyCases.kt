@@ -130,26 +130,36 @@ class TdcAyCases(private val jdbcTemplate: JdbcTemplate) {
                 if (aac008 != null && aac008.contains("51") && rec.abp001 == "在职" && ((num(rec.abp008) ?: BigDecimal.ZERO) > BigDecimal.ZERO))
                     flags = append(flags, "16")
                 // 大额(14): 退缴纳大额 / 退大病差额(源两分支共用 AA94 参数)
+                // [卷66 忠实] 源 TO_NUMBER(ABP007)=0/>0 两分支: ABP007 列空→TO_NUMBER=NULL→两分支
+                // 皆未知不进入——不查 AA94、不可能报"大病险参数设置有误"(空金额列天然惰性, 卷61)。
+                // 曾用 ?:ZERO 把空值当 0 → 分支误激活 → AA94 查参失败误拒行(e2e 实测, 已修)。
                 val daeParam = "SELECT aaa945 FROM aa94 WHERE aaa100=? AND aaa941='11' AND aaa946<=? AND aaa947>=?"
                 if (tc90["atc90pa"] == null) {
-                    val bd = (num(rec.abp007) ?: BigDecimal.ZERO)
-                    val a94 = jdbcTemplate.query(daeParam,
-                        { rs, _ -> rs.getBigDecimal("aaa945") }, aaa020, tc90["aaa601"], tc90["aaa601"]).firstOrNull()
-                        ?: throw AyBreak("大病险参数设置有误|")
-                    if (bd.compareTo(BigDecimal.ZERO) == 0) {
-                        flags = append(flags, "14")
-                        atc93bd_1 = a94
-                        atc93bd_2 = bd
-                    } else if (a94.compareTo(bd) != 0) {
-                        flags = append(flags, "14")
-                        atc93bd_2 = bd - a94
+                    val bd = num(rec.abp007)
+                    if (bd != null) {
+                        val a94 = jdbcTemplate.query(daeParam,
+                            { rs, _ -> rs.getBigDecimal("aaa945") }, aaa020, tc90["aaa601"], tc90["aaa601"]).firstOrNull()
+                            ?: throw AyBreak("大病险参数设置有误|")
+                        if (bd.compareTo(BigDecimal.ZERO) == 0) {
+                            flags = append(flags, "14")
+                            atc93bd_1 = a94
+                            atc93bd_2 = bd
+                        } else if (a94.compareTo(bd) != 0) {
+                            flags = append(flags, "14")
+                            atc93bd_2 = bd - a94
+                        }
                     }
                 }
                 // 失业代缴医疗(17) — 六项和=0 数值等值(compareTo, 铁律3; 和的 scale 随加数漂移)
-                val z = BigDecimal.ZERO
-                val abpSum = (num(rec.abp006) ?: z) + (num(rec.abp007) ?: z) + (num(rec.abp008) ?: z) +
-                    (num(rec.abp009) ?: z) + (num(rec.abp00a) ?: z) + (num(rec.abp00c) ?: z)
-                if (abpSum.compareTo(z) == 0 && (num(rec.abp00b) ?: z) > z) flags = append(flags, "17")
+                // [卷66 忠实] 源六项 TO_NUMBER 求和: 任一列空→和为 NULL→等值未知不旗标(空金额列
+                // 天然惰性, 卷61); 曾用 ?:ZERO 补零 → 空行被误判和=0 而误旗标。
+                val parts17 = listOf(num(rec.abp006), num(rec.abp007), num(rec.abp008),
+                    num(rec.abp009), num(rec.abp00a), num(rec.abp00c))
+                val abpSum = if (parts17.any { it == null }) null
+                             else parts17.reduce { a, b -> a!!.add(b) }
+                val b00b17 = num(rec.abp00b)
+                if (abpSum != null && abpSum.compareTo(BigDecimal.ZERO) == 0 &&
+                    b00b17 != null && b00b17.compareTo(BigDecimal.ZERO) > 0) flags = append(flags, "17")
                 // 是否本月新增: aae001 = atc90pa null ? 行.aae002 : 合同.aaa603
                 val aae001: Any? = if (tc90["atc90pa"] == null) rec.aae002 else tc90["aaa603"]
                 // 行落地(源: ATC9W0=R_TC9W.ATC9W0, TC9W1 匹配块被东软注释→恒 NULL, 忠实)

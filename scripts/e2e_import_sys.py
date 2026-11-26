@@ -454,8 +454,9 @@ check("§11 模板说明落第二 sheet", "填表说明" in tpl11.sheetnames)
 wb11 = openpyxl.Workbook(); w11 = wb11.active
 w11.append(["aab000", "aae003", "aac000", "aac002", "aac003", "abp001", "abp002", "abp003",
             "abp004", "abp005", "abp006", "abp007", "abp008", "abp009", "abp00a", "abp00b", "abp00c"])
+# 差异行大额列空(→NULL 惰性钉, 卷61); 等值行大额显式 '0'(→TO_NUMBER=0 忠实入支, 旗 14+参数 100)
 w11.append(["FIX11A", "", "", ID18B, NAMEB, "", "", "", 6000, "", "", "", "", "", "", "", ""])
-w11.append(["FIX11B", "", "", ID18B, NAMEB, "", "", "", 5000, "", "", "", "", "", "", "", ""])
+w11.append(["FIX11B", "", "", ID18B, NAMEB, "", "", "", 5000, "", "", "0", "", "", "", "", ""])
 buf11 = io.BytesIO(); wb11.save(buf11)
 audit11 = sql("SELECT COALESCE(max(id),0) FROM wb_audit_log")
 up11 = multipart_upload("tc9w_bp04", "市医保回盘夹具.xlsx", buf11.getvalue(),
@@ -476,24 +477,27 @@ check("§11 CE10 批次记录(ace104=2 行数)", sql(
 check("§11 引擎审计留痕(本 run 新增)", int(sql(
     f"SELECT count(*) FROM wb_audit_log WHERE id>{audit11} AND action='import:sys' "
     f"AND detail::text LIKE '%tc9w_bp04%'") or 0) >= 1)
-# 11.6 校验: TC90 匹配+TB93 结算单元+AA94 大额参数+旗标(差异行 11 基数+14 大额; 等值行仅 14)
+# 11.6 校验: TC90 匹配+TB93 结算单元+AA94 大额参数+旗标
+#     (差异行 11 基数, 大额列空=TO_NUMBER NULL 两分支皆未知不进[卷66 忠实]; 等值行真 0 入支仅 14)
 r = proc("PKG_保险人员增减.PRC_市医保异动回盘校验",
          {"aae002": YM11, "aaa030": A030_11, "aaa020": ATCD_11})
 check("§11 校验 appCode=1", r.get("appCode") == 1, str(r)[:120])
 check("§11 校验 rows=2 pass=2 reject=0", str(r.get("rows")) == "2" and str(r.get("pass")) == "2"
       and str(r.get("reject")) == "0", str({k: r.get(k) for k in ("rows", "pass", "reject")}))
-check("§11 差异行: 告警 11,14+合同匹配+TB93 单元", sql(
-    f"SELECT count(*) FROM tc9w_bp04 WHERE baz002={B11} AND aab000='FIX11A' AND aaa90y='11,14' "
+check("§11 差异行: 告警仅 11(空大额列惰性)+合同匹配+TB93 单元", sql(
+    f"SELECT count(*) FROM tc9w_bp04 WHERE baz002={B11} AND aab000='FIX11A' AND aaa90y='11' "
     f"AND atc900={C900B} AND atb931='吉林省虹基酒店管理有限公司'") == "1")
-check("§11 差异行: 基数对 5000→6000+大额参数 100", sql(
+check("§11 差异行: 基数对 5000→6000+大额参数未写(NULL 惰性钉)", sql(
     f"SELECT count(*) FROM tc9w_bp04 WHERE baz002={B11} AND aab000='FIX11A' "
-    f"AND aaa302_1=5000 AND aaa302_2=6000 AND atc93bd_1=100 AND atc93bd_2=0") == "1")
+    f"AND aaa302_1=5000 AND aaa302_2=6000 "
+    f"AND atc93bd_1 IS NULL AND atc93bd_2 IS NULL") == "1")
 check("§11 差异行: 原因回写含申报基数", sql(
     f"SELECT count(*) FROM tc9w_bp04 WHERE baz002={B11} AND aab000='FIX11A' "
     f"AND ace10b LIKE '%申报基数%'") == "1")
-check("§11 等值行: 无基数告警无原因回写(compareTo 数值语义钉)", sql(
+check("§11 等值行: 仅大额 14(真 0 入支)+参数 100+无基数告警无原因回写", sql(
     f"SELECT count(*) FROM tc9w_bp04 WHERE baz002={B11} AND aab000='FIX11B' "
-    f"AND aaa90y='14' AND ace10b IS NULL AND aaa302_1 IS NULL") == "1")
+    f"AND aaa90y='14' AND atc93bd_1=100 AND atc93bd_2=0 "
+    f"AND ace10b IS NULL AND aaa302_1 IS NULL") == "1")
 # 11.7 提交: 先快照停保扫尾集(过程忠实行为=全库 aaa604<=月 终止已参保行, 断言后原值回滚)
 _sweep = [s.split("|") for s in sql(
     "SELECT atc900||'|'||COALESCE(aaa604::text,'~')||'|'||COALESCE(aaa609::text,'~')||'|'||"
