@@ -1,7 +1,7 @@
 # rainbow-rcpq 项目须知（新会话必读）
 
 > 跨仓协作：与 rainbowpq（只读参照仓）的一切任务往来走 `/home/ubuntu/github/rewrite-bridge/`，
-> **开工前先读其 `协议.md`**（待办/认领中/已办/回执 状态机——每轮开工先扫 `待办/`）。
+> **开工前先读其 `协议.md`**（todo/claimed/done + receipts 状态机——**认领=移动到 claimed/ 加会话标识**，每轮开工先扫 `todo/`）。
 
 跨语言重写项目：旧东软 Lemis 派遣系统(rainbowpq, 本目录的只读参照) → 彩虹人才管理系统
 (Kotlin + Spring Boot 3 + PostgreSQL 16, 本仓库)。**后端已收官**(2026-11-10)：9/9 波次全移植、
