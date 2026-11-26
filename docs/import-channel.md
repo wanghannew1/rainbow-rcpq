@@ -37,6 +37,22 @@ Excel 文件 ──POST /import/sys/{importId}──► 通用导入引擎(SysIm
 7. 留痕: 成功/失败均写 wb_audit_log(`action=import:sys`, detail 含文件名/批次/行数/超长/跳过);
    模板下载写 `action=import:template`(铁律 8)。
 
+## 1.1 旧引擎 E2E 交叉验证(东软战役 58 卷, 2026-11-26)
+
+旧侧以真批次端到端 11/11 实弹复核了本通道所对照的旧引擎契约——逐条与本节规则互证一致:
+`data_form` 0 基列号✓ / `parameters` 同名键后写覆盖✓ / 超长仍入库+errors✓ / 头行数
+data_from✓。三条新增旧侧事实(重写保真参考):
+
+- **hbm 属性名陷阱**: 旧 SYS_IMPORT 表的 `DATA_FROM` 列在 hbm 里映射的属性名是
+  `startingRow`(头行数), `MIN_AVAI_CELL`↔minAvaiCell——读列不受影响, 直拷属性名会踩雷。
+- **终止导入必填五项**(tc90_impdel 校验过程, 缺一即 ace10a=2+逐项中文回写 ace10b):
+  aae003 资料提交年月(yyyymm) / atc90k 终止原因(AA10 码, 09=职工个人原因) /
+  atc90l 失业金(0/1) / atc90av 工资结束年月(yyyymm) / atc90n 经济赔偿(0/1);
+  报减年月格式/时限校验仅当险种旗标(aaa401/402/404/407='1')或 AAE00P IN(1,5) 时生效。
+- **提交即生效**: 旧提交过程直接 `TC90.ATB90R 3→5`(终止生效终态, 非字面"提交审核")+
+  `TB91(ATB911='23',ATB912='3',ATB91Z=合同)` 审核轨迹+BAE 系审计列; tdbd 批量审核按钮
+  (PRC_员工终止审核_批量)实为确认/补记审核人, 不翻状态。与 change 终止区的实现选择一致。
+
 ## 2. 模板生成(GET /import/sys/{importId}/template)
 
 旧系统下发人工维护的静态 .xls(FileDownLoadServlet), 新库 template_url 全空 →

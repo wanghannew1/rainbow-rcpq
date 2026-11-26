@@ -7,6 +7,14 @@
 > 全局：东软=经典左侧菜单树（166 项 UP_LEMIS_MENU）+dojo/unieap 桌面；新系统=6 组 14 项侧边栏（见
 > ui-reference §0）+Vue3/ElementPlus。
 
+## 0. 静态资源 parity 铁律（东软战役 59 卷, 2026-11-26）
+
+旧 webapp 的**顶层 `pages/`（3031 文件, =lemis/pages 逐字节副本）与 `report/`（568,
+encode.js+.rdx 模板）是运行时必需**——页面 JS 弹窗 url 直写 `/pages/...`、common.js:3022
+引用 `/report/encode.js`、报表引擎读 `/report/**.rdx`。卷57 纯源码部署曾因缺这两棵树导致
+**8091 全系统弹窗 404+报表资源 404**（回归盲区: 套件只打 DC 通道不加载弹窗 JSP）。
+重写含义: 打包必须覆盖这两类静态资源或统一改写 url 生成；对照不计"目录重复"为冗余。
+
 ## 1. tdba 新增员工信息申请 ↔ hire 新签导入（?tab=hire）
 
 | 东软按键 [实测] | 新系统按键 [渲染态] | 对照 |
