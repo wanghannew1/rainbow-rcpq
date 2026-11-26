@@ -2,7 +2,7 @@
 
 > 生成 2026-11-24。旧侧真值=备份库 user_source/user_views/user_sequences/user_tables 探针(scripts/db/work/LegacyInventory.java → legacy_*.tsv)+webapp 源码 grep；新侧真值=运行注册面(/proc)+interactions.json+PG 实况。分区引用既有的 entity-table-map.md / wxyj-frontend-parity.md / business-process.md §四，不重复。
 
-**对照文档族**：本账（机读总账：过程/交互/表/视图/序列/忠实标注）· `parity-tdb.md`（员工管理）· `parity-xaaz.md`（字典/单位/人员）· `parity-tdp.md`（导入）· `parity-tdd.md`（工资）· `wxyj-frontend-parity.md`（五险，样板）；流程= business-process.md §四；通道缺口= rewrite-spec/README.md。
+**对照文档族**：本账（机读总账：过程/交互/表/视图/序列/忠实标注）· `parity-tdb.md`（员工管理）· `parity-xaaz.md`（字典/单位/人员）· `parity-tdp.md`（导入）· `parity-tdd.md`（工资）· `parity-roles.md`（角色业务链，29 角色权限模型）· `parity-ui.md`（界面对照）· `wxyj-frontend-parity.md`（五险，样板）；流程= business-process.md §四；通道缺口= rewrite-spec/README.md。
 
 ## 1. 存储过程对照（旧 525 过程 ↔ 新注册 110）
 

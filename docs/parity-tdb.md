@@ -29,7 +29,7 @@
 | 1 | tdba 新增员工信息申请 | 7 | **hire 新签导入** | 改道：暂存三 store 线(TC90+TB91+TC9E)→导入线(TC90_BP→校验→提交→TB91)；单人=导入线单行 |
 | 2 | tdbb 合同终止或解除申请 | 6 | **change 合同终止区** | 改道：页面双键(清单后终止/终止申请)→批次通道 PRC_员工终止导入(TB911=23)；终止原因固定 09=简化(差异④) |
 | 3 | tdbc 员工信息变更申请 | 6 | **后端就绪前端未接** | doBg/doCbSh/TdbcChangeCases 已注册(InteractionGatewayController:408)与冒烟实测，无工作台页面 |
-| 5 | tdbe 调转二级单位/部门申请 | 1 | **后端就绪前端未接** | TdbeTdblCases.transferApply 实测(5e)；旧 PL/SQL 直生效+多选分隔符 bug 只能单选——新为 TB91 审核制 |
+| 5 | tdbe 调转二级单位/部门申请 | 1 | **后端就绪前端未接** | TdbeTdblCases.transferApply 实测(5e)；旧 PL/SQL 直生效+多选分隔符 bug 只能单选——新为 TB91 审核制；**东软 tdbe 页死因 2026-11-25 定性升级=DS 坏引用层（包修复不救活）**，二阶段建页时以 tdbl 同构实现为准 |
 | 4 | tdbd 员工信息审核 | 12 | **audit 新签审核台（部分）** | '20' 通过=doXinqCommit；批量打回=缺(通道缺口①)；撤销合同终止=后端 doTerminateCancle 就绪前端未接；'22'/'24' 不可达=忠实同构(旧硬编码过滤) |
 | 12 | tdbl 员工变更结算单元调转 | 0 | **后端就绪前端未接** | doJsdy/archiveForTransfer 实测(5e/5f)；穿梭框 UI 未建 |
 | 16 | tdbp 合同导入&信息更新（最常用） | 5 | **imports 四页签 + hire** | 新签✓54列/未解除更新✓15列(无审核直达=忠实)/续签✓9列/新增保险✓13列；**解除导入(imp_tab3)→改道 change 终止区**；模板下载=活键改进(配置反向生成)；tab2 信息更新死 Tab=忠实不移植 |
