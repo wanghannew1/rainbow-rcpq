@@ -96,6 +96,9 @@ AA92.hbm String PK、幽灵过程×2、PRC_GET_MONEY 10IN、AA10 7341/AA94 183/A
 
 - `rainbowpq/docs/写入重放战役/58`：真批次端到端 11/11（导入契约交叉验证+终止必填五项+
   状态机勘定）——已吸收进 import-channel §1.1/parity-tdb。
+- `rainbowpq/docs/写入重放战役/63`：tdbf 六同族弹窗批量 13/13——**随行面定律**
+  （saveWithOther 缺随行 store=NPE 500）+交互三分类；tdbf 处理层八弹窗全谱收官。
+  已吸收进 00-形状律。
 - `rainbowpq/docs/写入重放战役/62`：tdbf bgcl 变更处理 6/6（取消=双删不改员工/
   再次提交=_t 整数3 新律）+ 静态资源探活入回归套件（卷59 缺口闭环）——已吸收进
   00-形状律 1.2 补充。
