@@ -50,9 +50,11 @@ fuser -k 8080/tcp; nohup /usr/lib/jvm/java-21-openjdk-amd64/bin/java \
 - POST /import/tddc、/import/sys/{importId} — Excel 导入
 - GET  /proc、/interaction/registry — 清单
 - POST /sync/run、GET /sync/status|tables — Oracle→PG 每日同步（并行运行期，2026-11-12）：
-  15 表集合见 OracleSyncJob.specs；**同步表=旧库原始表，PG 侧只读不改造**（写在两次同步
-  之间会被覆盖）；PG 序列已抬段 1e7 防两库撞号（scripts/db/seq_offset.sql，PG 新业务键
-  从 1e7 起）。**生产发起=外挂进程**（与业务 JVM 隔离）：
+  **全量自动发现 ~172 表**（sync_daily.sh 无参；OracleSyncJob 静态 specs=21 主要表子集；
+  2026-11-26 勘正：含全部 bp 批次表族，"TC9W_BP 系列不在同步"旧口径作废）；**同步表=旧库
+  原始表，PG 侧只读不改造**（写在两次同步之间会被覆盖）；PG 序列已抬段防两库撞号
+  （scripts/db/seq_offset.sql，新业务键 1e7 段起、共享发号器按 Oracle 键域外推如
+  seq_sys_baz002=5e7）。**生产发起=外挂进程**（与业务 JVM 隔离）：
   `scripts/sync_daily.sh [表名...]`（crontab 01:30，退出码接告警；引擎=rcpq-web-sync.jar
   SyncMainKt）；进程内 /sync/run 仅作人工补跑；退役=摘 crontab
 

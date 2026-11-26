@@ -60,3 +60,21 @@ SELECT setval('seq_td04_id', GREATEST((SELECT COALESCE(max(id),0)::bigint+1 FROM
 SELECT setval('seq_tb97_bp_id',   GREATEST((SELECT COALESCE(max(id),0)::bigint+1 FROM tb97_bp),  10000001));
 SELECT setval('seq_tb97_bp01_id', GREATEST((SELECT COALESCE(max(id),0)::bigint+1 FROM tb97_bp01), 10000001));
 SELECT setval('seq_tb97_bp02_id', GREATEST((SELECT COALESCE(max(id),0)::bigint+1 FROM tb97_bp02), 10000001));
+-- 2026-11-26 §5.1 tc9w_bp04 市医保回盘线接入(/import/sys tc9w_bp04 统一引擎 + /wb/hz/import-bp
+-- 定制通道, 两通道共用同一对序列, 都是 nextval)。两序列停在 Oracle 同步行段内:
+--   seq_tc9w_bp04_id=965239 < 表内 max(id) 971840, seq_sys_baz002=9761839 < tc9w 族 baz002
+--   全局 max 9824802(tc9w; tc9w_bp04 自身 9818010/tc9w_bp 9815785/tc9u 9815215/tc9w2 9804766),
+--   首传即主键/批次键冲突(2026-11-26 e2e 实证 duplicate key pk_tc9w_bp04)。
+-- 同步归属勘正(2026-11-26, work/sync.log 实证 TC9W_BP04 read=523368 upsert=523368): 每晚同步
+-- 为全量自动发现 ~172 表(sync_daily.sh 无参模式), 含全部 bp 批次表族——OracleSyncJob 头注释
+-- "TC9W_BP 系列不在同步集合"过时, GET /sync/tables 的 21 表仅是静态 specs 子集。TC9W_BP04
+-- 202611 域的 6605 行即 Oracle 生产中月状态(ace10a='3')经同步进来, 零消耗 PG 序列——
+-- 同步表抬段铁律(先查 Oracle 键域)适用:
+--   id 序列: Oracle 本表键域 ~97 万, 月增 ~7 千(月度回盘批量) → 1e7 地板余量百月级, 沿用 1e7;
+--   baz002 序列: 多表共享发号器, Oracle SYS_BAZ002 现 ~985 万且距 1e7 仅 ~18 万(月增数万,
+--   数月即到) → 按 tb91 先例(Oracle 27M→5e7)抬 5e7 不相交段。
+-- 形态=不回落式抬段(GREATEST 含序列现值, 幂等重跑不倒退)。
+SELECT setval('seq_tc9w_bp04_id', GREATEST((SELECT last_value FROM seq_tc9w_bp04_id),
+    (SELECT COALESCE(max(id),0)::bigint+1 FROM tc9w_bp04), 10000001));
+SELECT setval('seq_sys_baz002', GREATEST((SELECT last_value FROM seq_sys_baz002),
+    (SELECT COALESCE(max(baz002),0)::bigint+1 FROM tc9w), 50000001));

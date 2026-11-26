@@ -110,17 +110,21 @@ class TdcAyCases(private val jdbcTemplate: JdbcTemplate) {
                         "SELECT atb931 FROM tb93 WHERE atb930=?",
                         { rs, _ -> rs.getString("atb931") }, atb930).firstOrNull()
                 } ?: throw AyBreak("匹配结算单元信息出错|")
-                // 基数不符(11)
+                // 基数不符(11) — 源 L4503 IF R_TC90.AAA302 <> TO_NUMBER(REC.ABP004): PL/SQL 数值比较,
+                // 任一侧 NULL=未知不旗标, 等值不看 scale(BigDecimal.compareTo, 铁律3; equals 曾把
+                // PG numeric 存量 5000.00 与回盘 "5000"/"5000.0" 误标不符)
                 val applyBase = num(rec.abp004)
-                if (tc90["aaa302"] != applyBase) {
+                val tc90Base = tc90["aaa302"] as BigDecimal?
+                if (tc90Base != null && applyBase != null && tc90Base.compareTo(applyBase) != 0) {
                     flags = append(flags, "11")
-                    aaa302_1 = tc90["aaa302"] as BigDecimal?
+                    aaa302_1 = tc90Base
                     aaa302_2 = applyBase
                     msg += "【申报基数：${aaa302_1}；实际缴费基数：${aaa302_2}】"
                     // 源在此覆盖 aae013(异议原因), 循环末写入
                 }
-                // 灵活就业(12)
-                if (rec.abp001 == "在职" && num(rec.abp008) == BigDecimal.ZERO) flags = append(flags, "12")
+                // 灵活就业(12) — TO_NUMBER(ABP008)=0 数值等值(compareTo, 铁律3; "0.0" 曾漏旗标)
+                if (rec.abp001 == "在职" && num(rec.abp008)?.compareTo(BigDecimal.ZERO) == 0)
+                    flags = append(flags, "12")
                 // 退出灵活就业(16)
                 val aac008 = tc90["aac008"] as String?
                 if (aac008 != null && aac008.contains("51") && rec.abp001 == "在职" && ((num(rec.abp008) ?: BigDecimal.ZERO) > BigDecimal.ZERO))
@@ -132,20 +136,20 @@ class TdcAyCases(private val jdbcTemplate: JdbcTemplate) {
                     val a94 = jdbcTemplate.query(daeParam,
                         { rs, _ -> rs.getBigDecimal("aaa945") }, aaa020, tc90["aaa601"], tc90["aaa601"]).firstOrNull()
                         ?: throw AyBreak("大病险参数设置有误|")
-                    if (bd == BigDecimal.ZERO) {
+                    if (bd.compareTo(BigDecimal.ZERO) == 0) {
                         flags = append(flags, "14")
                         atc93bd_1 = a94
                         atc93bd_2 = bd
-                    } else if (a94 != bd) {
+                    } else if (a94.compareTo(bd) != 0) {
                         flags = append(flags, "14")
                         atc93bd_2 = bd - a94
                     }
                 }
-                // 失业代缴医疗(17)
+                // 失业代缴医疗(17) — 六项和=0 数值等值(compareTo, 铁律3; 和的 scale 随加数漂移)
                 val z = BigDecimal.ZERO
-                if ((num(rec.abp006) ?: z) + (num(rec.abp007) ?: z) + (num(rec.abp008) ?: z) +
-                    (num(rec.abp009) ?: z) + (num(rec.abp00a) ?: z) + (num(rec.abp00c) ?: z) == z &&
-                    (num(rec.abp00b) ?: z) > z) flags = append(flags, "17")
+                val abpSum = (num(rec.abp006) ?: z) + (num(rec.abp007) ?: z) + (num(rec.abp008) ?: z) +
+                    (num(rec.abp009) ?: z) + (num(rec.abp00a) ?: z) + (num(rec.abp00c) ?: z)
+                if (abpSum.compareTo(z) == 0 && (num(rec.abp00b) ?: z) > z) flags = append(flags, "17")
                 // 是否本月新增: aae001 = atc90pa null ? 行.aae002 : 合同.aaa603
                 val aae001: Any? = if (tc90["atc90pa"] == null) rec.aae002 else tc90["aaa603"]
                 // 行落地(源: ATC9W0=R_TC9W.ATC9W0, TC9W1 匹配块被东软注释→恒 NULL, 忠实)

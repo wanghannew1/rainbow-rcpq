@@ -2573,7 +2573,9 @@ class TdbpImportCases(
             try {
                 if (str(tc93["atc937"]) == "1") {
                     val aa = num(rec["atc93aa"]) ?: BigDecimal.ZERO
-                    if (minWage > BigDecimal.ZERO && (num(tc93["atc93l"]) ?: BigDecimal.ZERO) == BigDecimal.ZERO &&
+                    // atc93l=0 数值等值(compareTo, 铁律3; PG numeric 存量 "0.00" equals 曾漏标守卫)
+                    if (minWage > BigDecimal.ZERO &&
+                        (num(tc93["atc93l"]) ?: BigDecimal.ZERO).compareTo(BigDecimal.ZERO) == 0 &&
                         aa < minWage) throw RuleException()
                 }
                 salaryComputeSh(atc930, aae011, aae017, aae019, aae020, aae022)

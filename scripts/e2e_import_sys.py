@@ -411,6 +411,120 @@ check("§10 /wb/yue/tj0c2 读面返回明细", isinstance(rows06, list) and len(
       f"{len(rows06)} 行")
 print(f"  TJ06 明细: {len(rows06)} 行")
 
+# 11) tc9w_bp04 市医保回盘线(2026-11-26 §5.1 旗标闭环): 统一引擎→暂存→TdcAyCases 校验→提交
+#     卷61 端到端同构黄金夹具: 隔离月 209901 + 克隆 TC90 医保合同(源=活体合同只读) + 最小 17 列
+#     两行(差异基数 6000→告警'11'+AA97_BG; 等值基数 5000→无基数告警, 钉 compareTo 数值语义)。
+#     链路: /import/sys/tc9w_bp04(data_from=1, 无 ace100, 批次键 BAZ002 上传级)→校验(TC90 匹配
+#     AAA402/AAE00P/属地/证件 + TB93 结算单元 + AA94 大额参数 + 九类旗标)→提交(TC90 落账 +
+#     AA97_BG 台账 + 全库停保扫尾)。提交内置停保扫尾(aaa604<=月), 先快照扫尾集、断言后原值
+#     回滚——本节只留隔离月工件, 真实域零残留。
+print("\n=== 11. tc9w_bp04(市医保回盘): 克隆合同→统一引擎→校验→提交 ===")
+YM11, A030_11, ATCD_11 = "209901", "1", "220100000000"
+# 11.0 序列自愈抬段(scripts/db/seq_offset.sql 2026-11-26 块同款不回落式——含序列现值,
+#      幂等重跑不倒退; tc9w_bp04 在同步集合(~172 表全量自动发现), 1e7/5e7 地板经 Oracle 键域核对)
+sql("SELECT setval('seq_tc9w_bp04_id', GREATEST((SELECT last_value FROM seq_tc9w_bp04_id), (SELECT COALESCE(max(id),0)::bigint+1 FROM tc9w_bp04), 10000001))")
+sql("SELECT setval('seq_sys_baz002', GREATEST((SELECT last_value FROM seq_sys_baz002), (SELECT COALESCE(max(baz002),0)::bigint+1 FROM tc9w), 50000001))")
+# 11.1 清场: 隔离月 209901 暂存行=纯本节工件(Oracle 同步域永不产生该月行), 物理删保重跑断言精确
+sql("DELETE FROM tc9w_bp04 WHERE aae002=209901")
+# 11.2 克隆 TC90 医保合同(源只读; 合成证号池避让; tc90 仅 PK atc900 无 UK, 克隆行无害滞留)
+_nB = 500 + _seq
+ID18B = gen_id(_nB)
+while sql(f"SELECT COUNT(*) FROM tc90 WHERE aac002='{ID18B}'") not in ("0", ""):
+    _nB += 1
+    ID18B = gen_id(_nB)
+NAMEB = "回盘验证员"
+SRC900 = sql("SELECT COALESCE(max(atc900),0) FROM tc90 WHERE aaa402='1' AND aae00p IN ('1','5','7') "
+             "AND aaa110='220100000000' AND atb930=40701 AND aab001=2961 "
+             "AND atc90pa IS NULL AND COALESCE(atb90r,'')<>'5'")
+check("§11 克隆源活体医保合同在册(新参保+非终止)", int(SRC900 or 0) > 0, f"src={SRC900}")
+_cols11 = sql("""SELECT string_agg(column_name, ',' ORDER BY ordinal_position) FROM information_schema.columns
+  WHERE table_schema='public' AND table_name='tc90'
+  AND column_name NOT IN ('atc900','aac002','aac003','aaa302','aaa306')""")
+sql(f"""INSERT INTO tc90 (atc900, aac002, aac003, aaa302, aaa306, {_cols11})
+  SELECT nextval('seq_tc90_atc900'), '{ID18B}', '{NAMEB}', 5000, 5000, {_cols11}
+  FROM tc90 WHERE atc900={SRC900}""")
+C900B = sql(f"SELECT COALESCE(max(atc900),0) FROM tc90 WHERE aac002='{ID18B}'")
+check("§11 克隆医保合同就绪(基数 5000 新参保)", int(C900B or 0) > int(SRC900 or 0), f"clone={C900B}")
+# 11.3 模板下载(data_from=1 → 第 0 行即列头 17 列, 说明落第二 sheet)
+tpl11 = openpyxl.load_workbook(io.BytesIO(get_template("tc9w_bp04")))
+check("§11 模板列头 17 列(第 0 行)", sum(1 for c in range(1, 18)
+      if tpl11["Sheet0"].cell(row=1, column=c).value) == 17)
+check("§11 模板说明落第二 sheet", "填表说明" in tpl11.sheetnames)
+# 11.4 最小夹具两行(17 列 data_form 序; 差异 6000/等值 5000; 其余格空=最小 4 格)
+wb11 = openpyxl.Workbook(); w11 = wb11.active
+w11.append(["aab000", "aae003", "aac000", "aac002", "aac003", "abp001", "abp002", "abp003",
+            "abp004", "abp005", "abp006", "abp007", "abp008", "abp009", "abp00a", "abp00b", "abp00c"])
+w11.append(["FIX11A", "", "", ID18B, NAMEB, "", "", "", 6000, "", "", "", "", "", "", "", ""])
+w11.append(["FIX11B", "", "", ID18B, NAMEB, "", "", "", 5000, "", "", "", "", "", "", "", ""])
+buf11 = io.BytesIO(); wb11.save(buf11)
+audit11 = sql("SELECT COALESCE(max(id),0) FROM wb_audit_log")
+up11 = multipart_upload("tc9w_bp04", "市医保回盘夹具.xlsx", buf11.getvalue(),
+                        {"aae002": YM11, "aaa030": A030_11, "aaa031": "市医保",
+                         "aaa020": ATCD_11, "aaa021": "吉林省长春市"})
+check("§11 引擎上传 succeed=true", up11.get("succeed") is True, str(up11)[:120])
+B11, ACE11 = up11.get("baz002"), (up11.get("ce10") or [0])[0]
+# 11.5 暂存面: id(seq 1e7 抬段, 首传撞 pk 回归钉)+baz002 上传级整批一致+parameters 五键盖章
+check("§11 暂存 2 行且整批共享上传级 baz002", sql(
+    f"SELECT count(*)||'/'||count(DISTINCT baz002) FROM tc9w_bp04 WHERE baz002={B11}") == "2/1")
+check("§11 id 来自 seq_tc9w_bp04_id 落 1e7 抬段", sql(
+    f"SELECT count(*) FROM tc9w_bp04 WHERE baz002={B11} AND id>=10000001") == "2")
+check("§11 parameters 五键盖章(aae002/aaa030/aaa031/aaa020/aaa021)", sql(
+    f"SELECT count(*) FROM tc9w_bp04 WHERE baz002={B11} AND aae002=209901 AND aaa030=1 "
+    f"AND aaa031='市医保' AND aaa020='{ATCD_11}' AND aaa021='吉林省长春市'") == "2")
+check("§11 CE10 批次记录(ace104=2 行数)", sql(
+    f"SELECT COALESCE(ace104,0) FROM ce10 WHERE ace100={ACE11}") == "2")
+check("§11 引擎审计留痕(本 run 新增)", int(sql(
+    f"SELECT count(*) FROM wb_audit_log WHERE id>{audit11} AND action='import:sys' "
+    f"AND detail::text LIKE '%tc9w_bp04%'") or 0) >= 1)
+# 11.6 校验: TC90 匹配+TB93 结算单元+AA94 大额参数+旗标(差异行 11 基数+14 大额; 等值行仅 14)
+r = proc("PKG_保险人员增减.PRC_市医保异动回盘校验",
+         {"aae002": YM11, "aaa030": A030_11, "aaa020": ATCD_11})
+check("§11 校验 appCode=1", r.get("appCode") == 1, str(r)[:120])
+check("§11 校验 rows=2 pass=2 reject=0", str(r.get("rows")) == "2" and str(r.get("pass")) == "2"
+      and str(r.get("reject")) == "0", str({k: r.get(k) for k in ("rows", "pass", "reject")}))
+check("§11 差异行: 告警 11,14+合同匹配+TB93 单元", sql(
+    f"SELECT count(*) FROM tc9w_bp04 WHERE baz002={B11} AND aab000='FIX11A' AND aaa90y='11,14' "
+    f"AND atc900={C900B} AND atb931='吉林省虹基酒店管理有限公司'") == "1")
+check("§11 差异行: 基数对 5000→6000+大额参数 100", sql(
+    f"SELECT count(*) FROM tc9w_bp04 WHERE baz002={B11} AND aab000='FIX11A' "
+    f"AND aaa302_1=5000 AND aaa302_2=6000 AND atc93bd_1=100 AND atc93bd_2=0") == "1")
+check("§11 差异行: 原因回写含申报基数", sql(
+    f"SELECT count(*) FROM tc9w_bp04 WHERE baz002={B11} AND aab000='FIX11A' "
+    f"AND ace10b LIKE '%申报基数%'") == "1")
+check("§11 等值行: 无基数告警无原因回写(compareTo 数值语义钉)", sql(
+    f"SELECT count(*) FROM tc9w_bp04 WHERE baz002={B11} AND aab000='FIX11B' "
+    f"AND aaa90y='14' AND ace10b IS NULL AND aaa302_1 IS NULL") == "1")
+# 11.7 提交: 先快照停保扫尾集(过程忠实行为=全库 aaa604<=月 终止已参保行, 断言后原值回滚)
+_sweep = [s.split("|") for s in sql(
+    "SELECT atc900||'|'||COALESCE(aaa604::text,'~')||'|'||COALESCE(aaa609::text,'~')||'|'||"
+    "COALESCE(atc90pa,'~') FROM tc90 a, ab01 b WHERE a.aab001=b.aab001 AND b.aaa030=1 "
+    "AND a.aaa110='220100000000' AND a.aaa402='1' AND a.atc90pa='0' AND a.atb90r='5' "
+    "AND a.aaa604<=209901 AND NOT EXISTS (SELECT 1 FROM tc10 WHERE atc107='1' AND atc900=a.atc900)"
+).splitlines() if s]
+r = proc("PKG_保险人员增减.PRC_市医保异动回盘提交",
+         {"aae002": YM11, "aaa030": A030_11, "aaa020": ATCD_11, "aae011": "jiaq"})
+check("§11 提交 appCode=1", r.get("appCode") == 1, str(r)[:120])
+check("§11 提交 applied=2 baseAdjusted=1 stopApplied=扫尾集", str(r.get("applied")) == "2"
+      and str(r.get("baseAdjusted")) == "1" and str(r.get("stopApplied")) == str(len(_sweep)),
+      str({k: r.get(k) for k in ("applied", "baseAdjusted", "stopApplied")}) + f" sweep={len(_sweep)}")
+# 11.8 落账面: 克隆合同基数 5000→6000+新参保年月置位+AA97_BG 台账+暂存回写 '1'+经办盖章
+check("§11 克隆合同落账(基数 6000/参保年月 209901/atc90pa='0')", sql(
+    f"SELECT count(*) FROM tc90 WHERE atc900={C900B} AND aaa302=6000 AND aaa306=6000 "
+    f"AND aaa603=209901 AND aaa608=209901 AND atc90pa='0'") == "1")
+check("§11 AA97_BG 台账(基数不符 5000→6000)", sql(
+    f"SELECT count(*) FROM aa97_bg WHERE atc900={C900B} AND tname='TC9W_BP04' "
+    f"AND aaa300_bgq=5000 AND aaa300_bgh=6000") == "1")
+check("§11 暂存回写 ace10a='1'+经办盖章", sql(
+    f"SELECT count(*) FROM tc9w_bp04 WHERE baz002={B11} AND ace10a='1' AND aae211='jiaq'") == "2")
+# 11.9 停保扫尾集原值回滚(隔离月不留真实域变异; 快照=aaa604/aaa609/atc90pa 三列)
+_ok11 = 0
+for _s900, _s604, _s609, _spa in _sweep:
+    _pa_lit = "NULL" if _spa == "~" else "'" + _spa + "'"
+    sql(f"UPDATE tc90 SET aaa604={'NULL' if _s604 == '~' else _s604}, "
+        f"aaa609={'NULL' if _s609 == '~' else _s609}, atc90pa={_pa_lit} WHERE atc900={_s900}")
+    _ok11 += 1
+check("§11 停保扫尾集已回滚(真实域零残留)", _ok11 == len(_sweep), f"restored={_ok11}")
+
 passed = sum(1 for _, ok in results if ok)
 print(f"\n=== 结果: {passed}/{len(results)} PASS ===")
 raise SystemExit(0 if passed == len(results) else 1)

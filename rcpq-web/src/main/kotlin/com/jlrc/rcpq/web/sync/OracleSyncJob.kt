@@ -14,7 +14,11 @@ import java.util.concurrent.atomic.AtomicBoolean
  *
  * 背景: 新旧系统并行一段时间, 新系统每日从 Oracle 旧库同步数据。同步表=旧库原始表,
  * PG 侧对这些表**只读不改造**——任何写在两次同步之间都会被下一次同步覆盖
- * (新系统自己的业务表如 TC9W/TC9W1/TC9W_BP 系列/wb_audit_log 不在同步集合, 不受影响)。
+ * (同步集合=全量自动发现 ~172 表, sync_daily.sh 无参模式: Oracle 有数据+PG 有同主键+非死表
+ * 即纳入, **含 TC9W_BP 系列/TC90_BP 族等全部 bp 批次表**——sync.log read=523368 实证;
+ * 本文件静态 specs 仅为主要表子集, GET /sync/tables 同; wb_audit_log 等纯新系统表不在其中)。
+ * 撞号后果实证(2026-11-26): 同步行零消耗 PG 序列, 段内首传即 pk 冲突(seq_offset.sql
+ * 2026-11-26 块)。
  *
  * 规则(确定性, 可复核):
  *  1) UPSERT by PK: Oracle 有 → PG 覆盖(Oracle 赢); Oracle 无的 PG 行不动(新系统自建行保留);

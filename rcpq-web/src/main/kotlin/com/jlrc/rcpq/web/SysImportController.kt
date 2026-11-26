@@ -46,6 +46,8 @@ class SysImportController(private val jdbcTemplate: JdbcTemplate, private val au
         "tc07_bp" to "seq_tc07_id", "td04_bp" to "seq_td04_id",
         // 三银行到账(2026-11-21, hbm: TB97_BP/BP01/BP02 → SEQ_TB97_BP*_ID)
         "tb97_bp" to "seq_tb97_bp_id", "tb97_bp01" to "seq_tb97_bp01_id", "tb97_bp02" to "seq_tb97_bp02_id",
+        // 市医保异动回盘(2026-11-26, 卷61 端到端实证; TC9W_BP04 PK=id, 批次键=BAZ002 无 ace100)
+        "tc9w_bp04" to "seq_tc9w_bp04_id",
     )
 
     @PostMapping("/{importId}")
@@ -126,7 +128,12 @@ class SysImportController(private val jdbcTemplate: JdbcTemplate, private val au
                         mapOf("file" to (file.originalFilename ?: ""), "error" to "未配置目标表ID序列: $table"))
                     return mapOf("succeed" to false, "msg" to "未配置目标表ID序列: $table")
                 }))
-                colNames.add("ace100"); args.add(ace100)
+                // 批次列按表存在性门控(卷61: TC9W_BP04 无 ace100 列, 批次键=BAZ002 **上传级**——
+                // 整批共享 line 86 生成的同一个 baz002, 与响应返回值一致; 既有 bp 族表均有 ace100, 行为不变)
+                when {
+                    cols.containsKey("ace100") -> { colNames.add("ace100"); args.add(ace100) }
+                    cols.containsKey("baz002") -> { colNames.add("baz002"); args.add(baz002) }
+                }
                 for ((form, to, dataType) in mappings) {
                     val idx = form.toIntOrNull() ?: continue
                     // 表里不存在的映射列跳过(information_schema 权威; 该列值不落库, 见响应 skipped)
