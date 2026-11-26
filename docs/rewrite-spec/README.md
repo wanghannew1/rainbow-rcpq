@@ -96,6 +96,8 @@ AA92.hbm String PK、幽灵过程×2、PRC_GET_MONEY 10IN、AA10 7341/AA94 183/A
 
 - `rainbowpq/docs/写入重放战役/58`：真批次端到端 11/11（导入契约交叉验证+终止必填五项+
   状态机勘定）——已吸收进 import-channel §1.1/parity-tdb。
+- `rainbowpq/docs/写入重放战役/61`：tdcay 市医保回盘线端到端 9/9（申报对照已注释/九类
+  告警不拒行/AA97_BG 告警分支）——东软侧"引擎阻断型"待打全部清零，导入四线总账齐。
 - `rainbowpq/docs/写入重放战役/60`：报增/新签线端到端 12/12（AAE00P 防伪特例/AA97
   注释禁用第三例/最小 25 格公式）——TdbpImportCases 移植版忠实性获旧侧终验。
 - `rainbowpq/docs/写入重放战役/59`：过时文档大扫查（9 份加指针）+顶层 pages/report 树
