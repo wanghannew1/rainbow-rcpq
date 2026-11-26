@@ -33,7 +33,7 @@
 | tdda 工资细项维护 | AA90 模板克隆/复制改删（换行式修改） | **TddCases 后端就绪，前端未接** | 8a-lite 实测；换行式修改=rewrite-spec 05（二阶段可简化 UPDATE） |
 | tddf 默认名册切换 | AA81 克隆 | **TddCases 后端就绪，前端未接** | 8a-lite 实测 |
 | tddd TC93 标志回写+TC8Z | — | TddCases 后端 ✓ | 8a-lite 实测 |
-| tddb/tddv/tddx/tddy/tddab/tddae/af/ag | 八子目录 | **待勘** | tddx 属死按钮族（第八例）；其余未逐页勘定 |
+| tddb/tddv/tddx/tddy/tddab/tddae/af/ag | 八子目录 | **待勘** | tddx 属死按钮族（第八例~~已改判 11-26, 死因=列漂移且已修复, 见 parity-tdp 顶部注~~）；其余未逐页勘定 |
 | tdcao 平均工资（派遣工资菜单） | PRC_计算平均工资+按单位 | ❌ 划走未移植 | 工资域波次最后一块；除零防护=二阶段 backlog |
 | tdix 平均工资（按结算单元） | TC93_PJGZ 快照重建（PKG_工资发放.PRC_按单位计算平均工资，body:3-92；读 V_TC93_TC9AA） | ❌ 划走未移植 | 二期 04 卷勘定：**tdix=按单元平均工资快照页**，与按人计算的 tdcao 是两个功能（勿混）；含明细弹窗 |
 | —（近似对应待核） | tddag 险金计算器（派遣工资角色，PKG_费用结算.PRC_险金计算器） | **calc 页**（PKG_人才派遣公共.PRC_计算险金→TC01） | 过程不同故 wxyj parity 按"新独有"口径成立；功能形态有近似对应页 tddag（角色界面清单·派遣工资），过程差异待核 |

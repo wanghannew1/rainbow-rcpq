@@ -126,6 +126,10 @@
 
 ### 1.3 旧有而新未注册（415）——结案/死码/未含, 逐条归属见 module-inventory 波次行
 
+> ⚠ [2026-11-26] 其中"死码"分类里涉及列漂移八包(PKG_IMP/IMP_FZ/派遣批量导入/HM/WY/
+> NEW2/RCFP_TJ/RCPQ_FZ)的条目, 死因已由卷53 补列了结——归属标签待 Phase2 复议,
+> 判读见 module-inventory 第八例改判段。
+
 | 过程 | 旧包(spec行) |
 |---|---|
 | DELETE1.PRINT | DELETE1(5) |
