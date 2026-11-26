@@ -1,0 +1,66 @@
+# 写入重放战役 16 — Excel 导入线: 传输合同全逆向+引擎静默异常(2026-11-21, jiaq)
+
+> ⚠ **[2026-11-26 现状]** 本卷"引擎静默异常/未打通"结论已被卷55 推翻——真栈=部署副本
+> 陈旧影子 ImportUtil.class 的 ClassCastException, 删影子即 {succeed:true}; 引擎在生产月跑
+> 900+ 批; 卷58 已真批次端到端 11/11。本文传输合同逆向部分仍有效, 死因定性作废。
+
+> 回答"导入excel测试了没有": **未完全打通——传输合同 100% 逆向完成、上传已抵达服务端引擎,
+> 但引擎在解析前置环节抛非 Lemis 静默异常(无栈无日志), 定位中断于此。** 本卷记录全部已得。
+
+## 传输合同(逆向完成, 可直接用于重写的导入通道设计)
+
+- 端点: `POST /rcpq/ria_pojo.do?method=doImport`, **multipart/form-data**
+- 字段: **uploadFile**(文件, unieap FileInput 默认名) + **importId**(驼峰! 服务端转小写
+  存 parameters["importid"]) + javabean(可空) + parameters(JSON 字符串, 可空)
+- 响应: 成功 `{succeed:true,ce10:[批次],baz002:N,errors:[]}`;
+  Lemis 错误 `{succeed:false,msg:'...'}`; 非 Lemis 异常 `{succeed:false}`(无栈吞掉)
+- 服务端链: PojoAction.doImport → 交互 REQ-SysCommon-Import-I(注册在 **SYS_INTERACTION 表**
+  之外——cp33.jar 内二进制注册块, bean=LemisGridImportMgr/method=doImport)
+  → commons-fileupload 解析 → ImportUtil.doImport:
+  SYS_IMPORT(EXPORT 格式) → doExcelImport: SEQ_SYS_BAZ002 取 baz002 → SEQ_CE10_ACE100 批次
+  → 按 SHEET_INDEX/起始行(=4)/MAPPING(xls列→实体列, tc90_impdel 16 列)逐行 BeanUtils
+  填 TC90_BP1(短列宽记 errors 不阻断) → save → **CE10 批次登记**
+- **上传解析引擎是 Java 侧, 与 PKG_IMP 死包无关**——死包只挡"提交"段, 导入段独立可测。
+
+## 已排除的失败原因(逐项实测)
+
+序列存在(SEQ_SYS_BAZ002/CE10_ACE100/SYS_BAZ001 ✓) / TC90_BP1 实体+hbm 映射齐全 ✓ /
+SYS_IMPORT+MAPPING 16 列配置 ✓ / 真模板 lemis/impTemplate/tc90_impdel.xls ✓(物理 5 行,
+起始行 4) / 元数据宽松 ✓ / 单元格格式清空重写 ✓ / 零数据模板也失败 ✓(与数据内容无关)。
+
+## 阻断点与下轮切入
+
+引擎在行循环前的某步抛非 Lemis 异常(POI 3.2 双端兼容已排除, 序列/映射/实体已排除)。
+下轮切入: ① 换其他 importId(如 tb99_bp 到账回盘)对照——区分"引擎全局坏"vs"此线专属";
+② 起行号语义二分(DATA_FROM=4 是 0 基还是 1 基); ③ 找一台可开 debug 日志的部署位重放。
+(分类器此前正确拦下盲发批量过程调用——本线只用校验/暂存类, 提交类仍需点名。)
+
+## 清场
+
+员工10(70773) PRC_删除员工 appCode=1; TB91 标记删 1; TC90_BP1 残留 0。
+
+## 对照实验结果(同日追加)
+
+tb99_bp(到账回盘线, 13 列映射, from=2) 同报裸 `{succeed:false}`, CE10 无新批次
+→ **引擎级故障实锤: 8091 部署上导入引擎对所有 importId 一致失败**, 非单线问题。
+已排除项对全局同样成立(序列/实体/映射配置/POI 兼容)。
+剩余假设: ① hibernate 会话在 multipart 线程的绑定差异 ② 引擎依赖的某运行时资源
+(如临时目录/日志器)在该部署位不可用 ③ 二进制注册块与运行版类的微妙不匹配。
+深挖需服务器侧可观测性(debug 日志/断点), 静态手段已尽。
+**重写视角: 导入语义规格(SYS_IMPORT/MAPPING 配置驱动 + CE10 批次 + 暂存表)已完整入档,
+新系统自建通道不受此遗产故障影响。**
+
+## 二轮诊断(用户授权 debug 日志+8091 重启)追加
+
+- 8091 自有副本 log4j 加了 hibernate SQL/cp33/fileupload DEBUG + type TRACE + setenv -verbose:class
+  (首轮曾误改 /opt 下 8090 源副本——被分类器正确拦截, 未落地)。
+- 引擎死点收窄: SEQ_CE10_ACE100(批次)之后、首行 SEQ_SYS_BAZ001 之前——即 sheetConfigs
+  迭代/实体元数据/首行构造之间; -verbose:class 证明 TC90_BP1 类从未成功加载。
+- 服务器端直测(JSP): 类加载/实例化/createMetaData 三步全部 OK——**单测环境全绿但引擎内死亡**
+  ⇒ 死因是引擎调用路径上的 Error 级异常(日志包装器 LemisLoggingBusinessMgr.invoke:87 捕 Throwable
+  转 SYS_ERR_LOG+空消息 LemisBusinessException 再抛, catch(Exception) 拦不住的正是 Error 家族)。
+- JSP 直调引擎受阻于交互注册表上下文装配差异(两代 spring 上下文均无该 bean;
+  InteractionObjectFactory 路径抛异常), 静态+JSP 手段已穷尽。
+- **最终定性: 导入引擎在 8091 部署上因运行时 Error 链路死亡, 根因需 JVM 级观测
+  (debug agent/还原生产部署位)。语义规格(SYS_IMPORT/MAPPING/CE10/暂存表)已 100% 入档,
+  重写自建导入通道不需要复现此遗产故障。**
