@@ -48,6 +48,8 @@ class SysImportController(private val jdbcTemplate: JdbcTemplate, private val au
         "tb97_bp" to "seq_tb97_bp_id", "tb97_bp01" to "seq_tb97_bp01_id", "tb97_bp02" to "seq_tb97_bp02_id",
         // 市医保异动回盘(2026-11-26, 卷61 端到端实证; TC9W_BP04 PK=id, 批次键=BAZ002 无 ace100)
         "tc9w_bp04" to "seq_tc9w_bp04_id",
+        // 税务/个税域三件(桥单 20261127-042 可行性接线; hbm SEQ_TC97_BP_ID/SEQ_TC97_BP_WYH_ID/SEQ_TC95_ID)
+        "tc97_bp" to "seq_tc97_bp_id", "tc97_bp_wyh" to "seq_tc97_bp_wyh_id", "tc95_bp" to "seq_tc95_id",
     )
 
     @PostMapping("/{importId}")
