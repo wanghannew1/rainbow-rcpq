@@ -200,6 +200,8 @@ r = proc("PKG_派遣批量导入.PRC_员工终止导入提交", {"ace100": ace1,
 term = sql(f"SELECT atb90r||'/'||coalesce(atc90i::text,'-')||'/'||coalesce(jynum,'-') FROM tc90 WHERE atc900={atc900}")
 tb9123 = sql(f"SELECT atb911||'/'||coalesce(atb912,'-') FROM tb91 WHERE atb91z={atc900} AND atb911='23' LIMIT 1")
 check("终止生效(atb90r=2+终止日期)", term.startswith("2/2028-12-31"), term)
+# 桥单 025 加固: jynum 仅在终止提交 atb90r='3' 门内赋值——非空即终止实弹指纹(防出生值虚绿, 回执 024)
+check("终止实弹指纹(jynum 非空)", "NULL" not in term and term.count("/") >= 2 and term.split("/")[2] not in ("-", ""), term)
 check("终止审核流水(23)", tb9123.startswith("23"), tb9123)
 
 print("\n" + "=" * 60)
