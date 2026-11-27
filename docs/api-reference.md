@@ -2,7 +2,7 @@
 > 生成时间 2026-11-24，来源：`GET /proc`+`GET /interaction/registry` 运行注册面 + Kotlin 源码静态扫描。
 > 参数清单为 best-effort 抽取（handler 内 `params["…"]`/必填 listOf），**权威以 rcpq-service 源码为准**。
 > 通用契约：`POST` 请求体=JSON 对象（形参名→值），返回 `{appCode:1 成功 / -1 业务拒绝, errMsg, …业务字段}`。
-## 1. POST /proc/{包名.过程名} — 注册 110 过程
+## 1. POST /proc/{包名.过程名} — 注册 111 过程
 
 ### PKG_IMP（3）
 | 过程 | 参数(源码抽取) | 实现 |
@@ -149,6 +149,7 @@
 | PRC_社保未申报 | — | `rcpq-service/src/main/kotlin/com/jlrc/rcpq/service/td/Jishu5WsbCases.kt:184` |
 | PRC_社保缴费基数核对 | aaa020, aaa030, aae001 | `rcpq-service/src/main/kotlin/com/jlrc/rcpq/service/td/Jishu5Cases.kt:383` |
 | PRC_社保缴费基数确认 | — | `rcpq-service/src/main/kotlin/com/jlrc/rcpq/service/td/Jishu5Cases.kt:462` |
+| PRC_员工终止审核_批量 | prm_atb910(主键串), prm_aae011 | `rcpq-service/src/main/kotlin/com/jlrc/rcpq/service/td/TdrcAuditCases.kt:29` |
 
 ## 2. 查询/工作台端点（/wb 等 Controller 面）
 
@@ -263,3 +264,6 @@
 ## 5. 自述端点（运行时可查）
 - `GET /proc` — 过程注册清单（名 单）
 - `GET /interaction/registry` — 交互注册清单
+
+
+> 2026-11-27: +PKG_人才派遣.PRC_员工终止审核_批量(桥单 021 补移植, 源=work/pkg_all/PACKAGE_BODY_PKG_人才派遣.sql:61-170; BC-01 缺口腿关闭)。110→111。
