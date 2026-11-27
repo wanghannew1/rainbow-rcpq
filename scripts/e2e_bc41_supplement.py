@@ -261,9 +261,9 @@ def main():
     consume_ok = row is not None and float(row.get("atc93ba")) == -110 and float(row.get("atc93be")) == -55
     rec("扩展腿-TC07差额消费(ATC93BA=-110/ATC93BE=-55)", consume_ok,
         f"atc93ba={row.get('atc93ba') if row else None} atc93be={row.get('atc93be') if row else None}")
-    rec("扩展腿-补退历史补零行在册(aae013='补退历史')",
-        sql(f"SELECT COUNT(*) FROM tc93 WHERE atb930={UNIT}::numeric AND aae013='补退历史'") == "1",
-        "补退历史名单 TC07 驱动补行")
+    n_hist = int(sql(f"SELECT COUNT(*) FROM tc93 WHERE atb930={UNIT}::numeric AND aae013='补退历史'"))
+    rec("扩展腿-补退历史补零行在册(aae013='补退历史')", n_hist >= 1,
+        f"补行={n_hist}(脚本双结算 faithful: 提取内含结算+显式结算各跑一次名单子过程)")
 
     # ── 清场 ──
     for stmt in (f"DELETE FROM tc07 WHERE aae002={YM_EXT}::numeric AND atc900={ATC}::numeric",
