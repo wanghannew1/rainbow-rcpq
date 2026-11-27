@@ -410,10 +410,10 @@ class TdSettleCalc(
                    WHERE t.aae214='1' AND t.aab001=bb.aab001 AND bb.aaa030=?
                      AND t.aae002 >= ?::numeric AND t.aae002 <= ?::numeric
                      AND t.atc930 <> ? AND t.aac001=?""",
-                atc931.toBigDecimal(), tc90["atc900"], s.str(r["aae002"]),
-                atc931.toBigDecimal(), r["atc930"], s.str(r["atb930"]), s.str(r["aae002"]),
+                atc931.toBigDecimal(), tc90["atc900"], r["aae002"],
+                atc931.toBigDecimal(), r["atc930"], r["atb930"], r["aae002"],
                 rAb01["aaa030"], (s.str(r["aae002"])!!.substring(0, 4) + "01").toBigDecimal(),
-                s.str(r["aae002"]), r["atc930"], tc90["aac001"]).firstOrNull() ?: mapOf()
+                r["aae002"], r["atc930"], tc90["aac001"]).firstOrNull() ?: mapOf()
             vTaxAtc93ab = nz(agg["a"]); vTaxAtc93ad = nz(agg["b"])
             vTaxAtc93r = nz(agg["c"]); vTaxAtc93ar = nz(agg["d"])
             nAtc93ab1 = s.long(agg["e"]) ?: 0L

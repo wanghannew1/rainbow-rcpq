@@ -12,7 +12,8 @@ data class SettleRates(
 )
 
 @Component
-class TdSettleRateCases(private val s: TdSettleSupport) {
+class TdSettleRateCases(private val s: TdSettleSupport,
+                        private val sup: TdSupplementCases) {
 
     /** Oracle TO_CHAR(x) 整数/小数直排(16→'16'); TO_CHAR(x,'0.99')/'0.990' 两位/三位补零 */
     private fun fmt(v: BigDecimal, pat: Int?): String =
@@ -117,48 +118,12 @@ class TdSettleRateCases(private val s: TdSettleSupport) {
     }
 
     /**
-     * PRC_保险补退明细 门控双轨(铁律1 先例; 源 保险补退包 L2906-3086):
-     * DELETE TC07(datasource='30') 段忠实; 五子过程门条件逐字求值——
-     *   社保 atc90p∈('0','1')∧aaa208≥N_BJ_BEGIN; 医保 atc90pa∧aaa608∧省99;
-     *   工伤 atc90pb∧aaa908; 公积金 atc90w∧aaa508; 补差=基数补差历史行存在
-     * 门关(如 BC-09 夹具旗标全'2')→与源一致的零操作; 门开→数据面循环(~4700 行)未移植,
-     * 报错即止不静默(回执注明)。
+     * PRC_保险补退明细 调用面(源 保险补退包 L2906-3086 编排体)。
+     * 036 单门控双轨遗留#1 闭环: 门开路径=真实现, 五子数据面循环见 TdSupplement*。
+     * (桥单 20261127-041; RCPQ_TEST 场包体 VALID 实弹背书)
      */
     fun insuranceDetail(atc900: Long, aae002: String, aae011: String) {
-        try { s.userRow(aae011) } catch (e: Exception) {
-            throw SettleRet(-1, "无法计算补退，原因为经办人信息不正确")
-        }
-        val tc90 = s.single("v_tc90_qpkg", "atc900=?", atc900)
-            ?: throw SettleRet(-1, "无法计算补退，原因为查询合同信息出错")
-        s.jdbc.update(
-            "DELETE FROM tc07 WHERE atc07z='0' AND datasource='30' AND aae002=?::numeric " +
-                "AND atb930=? AND aac001=?",
-            aae002.toBigDecimalOrNull() ?: aae002, tc90["atb930"], tc90["aac001"])
-        // N_BJ_BEGIN = TC07(datasource='30', 非零和) max(aae003)+1, 无行→202212
-        val nBjBegin = s.jdbc.queryForObject(
-            """SELECT CASE WHEN MAX(aae003) IS NULL THEN 202212 ELSE MAX(aae003)::bigint END
-               FROM (SELECT aae003 FROM tc07 WHERE atc07z IN ('0','1','9') AND datasource='30'
-                     AND (COALESCE(bba001,0)+COALESCE(bba003,0)+COALESCE(baa001,0)+COALESCE(baa003,0))
-                         + COALESCE(aaa913,0) <> 0 AND aae002 < ?::numeric AND atc900=?) t""",
-            Long::class.java, aae002.toBigDecimalOrNull() ?: aae002, atc900) ?: 202212L
-        val ym = aae002.toBigDecimalOrNull() ?: BigDecimal.ZERO
-        fun flagGate(flag: String?, stop: Any?, extra: Boolean = true): Boolean =
-            (flag == "0" || flag == "1") && s.nvl(stop).toLong() >= nBjBegin &&
-                nBjBegin <= ym.toLong() && extra
-        val prov110 = s.str(tc90["aaa110"])?.let { it.length >= 4 && it.substring(2, 4) == "99" } ?: false
-        val anyOpen =
-            flagGate(s.str(tc90["atc90p"]), tc90["aaa208"]) ||
-                flagGate(s.str(tc90["atc90pa"]), tc90["aaa608"], prov110) ||
-                flagGate(s.str(tc90["atc90pb"]), tc90["aaa908"]) ||
-                flagGate(s.str(tc90["atc90w"]), tc90["aaa508"]) ||
-                (s.jdbc.queryForObject(
-                    "SELECT COUNT(*) FROM tc07 WHERE atc07z IN ('0','1') " +
-                        "AND atc072 IN ('16','24','25','26') AND atb930=? AND aac001=?",
-                    Int::class.java, tc90["atb930"], tc90["aac001"]) ?: 0) > 0
-        if (anyOpen) {
-            throw SettleRet(-1,
-                "无法计算补退，补退明细五子过程数据面循环未移植(桥单 20261127-034 门控双轨: 门开路径待补)")
-        }
+        sup.detail(atc900, aae002, aae011)
     }
 }
 
