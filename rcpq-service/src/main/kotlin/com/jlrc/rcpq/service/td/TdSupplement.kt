@@ -238,14 +238,14 @@ class TdSupplementCases(
             val rows = s.jdbc.queryForList(
                 """SELECT a.*, b.aaa030, b.aaa031 FROM tc90 a, ab01 b
                    WHERE a.aab001=b.aab001 AND a.${g.flagCol}='1'
-                     ${if (g.prov99) "AND SUBSTR(a.aaa110,3,2)='99'" else ""}
+                     ${if (g.prov99) "AND SUBSTR(a.aaa110::text,3,2)='99'" else ""}
                      AND ((a.${g.ksCol}<?::numeric AND a.${g.jsFlagCol} IS NULL
-                           AND SUBSTR(a.${g.ksCol},1,4)<?::numeric)
+                           AND SUBSTR(a.${g.ksCol}::text,1,4)<?::text)
                        OR (a.${g.ksCol}<?::numeric AND a.${g.jsYmCol}=?::numeric
                            AND a.${g.jsFlagCol}='0'
-                           AND SUBSTR(a.${g.ksCol},1,4)<SUBSTR(a.${g.jsYmCol},1,4)))
+                           AND SUBSTR(a.${g.ksCol}::text,1,4)<SUBSTR(a.${g.jsYmCol}::text,1,4)))
                      AND a.atc900=?""",
-                aae002.toBigDecimal(), aae002.substring(0, 4).toBigDecimal(),
+                aae002.toBigDecimal(), aae002.substring(0, 4),
                 aae002.toBigDecimal(), aae002.toBigDecimal(), atc900)
             for (r in rows) {
                 // 源 TO_DATE 格式守卫(三段同文案'社保补发...'): NULL/非法年月即报错
