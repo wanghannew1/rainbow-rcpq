@@ -123,8 +123,23 @@ def main():
                  f"TRIM(TRAILING '.' FROM TRIM(TRAILING '0' FROM aaa302::text))"
                  f" FROM tc90 WHERE aac002='{F_ID}'")
     rec("TC90: 新参保回写", row == f"{F_MONTH}/0/6000", f"aaa603/atc90pa/aaa302={row}(数值规整后)")
-    bg = scalar(f"SELECT COUNT(*) FROM aa97_bg WHERE atc900={atc900}")
-    rec("AA97_BG: 底册变更行", bg == "1", f"rows={bg}")
+    # 桥单 010(BC-03 收尾): 值断言补齐(旧侧对照表 #8 count/bgq/bgh=1/5000/6000; 数值比较免 scale 陷阱)
+    bg = scalar(f"SELECT COUNT(*) FROM aa97_bg WHERE atc900={atc900} "
+                f"AND aaa300_bgq=5000 AND aaa300_bgh=6000")
+    rec("AA97_BG: 底册变更行(bgq=5000/bgh=6000 值钉)", bg == "1", f"count(值匹配)={bg}")
+
+    # 深度对照(纪律 v2, 桥单 010): 清场前全列行态导出, 供跨库逐列 diff(序列/时间戳列对照时排除)
+    dump = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                        "work", "bc03_pg_rowdump.txt")
+    with open(dump, "w", encoding="utf-8") as f:
+        for tbl, where in (("tc9w_bp04", f"aac002='{F_ID}' AND aae002={F_MONTH}"),
+                           ("tc90", f"atc900={atc900}"),
+                           ("aa97_bg", f"atc900={atc900}")):
+            out = subprocess.run(["psql", PG, "-tAc",
+                                  f"SELECT row_to_json(t) FROM (SELECT * FROM {tbl} WHERE {where}) t"],
+                                 capture_output=True, text=True).stdout.strip()
+            f.write(f"{tbl}: {out}\n")
+    print(f"    全列行态导出 → {dump}")
 
     # 6) 清场
     for sql in (f"DELETE FROM tc9w_bp04 WHERE aac002='{F_ID}'",
