@@ -78,3 +78,9 @@ SELECT setval('seq_tc9w_bp04_id', GREATEST((SELECT last_value FROM seq_tc9w_bp04
     (SELECT COALESCE(max(id),0)::bigint+1 FROM tc9w_bp04), 10000001));
 SELECT setval('seq_sys_baz002', GREATEST((SELECT last_value FROM seq_sys_baz002),
     (SELECT COALESCE(max(baz002),0)::bigint+1 FROM tc9w), 50000001));
+
+-- 2026-11-27 BC-11(桥单 033, e2e_bc11_wage_dict WZ-04 实证): seq_aa99_aaa990 停在 1,
+-- 表内 max(aaa990)=2(同步行零耗序列), 首发 INSERT 即 pk_aa99 撞号(旧侧卷49 "首次批内
+-- 重复配号怪癖"同族)。字典族按 Oracle 键域极小(个位~十位), 1e7 地板即可(无共享发号器)。
+SELECT setval('seq_aa99_aaa990', GREATEST((SELECT last_value FROM seq_aa99_aaa990),
+    (SELECT COALESCE(max(aaa990),0)::bigint+1 FROM aa99), 10000001));
