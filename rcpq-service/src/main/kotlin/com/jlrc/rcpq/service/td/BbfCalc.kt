@@ -101,7 +101,7 @@ class BbfCases(
                ?, ?, ?, ?, now(), ?, ?, ?, ?, ?, ?, ?, ?, ?,
                ?, ?, ?, ?, ?, ?,
                ?, ?, ?, ?, ?)""",
-            tc90["aac001"]?.toString(), (tc90["atc900"] as Number).toLong(), tc90["atb930"],
+            (tc90["aac001"] as? Number)?.toLong(), (tc90["atc900"] as Number).toLong(), tc90["atb930"],
             month, ym, ym, aac101,
             c.aaa301, c.aaa304, c.atb90k, c.atb90m, c.atb90p, c.atb90r,
             c.bba001, c.bba003, c.baa001, c.baa003,
@@ -114,8 +114,13 @@ class BbfCases(
         false
     }
 
+    /** /proc 入口(独立事务)。进程内调用(费用结算等)走 bfInternal —— 共享事务内 BbfErr
+     *  穿越 @Transactional 边界会标 rollback-only, 外层 catch 后 commit 即
+     *  UnexpectedRollbackException(2026-11-27 BC-09 实证), 故拆无注解内联体。 */
     @Transactional
-    fun bf(atc900: Long, aae002: String, lb: String): Map<String, Any?> {
+    fun bf(atc900: Long, aae002: String, lb: String): Map<String, Any?> = bfInternal(atc900, aae002, lb)
+
+    fun bfInternal(atc900: Long, aae002: String, lb: String): Map<String, Any?> {
         val ym = aae002.toLongOrNull() ?: throw BbfErr("业务年月格式不正确，无法计算补发信息")
         if (lb.isBlank()) throw BbfErr("业务类别格式不正确，无法计算补发信息")
         val tc90 = loadTc90(atc900)
@@ -123,8 +128,9 @@ class BbfCases(
             return mapOf("code" to ok, "msg" to null as String?, "bf" to newBf(), "skip" to true)
         }
         if (lb == "2") {
+            // ac10.aac001=numeric, 原串化绑定在 PG 报 numeric=varchar(2026-11-27 BC-09 首爆修复)
             jdbc.update("DELETE FROM ac10 WHERE aae002=? AND aac001=?",
-                ym, tc90["aac001"]?.toString())
+                ym.toBigDecimal(), (tc90["aac001"] as? Number)?.toLong())
         }
         val bf = newBf()
         if (lb == "2" && ym < 202101L) {
@@ -165,7 +171,7 @@ class BbfCases(
         }
         // LB='2': TC93 max 已缴年月(忠实: N_CNT_1/N_CNT_2 同款 SQL)
         var nCnt1 = 190001L; var nCnt2 = 190001L; var nCnt3 = 190001L; var nCnt4 = 190001L
-        val aac001 = tc90["aac001"]?.toString()
+        val aac001 = (tc90["aac001"] as? Number)?.toLong()  // tc93.aac001=numeric
         if (lb == "2") {
             nCnt1 = jdbc.queryForObject(
                 """SELECT coalesce(max(atc931),190001) FROM tc93

@@ -348,9 +348,14 @@ class InsuranceCalcEngine(
         val out = Tc01()
         try {
             if (tc90.s("aae00p") == "2") return Pair(ok, out) // 劳务不计算
-            val tb93Aaa803 = jdbcTemplate.query(
-                "SELECT aaa803 FROM tb93 WHERE atb930=?", { rs, _ -> rs.getString("aaa803") }, tc90.l("atb930"))
-                .firstOrNull() ?: throw IllegalStateException("结算单元不存在: ${tc90.l("atb930")}")
+            // 行存在性语义(Oracle SELECT INTO): 行在即可, AAA803 可空 —— 2026-11-27 桥单 034 修复:
+            // 原 query(rowmapper=getString).firstOrNull() 把 "行存在但 AAA803 NULL" 误判为
+            // "结算单元不存在"(RowMapper 返 null → 列表 [null] → firstOrNull()=null 触发 elvis),
+            // 合成单元(tb93 行 aaa803 未设)在 BC-09 夹具首次踩响, 真实同步行从未暴露。
+            val tb93Row = jdbcTemplate.queryForList(
+                "SELECT aaa803 FROM tb93 WHERE atb930=?", tc90.l("atb930")).singleOrNull()
+                ?: throw IllegalStateException("结算单元不存在: ${tc90.l("atb930")}")
+            val tb93Aaa803 = tb93Row["aaa803"]?.toString()
             out.atc900 = tc90.l("atc900"); out.atb930 = tc90.l("atb930")
             out.aac001 = tc90.l("aac001"); out.aac003 = tc90.s("aac003"); out.aac002 = tc90.s("aac002")
             // P2: 原 OUT 形参 jslb 初始化即 NULL, 不随 xjbl 携带

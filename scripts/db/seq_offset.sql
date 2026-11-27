@@ -84,3 +84,14 @@ SELECT setval('seq_sys_baz002', GREATEST((SELECT last_value FROM seq_sys_baz002)
 -- 重复配号怪癖"同族)。字典族按 Oracle 键域极小(个位~十位), 1e7 地板即可(无共享发号器)。
 SELECT setval('seq_aa99_aaa990', GREATEST((SELECT last_value FROM seq_aa99_aaa990),
     (SELECT COALESCE(max(aaa990),0)::bigint+1 FROM aa99), 10000001));
+
+-- 2026-11-27 BC-09(桥单 034, e2e_bc09_settle 实证): 结算族三序列落后表 max 同族病
+-- (tb96 42784<43293 / tb9a 40401<40926 / tc07 5140475<5292056, 同步行零耗序列),
+-- 生成费用清单 TB96 自插头首插即撞 pk。Oracle 键域: tb96~4.3万/tb9a~4.1万/tc07~530万
+-- → 统一 1e7 地板(余量足够, tc07 月增~万级)。形态=不回落式抬段(幂等)。
+SELECT setval('seq_tb96_atb960', GREATEST((SELECT last_value FROM seq_tb96_atb960),
+    (SELECT COALESCE(max(atb960),0)::bigint+1 FROM tb96), 10000001));
+SELECT setval('seq_tb9a_atb9a0', GREATEST((SELECT last_value FROM seq_tb9a_atb9a0),
+    (SELECT COALESCE(max(atb9a0),0)::bigint+1 FROM tb9a), 10000001));
+SELECT setval('seq_tc07_atc070', GREATEST((SELECT last_value FROM seq_tc07_atc070),
+    (SELECT COALESCE(max(atc070),0)::bigint+1 FROM tc07), 10000001));
