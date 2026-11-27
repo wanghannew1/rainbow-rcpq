@@ -27,6 +27,7 @@ import java.util.concurrent.ConcurrentHashMap
 @Component
 class TddCases(
     private val jdbcTemplate: JdbcTemplate,
+    private val auditBackfill: com.jlrc.rcpq.service.AuditBackfill,
     private val objectMapper: ObjectMapper,
 ) {
     @PersistenceContext
@@ -131,8 +132,15 @@ class TddCases(
     // ---------- tddf.doSaveAa80: 默认名册切换 ----------
 
     @Transactional
-    fun doSaveAa80(aa80Row: Map<String, Any?>): Map<String, Any?> {
-        val aa80 = objectMapper.convertValue(aa80Row.filterKeys { it != "__state" }, AA80::class.java)
+    fun doSaveAa80(aa80Row: Map<String, Any?>, aae011: String? = null): Map<String, Any?> {
+        val fields = aa80Row.filterKeys { it != "__state" }.toMutableMap()
+        // DC save 框架审计回填移植(insert 行; 旧 tddfService 同源 setPojoSysUserInfo)
+        val cols = jdbcTemplate.queryForList(
+            "SELECT column_name FROM information_schema.columns WHERE table_name='aa80'")
+            .map { (it["column_name"] as String).lowercase() }.toSet()
+        auditBackfill.applyToInsert(fields, cols, aae011)
+        auditBackfill.applyBaz(fields, cols)
+        val aa80 = objectMapper.convertValue(fields, AA80::class.java)
         if (aa80.aaa802 == "1") {
             if (aa80.aaa800 == null) {
                 jdbcTemplate.update("UPDATE aa80 SET aaa802='0'")
@@ -150,11 +158,16 @@ class TddCases(
     // ---------- tddf.doSaveAa81: AA81 保存 + AA90 克隆 ----------
 
     @Transactional
-    fun doSaveAa81(rows: List<Map<String, Any?>>): Map<String, Any?> {
+    fun doSaveAa81(rows: List<Map<String, Any?>>, aae011: String? = null): Map<String, Any?> {
         var saved = 0
         var cloned = 0
+        val cols = jdbcTemplate.queryForList(
+            "SELECT column_name FROM information_schema.columns WHERE table_name='aa81'")
+            .map { (it["column_name"] as String).lowercase() }.toSet()
         for (row in rows) {
-            val aa81 = objectMapper.convertValue(row.filterKeys { it != "__state" }, AA81::class.java)
+            val fields = row.filterKeys { it != "__state" }.toMutableMap()
+            auditBackfill.applyToInsert(fields, cols, aae011)
+            val aa81 = objectMapper.convertValue(fields, AA81::class.java)
             if (aa81.aaa810 != null) {
                 em.merge(aa81)
                 saved++

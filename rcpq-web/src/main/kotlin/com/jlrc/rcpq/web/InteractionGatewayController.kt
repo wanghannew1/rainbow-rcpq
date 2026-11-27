@@ -220,12 +220,15 @@ class InteractionGatewayController(
                 "doSaveAa80" -> {
                     val aa80 = body["aa80"] as? Map<String, Any?>
                         ?: return mapOf("error" to "缺少 aa80", "code" to -30001)
-                    return mapOf("interaction" to code, "doSaveAa80" to tddCases.doSaveAa80(aa80))
+                    // 登录上下文: 定制服务同走审计回填(baz+审计六列, 旧 tddfService 同源)
+                    return mapOf("interaction" to code, "doSaveAa80" to
+                        tddCases.doSaveAa80(aa80, body["aae011"]?.toString() ?: body["bae011"]?.toString()))
                 }
                 "doSaveAa81" -> {
                     val rows = (body["rows"] as? List<Map<String, Any?>>)
                         ?: return mapOf("error" to "缺少 rows", "code" to -30001)
-                    return mapOf("interaction" to code, "doSaveAa81" to tddCases.doSaveAa81(rows))
+                    return mapOf("interaction" to code, "doSaveAa81" to
+                        tddCases.doSaveAa81(rows, body["aae011"]?.toString() ?: body["bae011"]?.toString()))
                 }
             }
         }
@@ -494,7 +497,9 @@ class InteractionGatewayController(
         }
         if (spec.method != "update") return mapOf("error" to "非保存交互: ${spec.method}", "code" to -30001)
         return try {
-            val r = updateExecutor.execute(store, rows)
+            // 登录上下文传递: 新增行审计回填(DC save 框架语义移植, 桥单 dc-audit-backfill)
+            val r = updateExecutor.execute(store, rows,
+                body["aae011"]?.toString() ?: body["bae011"]?.toString())
             mapOf("interaction" to code, "store" to store,
                 "inserted" to r.inserted, "updated" to r.updated, "deleted" to r.deleted)
         } catch (e: IllegalArgumentException) {

@@ -24,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional
 class UpdateExecutor(
     private val objectMapper: ObjectMapper,
     private val metadataRegistry: MetadataRegistry,
+    private val auditBackfill: AuditBackfill,
 ) {
     @PersistenceContext
     lateinit var em: EntityManager
@@ -45,18 +46,26 @@ class UpdateExecutor(
     data class UpdateResult(var inserted: Int = 0, var updated: Int = 0, var deleted: Int = 0)
 
     @Transactional
-    fun execute(store: String, rows: List<Map<String, Any?>>): UpdateResult {
+    fun execute(store: String, rows: List<Map<String, Any?>>): UpdateResult =
+        execute(store, rows, null)
+
+    /** aae011: 请求经办人(登录上下文); 新增行按 DC save 框架语义回填审计列(桥单 dc-audit-backfill,
+     *  旧 cp33 LemisPojoUtil.setPojoSysUserInfo 移植——modify 行不回填, BC-10 实证)。 */
+    @Transactional
+    fun execute(store: String, rows: List<Map<String, Any?>>, aae011: String?): UpdateResult {
         val meta = metadataRegistry.meta(store)
             ?: throw IllegalArgumentException("无store元数据: $store")
         val entityClass = entityClassByTable[meta.table]
             ?: throw IllegalArgumentException("表 ${meta.table} 无实体映射")
         val pkNames = meta.columns.filter { it.primaryKey }.map { it.name }
+        val colNames = meta.columns.map { it.name.lowercase() }.toSet()
         val result = UpdateResult()
         for (row in rows) {
             val state = row["__state"]?.toString() ?: "modified"
-            val fields = row.filterKeys { it != "__state" }
+            val fields = row.filterKeys { it != "__state" }.toMutableMap()
             when (state) {
                 "new" -> {
+                    auditBackfill.applyToInsert(fields, colNames, aae011)
                     val entity = objectMapper.convertValue(fields, entityClass)
                     em.persist(entity)
                     result.inserted++
