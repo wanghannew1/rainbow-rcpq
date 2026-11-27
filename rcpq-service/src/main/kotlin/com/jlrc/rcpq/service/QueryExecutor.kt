@@ -40,7 +40,7 @@ class QueryExecutor(private val jdbcTemplate: JdbcTemplate) {
                 }
                 validCols.containsKey(key) && value.isNotEmpty() -> {
                     where += "$key = ?"
-                    args += value
+                    args += typedValue(validCols[key]!!, value)
                 }
             }
         }
@@ -61,5 +61,23 @@ class QueryExecutor(private val jdbcTemplate: JdbcTemplate) {
 
         private fun isStringType(jdbcType: Int): Boolean =
             jdbcType == java.sql.Types.VARCHAR || jdbcType == java.sql.Types.CHAR
+
+        /**
+         * 等值参数按列 jdbcType 分型绑定(2026-11-27, 桥单 013 BC-04 对比中发现的移植缺陷)：
+         * 全 String 绑定在 PG 报 "operator does not exist: bigint = character varying"
+         * (Oracle 隐式转换宽容, PG 不行——PG 类型漂移铁律同族)。非数值/日期列维持 String;
+         * 解析失败回退原串(与 SysImportController.typed 同保守策略)。
+         */
+        private fun typedValue(meta: ColumnMeta, value: String): Any =
+            when (meta.jdbcType) {
+                java.sql.Types.BIGINT, java.sql.Types.INTEGER, java.sql.Types.SMALLINT,
+                java.sql.Types.TINYINT -> value.toLongOrNull() ?: value
+                java.sql.Types.NUMERIC, java.sql.Types.DECIMAL, java.sql.Types.FLOAT,
+                java.sql.Types.REAL, java.sql.Types.DOUBLE ->
+                    value.toBigDecimalOrNull() ?: value
+                java.sql.Types.DATE, java.sql.Types.TIMESTAMP, java.sql.Types.TIME ->
+                    runCatching { java.sql.Date.valueOf(value) }.getOrDefault(value)
+                else -> value
+            }
     }
 }
