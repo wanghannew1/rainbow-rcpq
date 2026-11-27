@@ -18,9 +18,7 @@ class SettleRet(val code: Int, val msg: String) : RuntimeException(msg)
  * 全列形态, PG 侧列集以此对齐)。
  */
 @Component
-class TdSettleSupport(val jdbc: JdbcTemplate, ds: DataSource) {
-
-    private val conn = ds.connection
+class TdSettleSupport(val jdbc: JdbcTemplate, private val ds: DataSource) {
 
     /** 表列名缓存(小写) */
     private val cols = HashMap<String, Set<String>>()
@@ -28,7 +26,10 @@ class TdSettleSupport(val jdbc: JdbcTemplate, ds: DataSource) {
     @Synchronized
     fun tableCols(table: String): Set<String> {
         cols[table]?.let { return it }
-        conn.use { c ->
+        // 每次取还(桥单 20261127-045 根因修复: 原构造器抢池连接+首用即关 → 字段残留
+        // 已关代理, 第二个未缓存表 tableCols 必死 'Connection is closed'; Hikari leak
+        // 栈 TdSettleSupport.kt:23 实证)
+        ds.connection.use { c ->
             val md = c.metaData.getColumns(null, null, table, "%")
             val s = mutableSetOf<String>()
             while (md.next()) s.add(md.getString("COLUMN_NAME").lowercase())
@@ -58,10 +59,20 @@ class TdSettleSupport(val jdbc: JdbcTemplate, ds: DataSource) {
     }
 
     fun isDup(e: Throwable): Boolean {
+        // 忠实 DUP_VAL_ON_INDEX 语义: 仅唯一约束违规(SQLState 23505)。
+        // 045 教训: 原按 DataIntegrityViolation 宽判, NOT NULL 违规(23502)被误吞成 DUP。
         var t: Throwable? = e
         while (t != null) {
-            if (t is org.springframework.dao.DataIntegrityViolationException ||
-                t is org.springframework.dao.DuplicateKeyException) return true
+            if (t is org.springframework.dao.DuplicateKeyException) return true
+            if (t is org.springframework.dao.DataIntegrityViolationException) {
+                var s: Throwable? = t
+                while (s != null) {
+                    if (s is java.sql.SQLException &&
+                        s.sqlState == "23505") return true
+                    s = s.cause
+                }
+                return false
+            }
             t = t.cause
         }
         return false

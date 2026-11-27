@@ -18,7 +18,7 @@ class TdSettleCalc(
     private val bbfCases: BbfCases,
     private val rateCases: TdSettleRateCases,
     private val listCases: TdSettleListCases,
-) {
+    private val rosterCases: TdRosterCases) {
 
     private fun nz(v: Any?): BigDecimal = s.nvl(v)
 
@@ -51,8 +51,8 @@ class TdSettleCalc(
             "SELECT COUNT(1) FROM tc93 WHERE atc931=?::numeric AND atc937=? AND atb930=?",
             Long::class.java, atc931.toBigDecimal(), atc937, atb930.toLong()) ?: 0L
         if (nCntAll == 0L) {
-            // 源调 PKG_工资发放.PRC_工资花名册(L850, 未移植记账项)——TC93 空单元路径
-            throw RuntimeException("PKG_工资发放.PRC_工资花名册 未移植(桥单 20261127-034 记账项)")
+            // 源 L849-862: 空单元 → 自动花名册造零行(034 记账项转正, 桥单 20261127-045)
+            rosterCases.roster(atb930, atc931, atc937, aae011)
         }
         // 待审核守卫
         val nPend = s.jdbc.queryForObject(

@@ -157,7 +157,7 @@ class InsuranceCalcEngine(
             if (ymStr.substring(0, 4) != curYear) {
                 val nextYear = (ymStr.substring(0, 4).toInt() + 1).toString()
                 jdbcTemplate.query("SELECT atb90s FROM aa97 WHERE aae214_3 IN ('1','3') AND aae001=? AND aac001=?",
-                    { rs, _ -> rs.getString("atb90s") }, nextYear, tc90.l("aac001")).firstOrNull()?.let { v = it }
+                    { rs, _ -> rs.getString("atb90s") }, nextYear.toLong(), tc90.l("aac001")).firstOrNull()?.let { v = it } // aae001 numeric, 年绑定数值化(桥单 20261127-045)
             }
             val idx: Int = v.indexOf(':')
             if (idx > 0) {
